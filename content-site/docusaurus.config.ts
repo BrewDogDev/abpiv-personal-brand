@@ -3,15 +3,13 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'TODO: Your Name',
-  tagline: 'TODO: Your tagline here',
-  favicon: 'img/favicon.ico',
+  title: 'BrewDogDev',
 
-  url: 'https://your-domain.com',
-  baseUrl: '/',
+  url: 'https://BrewDogDev.github.io',
+  baseUrl: '/abpiv-personal-brand/',
 
   projectName: 'abpiv-personal-brand',
-  organizationName: 'TODO: your-github-org',
+  organizationName: 'BrewDogDev',
 
   trailingSlash: false,
 
@@ -113,7 +111,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'TODO: Your Name',
+title: 'BrewDogDev',
       logo: {
         alt: 'Site Logo',
         src: 'img/logo.svg',
@@ -145,7 +143,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://github.com/TODO: your-github-org',
+          href: 'https://github.com/BrewDogDev',
           position: 'right',
           className: 'header-github-link',
         },
@@ -196,7 +194,7 @@ const config: Config = {
           title: 'Social',
           items: [
             {
-              href: 'https://github.com/TODO: your-github-org',
+              href: 'https://github.com/BrewDogDev',
               label: 'GitHub',
             },
             {
@@ -210,7 +208,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: 'Copyright (c) ' + new Date().getFullYear() + ' TODO: Your Name. Built with Docusaurus.',
+      copyright: 'Copyright (c) ' + new Date().getFullYear() + ' BrewDogDev. Built with Docusaurus.',
     },
     prism: {
       theme: prismThemes.github,
