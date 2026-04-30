@@ -1,7 +1,7 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
-import {links} from './links';
+import { links } from './links';
 
 const config: Config = {
   title: 'abpiv',
@@ -9,7 +9,7 @@ const config: Config = {
   favicon: 'img/headshot.png',
 
   url: 'https://abpiv.github.io',
-  baseUrl: '/abpiv-personal-brand/',
+  baseUrl: '/info/',
 
   projectName: 'abpiv-personal-brand',
   organizationName: 'abpiv',
@@ -45,12 +45,13 @@ const config: Config = {
           blogTitle: 'Insights',
           blogDescription: 'Posts and ideas -- blog-style.',
           showReadingTime: true,
+          authorsMapPath: '../authors.yml',
           feedOptions: {
             type: ['rss', 'atom'],
             title: 'Insights',
           },
           onInlineTags: 'warn',
-          onInlineAuthors: 'ignore',
+          onInlineAuthors: 'warn',
           onUntruncatedBlogPosts: 'ignore',
         },
         theme: {
@@ -72,12 +73,13 @@ const config: Config = {
         showReadingTime: true,
         blogSidebarTitle: 'All research',
         blogSidebarCount: 'ALL',
+        authorsMapPath: '../authors.yml',
         feedOptions: {
           type: ['rss', 'atom'],
           title: 'Research',
         },
         onInlineTags: 'warn',
-        onInlineAuthors: 'ignore',
+        onInlineAuthors: 'warn',
         onUntruncatedBlogPosts: 'ignore',
       },
     ],
@@ -89,12 +91,13 @@ const config: Config = {
         path: './newsroom',
         blogTitle: 'Newsroom',
         blogDescription: 'Announcements and milestones.',
+        authorsMapPath: '../authors.yml',
         feedOptions: {
           type: ['rss', 'atom'],
           title: 'Newsroom',
         },
         onInlineTags: 'warn',
-        onInlineAuthors: 'ignore',
+        onInlineAuthors: 'warn',
         onUntruncatedBlogPosts: 'ignore',
       },
     ],
@@ -144,7 +147,7 @@ const config: Config = {
           label: 'Newsroom',
           position: 'left',
         },
-        ],
+      ],
     },
     footer: {
       style: 'dark',
@@ -167,7 +170,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: 'Copyright (c) ' + new Date().getFullYear() + ' Allan B. Pedin IV. Built with Docusaurus.',
+      copyright: 'Copyright (c) ' + new Date().getFullYear() + ' Allan B. Pedin IV.',
     },
     prism: {
       theme: prismThemes.github,

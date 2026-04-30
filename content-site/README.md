@@ -10,14 +10,14 @@ This is a Docusaurus v3 (TypeScript) personal brand site located in `content-sit
 
 ### Routes & Plugins
 
-| Route | Plugin | Notes |
-|-------|--------|-------|
+| Route       | Plugin                                             | Notes                                          |
+| ----------- | -------------------------------------------------- | ---------------------------------------------- |
 | `/research` | `@docusaurus/plugin-content-blog` (id: `research`) | Long-form research, RSS at `/research/rss.xml` |
-| `/insights` | `@docusaurus/plugin-content-blog` (id: `default`) | Blog-style posts, RSS at `/insights/rss.xml` |
-| `/newsroom` | `@docusaurus/plugin-content-blog` (id: `newsroom`) | Announcements, RSS at `/newsroom/rss.xml` |
-| `/featured` | Custom React page `src/pages/featured/index.tsx` | Showcase of appearances |
-| `/about` | MDX page `src/pages/about.mdx` | Bio page |
-| `/` | Custom `src/pages/index.tsx` | Homepage with Hero, SectionCards, LatestPosts |
+| `/insights` | `@docusaurus/plugin-content-blog` (id: `default`)  | Blog-style posts, RSS at `/insights/rss.xml`   |
+| `/newsroom` | `@docusaurus/plugin-content-blog` (id: `newsroom`) | Announcements, RSS at `/newsroom/rss.xml`      |
+| `/featured` | Custom React page `src/pages/featured/index.tsx`   | Showcase of appearances                        |
+| `/about`    | MDX page `src/pages/about.mdx`                     | Bio page                                       |
+| `/`         | Custom `src/pages/index.tsx`                       | Homepage with Hero, SectionCards, LatestPosts  |
 
 ### Key Files
 
@@ -83,7 +83,7 @@ All blog posts frontmatter should use `author: allan`.
 
 ## Deployment
 
-- **baseUrl**: `/abpiv-personal-brand/`
+- **baseUrl**: `/info/`
 - **url**: `https://abpiv.github.io`
 - GitHub Actions workflow in `.github/workflows/deploy.yml` deploys to GitHub Pages on push to main
 - Organization: `abpiv`
