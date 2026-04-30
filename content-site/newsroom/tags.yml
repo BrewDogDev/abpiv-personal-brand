@@ -1,0 +1,14 @@
+launch:
+  label: Launch
+  permalink: /launch
+  description: Product and project launches
+
+update:
+  label: Update
+  permalink: /update
+  description: Project and content updates
+
+milestone:
+  label: Milestone
+  permalink: /milestone
+  description: Important milestones

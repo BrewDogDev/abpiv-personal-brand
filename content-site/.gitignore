@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.cache-loader/
+
+# Production
+build/
+.docusaurus/
+
+# Generated files
+docusaurus.config.js
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Lock files
+# package-lock.json is committed per plan
+# pnpm-lock.yaml should not be introduced
+yarn.lock

@@ -1,0 +1,14 @@
+analysis:
+  label: Analysis
+  permalink: /analysis
+  description: In-depth analysis of topics
+
+deep-dive:
+  label: Deep Dive
+  permalink: /deep-dive
+  description: Comprehensive explorations
+
+research:
+  label: Research
+  permalink: /research
+  description: Research and studies

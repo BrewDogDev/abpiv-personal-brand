@@ -1,0 +1,9 @@
+default:
+  name: "TODO: Your Name"
+  title: "TODO: Your title/role"
+  url: "https://your-domain.com"
+  image_url: "https://github.com/TODO: your-github-org.png"
+  socials:
+    github: "TODO: your-github-org"
+    x: "TODO: your-x-handle"
+    linkedin: "TODO: your-linkedin"

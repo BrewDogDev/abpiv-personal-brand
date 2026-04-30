@@ -1,0 +1,52 @@
+---
+slug: welcome
+title: "Welcome to Insights"
+author: default
+tags: [thoughts]
+date: 2026-04-30
+description: "Introducing Insights — a space for posts, ideas, and thoughts on technology and building things."
+---
+
+Welcome to **Insights** — a space for posts, ideas, and thoughts on technology, design, and building things.
+
+## What You'll Find Here
+
+Insights covers a range of topics:
+
+- Technical explorations and tutorials
+- Thoughts on software development practices
+- Notes on tools and technologies I use
+- Ideas and perspectives on building products
+
+## Format
+
+Posts are written in MDX, enabling:
+
+- Clear structured content with semantic headings
+- Code examples with syntax highlighting
+- Callouts for important notes
+- Links and references
+
+### Example Code
+
+```typescript
+interface Post {
+  title: string;
+  slug: string;
+  tags: string[];
+  date: string;
+}
+
+const createPost = (data: Omit<Post, 'slug'>): Post => ({
+  ...data,
+  slug: data.title.toLowerCase().replace(/\s+/g, '-'),
+});
+```
+
+## Stay Updated
+
+Subscribe via RSS to get notified when new insights are published.
+
+---
+
+Thanks for reading.

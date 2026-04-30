@@ -1,0 +1,14 @@
+thoughts:
+  label: Thoughts
+  permalink: /thoughts
+  description: Personal thoughts and perspectives
+
+tutorial:
+  label: Tutorial
+  permalink: /tutorial
+  description: How-to guides and tutorials
+
+announcement:
+  label: Announcement
+  permalink: /announcement
+  description: Announcements and updates
