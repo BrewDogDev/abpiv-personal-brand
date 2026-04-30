@@ -12,3 +12,8 @@ research:
   label: Research
   permalink: /research
   description: Research and studies
+
+publication:
+  label: Publication
+  permalink: /publication
+  description: Published academic papers

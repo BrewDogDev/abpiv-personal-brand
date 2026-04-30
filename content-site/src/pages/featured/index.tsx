@@ -95,7 +95,7 @@ export default function FeaturedPage(): React.JSX.Element {
       <div className="container padding--lg">
         <div className={styles.page}>
           <header className={styles.header}>
-            <h1 className={styles.title}>Featured</h1>
+            <h1 className={styles.title}>Featured On</h1>
             <p className={styles.subtitle}>
               Appearances on podcasts, conferences, interviews, guest posts, and other people's platforms.
             </p>

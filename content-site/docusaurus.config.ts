@@ -1,15 +1,18 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import {links} from './links';
 
 const config: Config = {
-  title: 'BrewDogDev',
+  title: 'abpiv',
 
-  url: 'https://BrewDogDev.github.io',
+  favicon: 'img/headshot.png',
+
+  url: 'https://abpiv.github.io',
   baseUrl: '/abpiv-personal-brand/',
 
   projectName: 'abpiv-personal-brand',
-  organizationName: 'BrewDogDev',
+  organizationName: 'abpiv',
 
   trailingSlash: false,
 
@@ -23,6 +26,8 @@ const config: Config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+
+  customFields: {},
 
   presets: [
     [
@@ -45,8 +50,8 @@ const config: Config = {
             title: 'Insights',
           },
           onInlineTags: 'warn',
-          onInlineAuthors: 'warn',
-          onUntruncatedBlogPosts: 'warn',
+          onInlineAuthors: 'ignore',
+          onUntruncatedBlogPosts: 'ignore',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -72,8 +77,8 @@ const config: Config = {
           title: 'Research',
         },
         onInlineTags: 'warn',
-        onInlineAuthors: 'warn',
-        onUntruncatedBlogPosts: 'warn',
+        onInlineAuthors: 'ignore',
+        onUntruncatedBlogPosts: 'ignore',
       },
     ],
     [
@@ -89,11 +94,10 @@ const config: Config = {
           title: 'Newsroom',
         },
         onInlineTags: 'warn',
-        onInlineAuthors: 'warn',
-        onUntruncatedBlogPosts: 'warn',
+        onInlineAuthors: 'ignore',
+        onUntruncatedBlogPosts: 'ignore',
       },
     ],
-    ['docusaurus-plugin-plausible', {domain: 'your-domain.com'}],
     [
       '@easyops-cn/docusaurus-search-local',
       {
@@ -108,13 +112,16 @@ const config: Config = {
   themeConfig: {
     image: 'img/social-card.png',
     colorMode: {
-      respectPrefersColorScheme: true,
+      defaultMode: 'dark',
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
-title: 'BrewDogDev',
+      title: 'abpiv',
       logo: {
-        alt: 'Site Logo',
-        src: 'img/logo.svg',
+        alt: 'Allan B. Pedin IV',
+        src: 'img/headshot.png',
+        srcDark: 'img/headshot.png',
       },
       items: [
         {
@@ -142,73 +149,31 @@ title: 'BrewDogDev',
           label: 'About',
           position: 'left',
         },
-        {
-          href: 'https://github.com/BrewDogDev',
-          position: 'right',
-          className: 'header-github-link',
-        },
+        
       ],
     },
     footer: {
       style: 'dark',
       links: [
         {
-          title: 'Content',
+          title: 'Navigation',
           items: [
-            {
-              to: '/research',
-              label: 'Research',
-            },
-            {
-              to: '/featured',
-              label: 'Featured',
-            },
-            {
-              to: '/insights',
-              label: 'Insights',
-            },
-            {
-              to: '/newsroom',
-              label: 'Newsroom',
-            },
+            { to: '/research', label: 'Research' },
+            { to: '/featured', label: 'Featured' },
+            { to: '/insights', label: 'Insights' },
+            { to: '/newsroom', label: 'Newsroom' },
           ],
         },
         {
-          title: 'Feeds',
+          title: 'RSS Feeds',
           items: [
-            {
-              to: '/research/rss.xml',
-              label: 'Research RSS',
-            },
-            {
-              to: '/insights/rss.xml',
-              label: 'Insights RSS',
-            },
-            {
-              to: '/newsroom/rss.xml',
-              label: 'Newsroom RSS',
-            },
-          ],
-        },
-        {
-          title: 'Social',
-          items: [
-            {
-              href: 'https://github.com/BrewDogDev',
-              label: 'GitHub',
-            },
-            {
-              href: 'https://x.com/TODO: your-x-handle',
-              label: 'X (Twitter)',
-            },
-            {
-              href: 'https://linkedin.com/in/TODO: your-linkedin',
-              label: 'LinkedIn',
-            },
+            { to: '/research/rss.xml', label: 'Research' },
+            { to: '/insights/rss.xml', label: 'Insights' },
+            { to: '/newsroom/rss.xml', label: 'Newsroom' },
           ],
         },
       ],
-      copyright: 'Copyright (c) ' + new Date().getFullYear() + ' BrewDogDev. Built with Docusaurus.',
+      copyright: 'Copyright (c) ' + new Date().getFullYear() + ' Allan B. Pedin IV. Built with Docusaurus.',
     },
     prism: {
       theme: prismThemes.github,

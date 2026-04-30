@@ -5,8 +5,10 @@ import styles from './styles.module.css';
 export function HomeHero(): React.JSX.Element {
   return (
     <section className={styles.hero}>
-      <h1 className={styles.name}>TODO: Your Name</h1>
-      <p className={styles.tagline}>TODO: Your tagline here</p>
+      <h1 className={styles.name}>Allan B. Pedin IV</h1>
+      <p className={styles.tagline}>
+        CEO | Redefining the Internet to be: Intelligent • Transparent • Inclusive • Decentralized | CEO & Co-Founder at CipherPlay & randao.net | Published AI & Blockchain Researcher
+      </p>
       <div className={styles.buttons}>
         <Link to="/insights" className={styles.primaryButton}>
           Read Insights
