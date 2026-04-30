@@ -5,9 +5,14 @@ import styles from './styles.module.css';
 export function HomeHero(): React.JSX.Element {
   return (
     <section className={styles.hero}>
+      <img
+        src="/img/headshot.png"
+        alt="Allan B. Pedin IV"
+        className={styles.avatar}
+      />
       <h1 className={styles.name}>Allan B. Pedin IV</h1>
       <p className={styles.tagline}>
-        CEO | Redefining the Internet to be: Intelligent • Transparent • Inclusive • Decentralized | CEO & Co-Founder at CipherPlay & randao.net | Published AI & Blockchain Researcher
+        CEO | Redefining the Internet to be: Intelligent, Transparent, Inclusive, Decentralized | CEO & Co-Founder at CipherPlay & randao.net | Published AI & Blockchain Researcher
       </p>
       <div className={styles.buttons}>
         <Link to="/insights" className={styles.primaryButton}>
@@ -16,8 +21,8 @@ export function HomeHero(): React.JSX.Element {
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </Link>
-        <Link to="/about" className={styles.secondaryButton}>
-          About Me
+        <Link to="/research" className={styles.secondaryButton}>
+          View Research
         </Link>
       </div>
     </section>

@@ -131,7 +131,7 @@ const config: Config = {
         },
         {
           to: '/featured',
-          label: 'Featured',
+          label: 'Featured on',
           position: 'left',
         },
         {
@@ -144,13 +144,7 @@ const config: Config = {
           label: 'Newsroom',
           position: 'left',
         },
-        {
-          to: '/about',
-          label: 'About',
-          position: 'left',
-        },
-        
-      ],
+        ],
     },
     footer: {
       style: 'dark',

@@ -6,7 +6,7 @@ import {LatestPosts} from '@site/src/components/LatestPosts';
 
 export default function Home(): ReactNode {
   return (
-    <Layout title="Home" description="TODO: Your tagline here">
+    <Layout title="Home" description="CEO | Redefining the Internet">
       <main style={{padding: '2rem 0'}}>
         <div className="container">
           <HomeHero />

@@ -1,48 +1,19 @@
 ---
-slug: intro
-title: "Introducing Research: A Deep Dive into Knowledge"
+slug: randao-white-paper
+title: "RandDAO White Paper V1"
 author: allan
-tags: [research, deep-dive]
-date: 2026-04-30
-description: "Welcome to the Research section. This inaugural post explains what to expect from long-form research content."
+tags: [research, randao]
+date: 2025-03-01
+description: "A decentralized random number generation protocol developed by RandDAO."
 ---
+import RandDao from '@site/static/img/research/randao-logo.png';
 
-Welcome to **Research** — a section dedicated to long-form studies, analyses, and deep explorations of topics I find compelling.
+<div style={{textAlign: 'right'}}>
+<img src={RandDao} height="48px"/>
+</div>
 
-## What to Expect
+## RandDAO Whitepaper
 
-This section will feature:
+The RANDAO whitepaper describes a decentralized random number generation protocol. RandDAO is the company behind this technology.
 
-- **In-depth analyses** of emerging trends and technologies
-- **Research papers** and studies with practical applications
-- **Deep dives** into subjects that deserve thorough examination
-
-## Content Format
-
-All research posts are authored in MDX, allowing for:
-
-- Rich typography with semantic headings
-- Code blocks with syntax highlighting
-- Callouts and admonitions for key insights
-- Embedded images and media
-
-```typescript
-// Example code block demonstrating a concept
-const analyze = <T>(items: T[]): Record<string, T[]> => {
-  return items.reduce((acc, item) => {
-    const key = typeof item === 'object' ? (item as any).category : 'uncategorized';
-    (acc[key] ??= []).push(item);
-    return acc;
-  }, {} as Record<string, T[]>);
-};
-```
-
-## Stay Connected
-
-Research posts are published with RSS feed support. Subscribe to stay updated as new long-form content becomes available.
-
-> **Note:** Each research post uses `slug:` in the frontmatter to produce clean URLs like `/research/intro` instead of the default date-based path.
-
----
-
-Looking forward to exploring ideas together.
+**[Read the RANDAO Whitepaper V1](https://randao-whitepaper.ar.io/)**

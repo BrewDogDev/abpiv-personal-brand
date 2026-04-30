@@ -16,7 +16,7 @@ const sections = [
   },
   {
     to: '/featured',
-    title: 'Featured',
+    title: 'Featured on',
     description: 'Appearances on podcasts, conferences, interviews, and guest posts.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
