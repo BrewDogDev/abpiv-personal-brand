@@ -2,6 +2,7 @@ import React, {useMemo} from 'react';
 import {FeaturedCard} from '@site/src/components/FeaturedCard';
 import {FeaturedItems} from '@site/src/data/featured';
 import type {FeaturedItem} from '@site/src/data/featured';
+import {links} from '@site/links';
 import Layout from '@theme/Layout';
 import Head from '@docusaurus/Head';
 import styles from './styles.module.css';
@@ -33,7 +34,7 @@ export default function FeaturedPage(): React.JSX.Element {
             <p className={styles.subtitle}>
               Appearances on podcasts, conferences, interviews, guest posts, and other people's platforms.
             </p>
-            <a href="mailto:todo@example.com" className={styles.cta}>
+            <a href={links.email} className={styles.cta}>
               Suggest an appearance
               <svg
                 width="16"

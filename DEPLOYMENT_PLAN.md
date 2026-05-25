@@ -1,86 +1,136 @@
-# Deployment Plan: Firebase Hosting on Google Cloud
+# Deployment Plan: Firebase Hosting + Cloudflare DNS
+
+Last audited: 2026-05-25
 
 ## Context
 
-This repo (`abpiv/abpiv-personal-brand`) contains a Docusaurus v3 static site in `content-site/`. It currently deploys to GitHub Pages at `https://abpiv.github.io/info/` via `.github/workflows/deploy.yml`.
+This repo contains a Docusaurus v3 static site in `content-site/`.
 
-**Goal:** Add production deployment to Firebase Hosting on Google Cloud at `https://allanbpediniv.com/info/` while keeping GitHub Pages as a staging environment.
-
-## Decisions (locked in)
+Production target:
 
 | Item | Value |
 | --- | --- |
-| Production host | Firebase Hosting (GCP) |
-| GCP project ID | `abpiv-personal-brand` |
+| Production host | Firebase Hosting |
+| GCP / Firebase project ID | `abpiv-personal-brand` |
 | Production domain | `allanbpediniv.com` |
+| Production site path | `https://allanbpediniv.com/info/` |
 | DNS registrar / manager | Cloudflare |
-| `baseUrl` | Stays `/info/` (room for other frontends later) |
-| Staging | GitHub Pages at `abpiv.github.io/info/` (unchanged) |
-| Auth to GCP | Workload Identity Federation (no long-lived keys) |
+| Docusaurus `baseUrl` | `/info/` |
+| Auth to GCP | Workload Identity Federation (no long-lived service account keys) |
 
-## Open questions for the implementing agent
+Staging target:
 
-Before executing, confirm with the user:
+| Item | Value |
+| --- | --- |
+| Staging host | Firebase Hosting |
+| Staging deploy target | `staging` in `content-site/firebase.staging.json` |
+| Staging project ID | GitHub variable `FIREBASE_STAGING_PROJECT_ID`, defaulting to `abpiv-personal-brand` if unset |
+| Staging site ID | GitHub variable `FIREBASE_STAGING_SITE_ID`, with proposed default `personal-brand-staging` |
+| Staging domain | `personal-brand-staging.lobst3rs.com` |
+| Staging site path | `https://personal-brand-staging.lobst3rs.com/info/` |
+| Staging DNS manager | Cloudflare zone `lobst3rs.com` |
 
-1. **Production trigger** — `workflow_dispatch` only, or also auto-deploy on git tags `v*.*.*`? (Default assumption: `workflow_dispatch` only, gated by a `production` GitHub environment for an approval click.)
-2. **Repo slug** — confirm it is `abpiv/abpiv-personal-brand` (used in the WIF attribute condition).
-3. **`www` subdomain** — should `www.allanbpediniv.com` also work (redirecting to apex), or apex only?
+Legacy comparison target:
 
----
+| Item | Value |
+| --- | --- |
+| Comparison host | GitHub Pages |
+| Comparison URL from earlier plan | `https://abpiv.github.io/info/` |
+| Current caveat | This URL returned 404 during the 2026-05-25 audit. Treat GitHub Pages as a legacy/comparison target, not the requested staging environment. |
 
-## Architecture
+Observed repository remote during audit:
 
+```text
+origin https://github.com/BrewDogDev/abpiv-personal-brand.git
 ```
-                  push to main                    manual dispatch
-                                                  (or tag vX.Y.Z)
-                       |                                 |
-                       v                                 v
-              +----------------+              +------------------+
-              |  GitHub Pages  |              | Firebase Hosting |
-              |    STAGING     |              |   PRODUCTION     |
-              |  abpiv.github  |              | allanbpediniv.com|
-              |   .io/info/    |              |      /info/      |
-              +----------------+              +------------------+
+
+Use `BrewDogDev/abpiv-personal-brand` in Workload Identity Federation conditions unless the repository is transferred or the remote is intentionally changed before setup.
+
+## Repo State
+
+The repo-side deployment files already exist:
+
+- `.github/workflows/deploy.yml`
+- `content-site/firebase.json`
+- `content-site/.firebaserc`
+- `content-site/docusaurus.config.ts`
+- `content-site/package.json`
+
+The workflow builds the Docusaurus artifact once, deploys Firebase staging to `personal-brand-staging.lobst3rs.com`, keeps a GitHub Pages legacy/comparison deploy, and deploys production automatically through Firebase Hosting whenever changes merge to `main`. Staging can also be run manually with `workflow_dispatch` and `target=staging`; select the `main` branch to redeploy the current main artifact. Production can be run manually from `main` with `target=production`.
+
+Both Firebase jobs package the Docusaurus `build/` output under `firebase-public/info/` before deploying so Firebase serves the site at the configured `/info/` base path. Production uses `content-site/firebase.json`. Staging uses `content-site/firebase.staging.json`, whose `hosting.target` is `staging`; the workflow binds that target at runtime with `firebase target:apply hosting staging "$FIREBASE_STAGING_SITE_ID"` so account-specific staging site IDs do not have to be committed.
+
+The Firebase jobs use `google-github-actions/auth` plus the Firebase CLI so GitHub Actions can authenticate with Google Application Default Credentials from Workload Identity Federation.
+
+`content-site/package.json` still includes the default Docusaurus `deploy` script for manual compatibility, but the current deployment flow does not use it. GitHub Actions deploys Firebase Hosting with `npx --yes firebase-tools@15.18.0 deploy`.
+
+## Local Verification
+
+From `content-site/`:
+
+```bash
+npm.cmd run typecheck
+npm.cmd run build
 ```
 
-Both targets serve the same build artifact (`content-site/build/`) produced by `npm run build` with `baseUrl: '/info/'`. Only the deploy job differs.
+The Firebase staging deployment commands used by GitHub Actions are:
 
----
+```bash
+npx --yes firebase-tools@15.18.0 target:apply hosting staging "$FIREBASE_STAGING_SITE_ID" --project "$FIREBASE_STAGING_PROJECT_ID" --non-interactive
+npx --yes firebase-tools@15.18.0 deploy --config firebase.staging.json --only hosting:staging --project "$FIREBASE_STAGING_PROJECT_ID" --non-interactive
+```
 
-## Phase 1 — GCP / Firebase setup (one-time, manual)
+The Firebase production deployment command used by GitHub Actions is:
 
-1. Create the project: https://console.cloud.google.com/welcome/new?project=abpiv-personal-brand
-2. Enable Firebase on the project: https://console.firebase.google.com -> Add project -> "Use existing GCP project" -> select `abpiv-personal-brand`. Decline Google Analytics (Plausible already configured).
-3. In Firebase console -> **Hosting** -> Get started. Accept the default site ID `abpiv-personal-brand` (gives a free `*.web.app` URL).
-4. Enable required APIs in Cloud Shell:
-   ```bash
-   gcloud services enable \
-     firebasehosting.googleapis.com \
-     iamcredentials.googleapis.com \
-     iam.googleapis.com \
-     sts.googleapis.com \
-     --project=abpiv-personal-brand
-   ```
+```bash
+npx --yes firebase-tools@15.18.0 deploy --only hosting --project abpiv-personal-brand --non-interactive
+```
 
----
+That command requires Google credentials and should be run by GitHub Actions after the WIF setup, or locally by a user already authenticated to the target Firebase project.
 
-## Phase 2 — Workload Identity Federation (one-time, manual)
+For manual local Firebase deploys, first package the Docusaurus build under the configured Firebase public directory:
 
-Eliminates storing service-account JSON keys in GitHub secrets. Run in Cloud Shell:
+```bash
+rm -rf firebase-public
+mkdir -p firebase-public/info
+cp -R build/. firebase-public/info/
+```
+
+## One-Time GCP / Firebase Setup
+
+These steps require a user with access to Google Cloud and Firebase:
+
+1. Create or select GCP project `abpiv-personal-brand`.
+2. In Firebase Console, add Firebase to the existing GCP project.
+3. In Firebase Hosting, initialize the production default Hosting site. The expected default site ID is `abpiv-personal-brand`, which creates `https://abpiv-personal-brand.web.app/`.
+4. Create the staging Hosting site. Recommended default: `personal-brand-staging`, which creates `https://personal-brand-staging.web.app/`. If that globally unique site ID is unavailable, choose another valid site ID and store it in GitHub variable `FIREBASE_STAGING_SITE_ID`.
+5. Staging can live in the same Firebase project as production, or in a separate Firebase/GCP project. If using a separate project, store its ID in `FIREBASE_STAGING_PROJECT_ID` and set up separate WIF variables.
+6. Enable required APIs in each Firebase/GCP project used for deploys:
+
+```bash
+gcloud services enable \
+  firebasehosting.googleapis.com \
+  iamcredentials.googleapis.com \
+  iam.googleapis.com \
+  sts.googleapis.com \
+  --project=abpiv-personal-brand
+```
+
+## One-Time Workload Identity Federation Setup
+
+Run in Google Cloud Shell or another authenticated Google Cloud environment:
 
 ```bash
 PROJECT_ID=abpiv-personal-brand
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
-REPO=abpiv/abpiv-personal-brand   # CONFIRM THIS
+REPO=BrewDogDev/abpiv-personal-brand
 
-# Service account used only for deploys
 gcloud iam service-accounts create github-deployer \
-  --display-name="GitHub Actions Deployer" \
+  --display-name="GitHub Actions Firebase Hosting Deployer" \
   --project=$PROJECT_ID
 
 SA_EMAIL=github-deployer@$PROJECT_ID.iam.gserviceaccount.com
 
-# Minimum roles for Firebase Hosting deploys
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:$SA_EMAIL" \
   --role="roles/firebasehosting.admin"
@@ -89,259 +139,125 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:$SA_EMAIL" \
   --role="roles/serviceusage.serviceUsageConsumer"
 
-# Workload Identity Pool + GitHub OIDC Provider
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/serviceusage.apiKeysViewer"
+
 gcloud iam workload-identity-pools create github-pool \
-  --location=global --project=$PROJECT_ID
+  --location=global \
+  --project=$PROJECT_ID
 
 gcloud iam workload-identity-pools providers create-oidc github-provider \
   --location=global \
   --workload-identity-pool=github-pool \
   --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref" \
-  --attribute-condition="assertion.repository=='${REPO}'" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref,attribute.workflow=assertion.workflow" \
+  --attribute-condition="assertion.repository=='${REPO}' && assertion.ref=='refs/heads/main' && assertion.workflow=='Deploy'" \
   --project=$PROJECT_ID
 
-# Allow the GitHub repo to impersonate the service account
 gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
   --role=roles/iam.workloadIdentityUser \
   --member="principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/attribute.repository/$REPO" \
   --project=$PROJECT_ID
 
-# Print values to put in GitHub
 echo "GCP_WORKLOAD_IDENTITY_PROVIDER=projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
 echo "GCP_SERVICE_ACCOUNT=$SA_EMAIL"
 ```
 
-Add these as **GitHub repository variables** (Settings -> Secrets and variables -> Actions -> Variables tab). They are non-sensitive identifiers, not secrets:
+Add the printed values as GitHub repository variables for production:
 
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`
 - `GCP_SERVICE_ACCOUNT`
 
-Also create a GitHub **environment** named `production` (Settings -> Environments -> New environment). Optionally require manual approval on it — this turns `workflow_dispatch` deploys into a "click to approve" gate.
+For staging, either reuse the production WIF variables if staging lives in the same project and the same service account is allowed to deploy to the staging site, or create a separate staging service account/provider and add:
 
----
+- `GCP_STAGING_WORKLOAD_IDENTITY_PROVIDER`
+- `GCP_STAGING_SERVICE_ACCOUNT`
+- `FIREBASE_STAGING_PROJECT_ID` if the staging Firebase project differs from `abpiv-personal-brand`
+- `FIREBASE_STAGING_SITE_ID` if the staging site ID differs from the proposed `personal-brand-staging`
 
-## Phase 3 — Repo changes (agent writes these)
+Create a GitHub environment named `production`. For fully automatic deploys on merge to `main`, do not configure required reviewers on this environment; required reviewers turn the production job into an approval-gated deploy.
 
-### File: `content-site/firebase.json` (new)
+Create a GitHub environment named `staging`. The workflow sets its environment URL to `https://personal-brand-staging.lobst3rs.com/info/`.
 
-```json
-{
-  "hosting": {
-    "public": "build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "redirects": [
-      { "source": "/", "destination": "/info/", "type": 301 }
-    ],
-    "headers": [
-      {
-        "source": "/info/assets/**",
-        "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-        ]
-      }
-    ]
-  }
-}
+## Cloudflare DNS + Firebase Custom Domain Setup
+
+These steps require access to Firebase Console and the Cloudflare zones for `allanbpediniv.com` and `lobst3rs.com`.
+
+### Staging: `personal-brand-staging.lobst3rs.com`
+
+1. In Firebase Console -> Hosting -> Add custom domain, choose the staging site, and enter `personal-brand-staging.lobst3rs.com`.
+2. Keep the Firebase-provided TXT verification record permanently in Cloudflare DNS for the `lobst3rs.com` zone.
+3. Add or update the Cloudflare record Firebase requests for the staging subdomain:
+
+| Type | Name | Content | Proxy status |
+| --- | --- | --- | --- |
+| TXT | `personal-brand-staging` or full `personal-brand-staging.lobst3rs.com` | Firebase verification value | DNS only |
+| A | `personal-brand-staging` | `199.36.158.100` | DNS only during verification/cert provisioning |
+
+4. Wait for Firebase domain verification and managed SSL certificate provisioning.
+5. Verify:
+
+```bash
+curl -I https://personal-brand-staging.lobst3rs.com/info/
+curl -I https://personal-brand-staging.lobst3rs.com/
 ```
 
-Notes:
-- `public: "build"` matches Docusaurus's output directory.
-- The redirect makes bare apex `allanbpediniv.com/` land on `/info/` since that is where Docusaurus renders.
-- `/info/assets/**` are fingerprinted by Docusaurus, safe for long immutable caching.
+### Production: `allanbpediniv.com`
 
-### File: `content-site/.firebaserc` (new)
+1. In Firebase Console -> Hosting -> Add custom domain, enter `allanbpediniv.com`.
+2. Keep the Firebase-provided TXT verification record permanently in Cloudflare DNS.
+3. Add or update Cloudflare records for the apex domain:
 
-```json
-{ "projects": { "default": "abpiv-personal-brand" } }
+| Type | Name | Content | Proxy status |
+| --- | --- | --- | --- |
+| TXT | `allanbpediniv.com` or `@` | Firebase verification value | DNS only |
+| A | `allanbpediniv.com` or `@` | `199.36.158.100` | DNS only during verification/cert provisioning |
+
+4. If `www.allanbpediniv.com` should also work, add it as a Firebase custom domain too, preferably configured in Firebase to redirect to `allanbpediniv.com`. Then add:
+
+| Type | Name | Content | Proxy status |
+| --- | --- | --- | --- |
+| A | `www` | `199.36.158.100` | DNS only during verification/cert provisioning |
+
+5. Wait for Firebase domain verification and managed SSL certificate provisioning.
+6. Verify:
+
+```bash
+curl -I https://abpiv-personal-brand.web.app/info/
+curl -I https://allanbpediniv.com/info/
+curl -I https://allanbpediniv.com/
 ```
 
-### File: `.github/workflows/deploy.yml` (replace)
+Expected behavior:
 
-Replace the entire file with the structure below. Keeps the existing staging behavior and adds a gated production job.
+- `/info/` serves the Docusaurus site.
+- `/` redirects to `/info/`.
+- Unknown paths serve the Docusaurus/Firebase 404 behavior.
 
-```yaml
-name: Deploy
+After Firebase shows the custom domain and certificate as active, leaving Cloudflare DNS records as DNS only is acceptable because Firebase Hosting already provides CDN and SSL. If Cloudflare proxy is enabled later, use Cloudflare SSL/TLS mode `Full (strict)` and re-test redirects and certificate status.
 
-on:
-  push:
-    branches: [main]
-    paths: ['content-site/**', '.github/workflows/deploy.yml']
-  workflow_dispatch:
-    inputs:
-      target:
-        description: 'Where to deploy'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
+## Deployment Flow
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: content-site/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: content-site
-
-      - name: Build website
-        run: npm run build
-        working-directory: content-site
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: content-site/build
-
-      - name: Upload build artifact (for Firebase job)
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-build
-          path: content-site/build
-          retention-days: 7
-
-  deploy-staging:
-    # Runs on every main push, and on manual dispatch when target=staging
-    if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && inputs.target == 'staging')
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  deploy-production:
-    # Manual only. Gated by 'production' GitHub Environment (set approvals there).
-    if: github.event_name == 'workflow_dispatch' && inputs.target == 'production'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://allanbpediniv.com/info/
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: site-build
-          path: content-site/build
-
-      - name: Authenticate to Google Cloud (WIF)
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          projectId: abpiv-personal-brand
-          channelId: live
-          entryPoint: content-site
-```
-
-Notes:
-- Build happens exactly once. Staging and production deploy the same artifact.
-- GitHub Pages continues to deploy automatically on every push to `main` (staging).
-- Production requires `workflow_dispatch` with `target=production`. Adding required reviewers on the `production` environment makes every prod deploy a one-click approval.
-- The Firebase deploy action reads Google ADC credentials from the `auth` step via the `GOOGLE_APPLICATION_CREDENTIALS` env var that action sets.
-
-### Optional: tag-based production trigger
-
-If the user confirms tag-based prod deploys, add this to the `on:` block and update the production `if:`:
-
-```yaml
-on:
-  push:
-    branches: [main]
-    tags: ['v*.*.*']
-    paths: ['content-site/**', '.github/workflows/deploy.yml']
-```
-
-And the production job condition becomes:
-
-```yaml
-if: >-
-  startsWith(github.ref, 'refs/tags/v') ||
-  (github.event_name == 'workflow_dispatch' && inputs.target == 'production')
-```
-
----
-
-## Phase 4 — DNS on Cloudflare (manual)
-
-1. In Firebase console -> Hosting -> **Add custom domain** -> enter `allanbpediniv.com`. Firebase returns:
-   - One TXT record for domain verification
-   - Two A records (apex) pointing at Firebase anycast IPs (use whatever values the console shows; do NOT hardcode from this doc — they change).
-2. In Cloudflare DNS for `allanbpediniv.com`:
-   - Add the TXT record exactly as shown.
-   - Add both A records for `@`.
-   - **Set proxy status to DNS only (gray cloud) for all three records initially.** Cloudflare proxy can interfere with Firebase's managed-cert HTTP-01 challenge.
-   - If `www` requested: add `www` as CNAME to `allanbpediniv.com`, proxy status DNS only.
-3. Wait for Firebase verification (usually minutes) and managed SSL cert provisioning (up to 24h, typically <1h).
-4. Once `https://allanbpediniv.com/info/` loads cleanly and the cert is valid:
-   - Optional: flip Cloudflare records to **Proxied (orange cloud)**. In that case set Cloudflare SSL/TLS mode to **Full (strict)** to avoid a redirect loop or cert mismatch. Skipping Cloudflare proxy is fine — Firebase CDN is already global and this is the lowest-friction option.
-
----
-
-## Phase 5 — Cutover & verification
-
-1. Merge repo changes (Phase 3) to `main`.
-2. Confirm staging still works: `https://abpiv.github.io/info/` builds and loads as before.
-3. Run `workflow_dispatch` with `target=production`. Approve the production environment prompt (if enabled).
-4. Verify the Firebase default URL first: `https://abpiv-personal-brand.web.app/info/`.
-5. After DNS + cert are live: verify `https://allanbpediniv.com/info/`.
-6. Verify apex redirect: `https://allanbpediniv.com/` -> `/info/`.
-7. Verify 404 behavior on an unknown path matches the Docusaurus 404 page.
-
----
+1. Merge deployment repo changes to `main`.
+2. The `Deploy` workflow builds the site once, deploys Firebase staging to `personal-brand-staging.lobst3rs.com`, deploys the legacy/comparison GitHub Pages artifact, and deploys Firebase production to `allanbpediniv.com` automatically.
+3. Verify Firebase staging default URL: `https://personal-brand-staging.web.app/info/` if using the proposed site ID.
+4. Verify staging custom domain: `https://personal-brand-staging.lobst3rs.com/info/`.
+5. Verify production default URL: `https://abpiv-personal-brand.web.app/info/`.
+6. Verify production custom domain: `https://allanbpediniv.com/info/`.
+7. Optional: run the `Deploy` workflow manually from the `main` branch with `target=staging` or `target=production` to redeploy the current main artifact.
 
 ## Rollback
 
-- GitHub Pages staging is untouched at all times; it IS the rollback path.
-- Firebase Hosting keeps release history: Firebase Console -> Hosting -> select site -> "Rollback" on any prior release.
+Firebase Hosting keeps release history per site. In Firebase Console -> Hosting, select the staging or production site and roll back to a prior release if needed.
 
----
+GitHub Pages is separate from both Firebase staging and Firebase production and can be used as a legacy comparison target once its URL is confirmed live.
 
-## Cost expectations
+## Known Deployment Caveats
 
-- Firebase Hosting free tier: 10 GB storage, 360 MB/day egress. A Docusaurus site like this is well under both. Expected cost: **$0/month**.
-- No load balancer, no Cloud Run, no GCS bucket. If traffic ever exceeds the free tier, Blaze plan is pay-as-you-go at pennies.
-
----
-
-## Summary of files the next agent must create or modify
-
-| Path | Action |
-| --- | --- |
-| `content-site/firebase.json` | Create (contents in Phase 3) |
-| `content-site/.firebaserc` | Create (contents in Phase 3) |
-| `.github/workflows/deploy.yml` | Replace with new multi-job version in Phase 3 |
-
-All GCP, Firebase console, Cloudflare DNS, and GitHub variable/environment setup is manual and must be completed by a human with appropriate console access. The commands in Phases 1 and 2 are ready to copy-paste into Cloud Shell.
+- `content-site/docusaurus.config.ts` currently has `url: 'https://abpiv.github.io'`. If production SEO/canonical URLs must point to `allanbpediniv.com`, the site should eventually support target-specific Docusaurus `url` values or choose a single canonical host.
+- The observed remote is `BrewDogDev/abpiv-personal-brand`, while earlier notes referenced `abpiv/abpiv-personal-brand`. WIF conditions must match the actual GitHub repository that runs the workflow.
+- `https://allanbpediniv.com/info/` did not resolve during the 2026-05-25 audit, so DNS/custom-domain setup is still account-side work.
+- `https://abpiv-personal-brand.web.app/info/` returned 404 during the 2026-05-25 audit, so Firebase Hosting has not yet served this artifact.
+- `https://personal-brand-staging.lobst3rs.com/info/` is new account-side setup and must be verified after the staging Firebase site, custom domain, DNS, WIF variables, and first deploy are configured.
+- `https://abpiv.github.io/info/` returned 404 during the 2026-05-25 audit, so the legacy comparison target is not currently verified live.

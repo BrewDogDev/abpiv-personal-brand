@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "staging",
     "public": "firebase-public",
     "ignore": ["firebase.json", "firebase.staging.json", "**/.*", "**/node_modules/**"],
     "cleanUrls": true,

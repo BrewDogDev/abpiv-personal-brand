@@ -5,6 +5,7 @@ node_modules/
 # Production
 build/
 .docusaurus/
+firebase-public/
 
 # Generated files
 docusaurus.config.js
