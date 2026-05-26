@@ -1,6 +1,11 @@
 name: Analytics Infrastructure
 
 on:
+  push:
+    branches:
+      - 'codex/**'
+    paths:
+      - '.github/workflows/analytics-infra.yml'
   workflow_dispatch:
 
 permissions:
