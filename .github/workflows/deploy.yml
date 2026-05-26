@@ -15,6 +15,12 @@ on:
       - '.github/workflows/deploy.yml'
       - '.github/workflows/analytics-infra.yml'
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to Cloudflare Pages after validation'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -191,7 +197,7 @@ jobs:
   deploy:
     if: >-
       github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' && inputs.deploy)
     needs: build
     runs-on: ubuntu-latest
     environment:
