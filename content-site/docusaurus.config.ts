@@ -22,6 +22,7 @@ const config: Config = {
 
   future: {
     v4: true,
+    faster: false,
   },
 
   i18n: {

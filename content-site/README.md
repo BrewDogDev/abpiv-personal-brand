@@ -95,7 +95,7 @@ All blog posts frontmatter should use `author: allan`.
 
 ```bash
 cd content-site
-npm start        # Development server
+npm start        # Development server on http://localhost:3001
 npm run build    # Production build
 npm run serve    # Serve built site
 npm run clear    # Clear cache
