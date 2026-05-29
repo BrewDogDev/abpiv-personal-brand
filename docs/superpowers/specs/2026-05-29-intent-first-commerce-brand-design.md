@@ -169,6 +169,81 @@ Avoid or qualify:
 - "without worrying about cost" unless explicitly referring to coordination cost, not price
 - private investor, customer, partner, or program details unless Allan approves public use
 
+## Visual Brand Strategy
+
+Approved direction: Intent-First Navigator.
+
+The visual system should convert investors by making Allan memorable as the founder framing intent-first commerce, then placing technical proof close enough to make the thesis credible. Lead with the category thesis, not with Web3 infrastructure or founder biography alone.
+
+Investor-conversion belief order:
+
+1. Memorability: Allan is associated with a clear market shift from transaction-first commerce to intent-first commerce.
+2. Diligence belief: Allan's research, RANDAO, decentralized trust work, and founder execution make the thesis more credible than generic AI-commerce commentary.
+3. Human confidence: Allan feels like a real founder worth meeting, following, inviting, or introducing.
+
+Recognition role: Allan is the pathfinder for intent-first commerce.
+
+Distinctive memory cues:
+
+- Destination and journey language.
+- A path or route motif connecting human intent to market outcome.
+- Proof chips or proof tiles near major thesis claims.
+- A founder portrait used as a trust signal, not as the whole identity.
+
+Logo or symbol role:
+
+- The personal brand should not depend on a complex new logo in the first implementation.
+- Use `Allan B. Pedin IV` or `ABPIV` as the wordmark depending on space.
+- If a symbol is introduced later, it should express pathfinding, coordination, or intent-to-outcome movement rather than a generic AI node graph.
+
+Color role:
+
+- Deep navy or near-black should carry seriousness, focus, and technical credibility.
+- Cyan should signal intelligence, systems, and active coordination.
+- Warm amber should appear sparingly as the human-agency accent.
+- White or very light surfaces should be used for clarity accents and proof objects, not as large hero shapes behind important text.
+
+Typography personality:
+
+- Use confident sans-serif headlines with tight, readable hierarchy.
+- Use restrained body copy that feels commercial and credible rather than hype-driven.
+- Use monospace only for research, proof, protocol, or technical-detail moments.
+- Do not let code styling become the primary personality of the brand.
+
+Imagery worldview:
+
+- Combine founder presence with abstract route maps, market nodes, proof assets, talks, papers, and venture artifacts.
+- Avoid generic AI glow, generic blockchain networks, stock commerce imagery, and decorative visuals that do not reinforce coordination.
+- Show Allan's face where trust matters, especially on the homepage and bio surfaces, but make the thesis the first remembered idea.
+
+Motion behavior:
+
+- Motion, if used, should be restrained and directional: paths resolving, nodes connecting, proof objects revealing, or intent moving toward outcome.
+- Avoid constant ambient motion that makes the brand feel like a crypto landing page or distracts from readability.
+
+Accessibility constraints:
+
+- Maintain high contrast for all hero and proof text.
+- Do not place text over large light/dark diagonal shapes unless contrast remains clear across all responsive breakpoints.
+- Treat decorative paths and nodes as secondary accents.
+- Avoid relying on color alone to communicate proof status, selection, or hierarchy.
+- Keep the hero readable at a glance on mobile and desktop.
+
+Templates needed:
+
+- Homepage hero and proof strip.
+- Investor/social preview card.
+- Research and proof tiles.
+- Featured appearance cards.
+- Thesis-post header.
+- Lightweight speaker/media bio block.
+
+Website integration scope: homepage-first with reusable tokens. The homepage should receive the first implementation, while palette, spacing, proof-chip, route-motif, and typography decisions should be reusable by Research, Featured, Insights, and Newsroom later.
+
+Reference mockup: `docs/superpowers/specs/2026-05-29-intent-first-commerce-visual-reference.html`.
+
+Implementation caution: an earlier mockup used a large white diagonal shape that reduced readability. Do not use large light shapes as the primary hero motif. Use high-contrast surfaces and thin path cues instead.
+
 ## Public Copy Seeds
 
 Short bio:
@@ -188,8 +263,10 @@ Allan's work has moved through three coordination frontiers: civic systems, dece
 ## Best Next Artifacts
 
 - Homepage hero copy and information architecture.
+- Homepage visual integration using the Intent-First Navigator direction.
 - About page narrative.
 - Founder bio variants for investors, partners, media, and events.
 - Agentic commerce thesis post.
+- Investor/social preview card using the thesis-first visual system.
 - RANDAO/CipherPlay linkage language that supports Allan's credibility without making the personal brand venture-dependent.
 - Proof library separating confirmed-public, user-confirmed, private-sourced, and needs-verification claims.

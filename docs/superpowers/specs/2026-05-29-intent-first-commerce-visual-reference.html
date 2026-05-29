@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Intent-First Navigator Visual Strategy</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1118;
+      --surface: #111a24;
+      --surface-2: #172232;
+      --text: #f7fafc;
+      --muted: #b8c4d2;
+      --cyan: #76e4f7;
+      --amber: #ffb86b;
+      --green: #78e2b0;
+      --border: rgba(255, 255, 255, 0.14);
+      --strong-border: rgba(118, 228, 247, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 56px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: 0.98;
+      letter-spacing: 0;
+      margin-bottom: 12px;
+      max-width: 840px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 760px;
+      margin-bottom: 28px;
+    }
+
+    .strategy-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .hero-preview,
+    .strategy-panel,
+    .asset {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+    }
+
+    .hero-preview {
+      min-height: 500px;
+      position: relative;
+      overflow: hidden;
+      padding: 32px;
+      border-color: var(--strong-border);
+      background:
+        linear-gradient(135deg, rgba(118, 228, 247, 0.1), transparent 28%),
+        linear-gradient(160deg, rgba(255, 184, 107, 0.11), transparent 42%),
+        var(--surface);
+    }
+
+    .hero-preview::before {
+      content: "";
+      position: absolute;
+      inset: 24px;
+      border: 1px solid rgba(118, 228, 247, 0.16);
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .hero-preview::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      bottom: 48px;
+      width: 420px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), var(--amber));
+      transform: rotate(-22deg);
+      opacity: 0.68;
+      pointer-events: none;
+    }
+
+    .preview-content {
+      position: relative;
+      z-index: 1;
+      min-height: 436px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 28px;
+    }
+
+    .preview-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .wordmark {
+      color: var(--text);
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .preview-main {
+      display: grid;
+      align-content: center;
+      max-width: 560px;
+    }
+
+    .preview-kicker {
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .preview-headline {
+      color: var(--text);
+      font-size: clamp(42px, 6vw, 74px);
+      line-height: 0.94;
+      font-weight: 900;
+      letter-spacing: 0;
+      margin-bottom: 18px;
+      max-width: 720px;
+    }
+
+    .preview-copy {
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+      margin-bottom: 0;
+    }
+
+    .path-map {
+      position: absolute;
+      right: 36px;
+      bottom: 72px;
+      width: 286px;
+      height: 132px;
+      color: var(--cyan);
+      opacity: 0.9;
+    }
+
+    .path-map span {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px rgba(118, 228, 247, 0.12);
+    }
+
+    .path-map span:nth-of-type(3),
+    .path-map span:nth-of-type(5) {
+      color: var(--amber);
+    }
+
+    .path-map i {
+      position: absolute;
+      height: 1.5px;
+      background: currentColor;
+      opacity: 0.42;
+      transform-origin: left center;
+    }
+
+    .proof-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: 650px;
+    }
+
+    .proof-chip {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .proof-chip:first-child,
+    .proof-chip:nth-child(3) {
+      border-color: rgba(118, 228, 247, 0.42);
+    }
+
+    .strategy-panel {
+      padding: 24px;
+      background: var(--surface-2);
+    }
+
+    .strategy-panel h2 {
+      font-size: 24px;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .strategy-panel > p {
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .stack-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stack-item {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .stack-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--cyan);
+      color: #061017;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .stack-item strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .stack-item span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .asset {
+      padding: 18px;
+      min-height: 130px;
+    }
+
+    .asset strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .asset span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      main {
+        width: min(100% - 28px, 760px);
+      }
+
+      .strategy-shell,
+      .asset-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .path-map {
+        display: none;
+      }
+
+      .preview-headline {
+        font-size: clamp(36px, 12vw, 58px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Intent-First Navigator</h1>
+    <p class="subtitle">An accessible A-direction mockup: high contrast, clear reading order, and a thin path motif instead of a large white diagonal.</p>
+
+    <div class="strategy-shell">
+      <section class="hero-preview" aria-label="Homepage hero visual direction">
+        <div class="preview-content">
+          <div class="preview-nav">
+            <span class="wordmark">Allan B. Pedin IV</span>
+            <span>research / ventures / thesis</span>
+          </div>
+          <div class="preview-main">
+            <div class="preview-kicker">Intent-first commerce</div>
+            <h2 class="preview-headline">Humans state the destination.</h2>
+            <p class="preview-copy">Allan builds emerging technology for a future where people express outcomes and intelligent agents coordinate the market activity needed to make them happen.</p>
+          </div>
+          <div class="proof-strip" aria-label="Credibility proof points">
+            <span class="proof-chip">AI research</span>
+            <span class="proof-chip">Blockchain security</span>
+            <span class="proof-chip">RANDAO</span>
+            <span class="proof-chip">Founder execution</span>
+          </div>
+        </div>
+        <div class="path-map" aria-hidden="true">
+          <span style="left: 4%; top: 52%;"></span>
+          <span style="left: 26%; top: 24%;"></span>
+          <span style="left: 48%; top: 58%;"></span>
+          <span style="left: 70%; top: 18%;"></span>
+          <span style="left: 88%; top: 50%;"></span>
+          <i style="left: 8%; top: 57%; width: 67px; transform: rotate(-34deg);"></i>
+          <i style="left: 29%; top: 31%; width: 74px; transform: rotate(33deg);"></i>
+          <i style="left: 51%; top: 64%; width: 81px; transform: rotate(-39deg);"></i>
+          <i style="left: 73%; top: 25%; width: 58px; transform: rotate(39deg);"></i>
+        </div>
+      </section>
+
+      <aside class="strategy-panel">
+        <h2>Conversion Job</h2>
+        <p>The identity should make investors quickly believe Allan is defining a real market shift, then give them credible proof to keep reading.</p>
+        <div class="stack-list">
+          <div class="stack-item">
+            <div class="stack-num">1</div>
+            <div><strong>Thesis First</strong><span>Use destination, journey, and pathfinding cues to make intent-first commerce memorable.</span></div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-num">2</div>
+            <div><strong>Proof Nearby</strong><span>Every major claim gets a nearby credibility object: research, RANDAO, speaking, or founder learning.</span></div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-num">3</div>
+            <div><strong>Human Trust</strong><span>Founder photo and voice should appear as confidence signals, not as the whole brand idea.</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="asset-grid">
+      <div class="asset"><strong>Primary Cue</strong><span>A path from intent to outcome: not decoration, a repeated metaphor for coordination.</span></div>
+      <div class="asset"><strong>Color Role</strong><span>Deep navy for seriousness, cyan for intelligence, amber for human agency, white only for small clarity accents.</span></div>
+      <div class="asset"><strong>Typography</strong><span>Confident sans headlines, restrained body copy, monospace only for proof and research details.</span></div>
+      <div class="asset"><strong>Imagery</strong><span>Founder portrait plus route maps, market nodes, product proof, talks, papers, and venture assets.</span></div>
+    </div>
+
+    <p class="footer-note">Accessibility principle: no large light shapes behind dark-on-dark or light-on-light text; every hero claim must remain readable at a glance.</p>
+  </main>
+</body>
+</html>
