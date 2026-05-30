@@ -186,23 +186,39 @@ Avoid or qualify:
 
 ## Visual Brand Strategy
 
-Approved direction: Visionary Founder, grounded by proof.
+Approved direction: Visionary Operator CEO.
 
-The visual system should make Allan feel like a credible emerging-technology founder with a broad thesis about individual agency and coordination. It should not make the personal brand look like a single-product landing page.
+The visual system should make investors place Allan in the CEO archetype first: a founder who can carry a thesis, raise capital, recruit talent, form partnerships, explain the future, and turn emerging technology into venture-backed execution. It should not make the personal brand look like an academic portfolio, an influencer profile, a crypto dashboard, or a single-product landing page.
+
+This direction was adapted from the intent-first commerce visual reference. Keep its strongest craft decisions: deep technical palette, cyan and amber accents, high contrast, restrained path/system motifs, and proof chips near major claims. Shift the meaning away from product-specific commerce and toward CEO-level thesis, judgment, execution, and trust.
 
 Investor-conversion belief order:
 
-1. Memorability: Allan is associated with expanding individual agency through emerging technology.
-2. Diligence belief: Allan's research, venture work, decentralized infrastructure experience, and public explanation make the vision credible.
-3. Human confidence: Allan feels like a real founder worth meeting, following, inviting, or introducing.
+1. CEO recognition: Allan reads as a capital-worthy founder and operator, not only as a technical expert.
+2. Memorability: Allan is associated with expanding individual agency through emerging technology.
+3. Diligence belief: Allan's research, venture work, decentralized infrastructure experience, and public explanation make the vision credible.
+4. Human confidence: Allan feels like a real CEO worth meeting, following, inviting, introducing, or backing.
 
-Recognition role: Allan is the human signal and founder thesis; projects are proof.
+Recognition role: Allan is the CEO thesis and human signal; projects are proof.
+
+Core visual formula:
+
+- Vision: a bold founder thesis about expanding individual agency.
+- Execution: venture and infrastructure proof placed close to the thesis.
+- Trust: research, public explanation, and founder presence used as confidence signals.
+
+Selected workshop direction:
+
+- Use "Visionary Operator CEO" as the primary look and feel.
+- Borrow market-map confidence from the "Category CEO" option when explaining markets, systems, or venture opportunities.
+- Borrow calm diligence polish from the "Institutional CEO" option for investor-specific pages, one-pagers, and proof libraries.
 
 Distinctive memory cues:
 
 - Agency, capability, and coordination language.
-- Subtle system or route motifs showing independent parts becoming easier to coordinate.
-- Proof chips or proof tiles near major claims.
+- Subtle system, route, and alignment motifs showing independent parts becoming easier to coordinate.
+- Proof chips, proof tiles, or small executive signal cards near major claims.
+- CEO signal stacks such as vision, execution, trust, research, venture proof, and public voice.
 - A founder portrait used as a trust signal, not as the whole identity.
 
 Logo or symbol role:
@@ -228,6 +244,7 @@ Typography personality:
 Imagery worldview:
 
 - Combine founder presence with abstract system maps, proof assets, talks, papers, and venture artifacts.
+- Use founder presence to signal leadership and judgment, not lifestyle or influencer personality.
 - Avoid generic AI glow, generic blockchain networks, stock commerce imagery, and decorative visuals that do not reinforce agency or coordination.
 - Show Allan's face where trust matters, especially on the homepage and bio surfaces, but make the thesis the first remembered idea.
 
@@ -252,10 +269,11 @@ Templates needed:
 - Featured appearance cards.
 - Thesis-post header.
 - Lightweight speaker/media bio block.
+- Investor-facing founder thesis or memo surface.
 
 Website integration scope: homepage-first with reusable tokens. The homepage should receive the first implementation, while palette, spacing, proof-chip, route-motif, and typography decisions should be reusable by Research, Featured, Insights, and Newsroom later.
 
-Implementation caution: previous intent-first-commerce visual references may still contain useful craft details, but they should not define the active master brand.
+Implementation caution: previous intent-first-commerce visual references may still contain useful craft details, but they should not define the active master brand. Do not lead with product-specific language such as intent-first commerce, agentic commerce, or decentralized randomness on the master personal-brand hero.
 
 ## Public Copy Seeds
 
