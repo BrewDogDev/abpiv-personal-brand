@@ -2,6 +2,10 @@
 
 Date: 2026-05-29
 
+Status: Superseded for the master personal brand by `2026-05-30-visionary-founder-brand-design.md`.
+
+This document remains useful as a venture-specific or product-thesis artifact. It should not be treated as Allan B. Pedin IV's active top-level personal brand strategy.
+
 ## Context
 
 This spec defines the working personal brand strategy for Allan B. Pedin IV. It is based on the existing personal-brand site, the local branding skill, and `abpiv-agents/docs/allan-actionable-context.md`.
