@@ -7,11 +7,15 @@ This repo hosts the public Docusaurus site for `allanbpediniv.com` and the share
 - Repository: `BrewDogDev/abpiv-personal-brand`
 - Production branch: `main`
 - Public site: `https://allanbpediniv.com/info/`
+- Preview content site: `https://content-site.lobst3rs.com/info/`
 - Domain root: `https://allanbpediniv.com/` redirects to `/info/`
 - Cloudflare Pages project: `abpiv-personal-brand`
 - Analytics dashboard: `https://analytics.lobst3rs.com`
 - Plausible site domain: `allanbpediniv.com`
 - Public analytics route: `https://allanbpediniv.com/_analytics/*`
+- Public n8n forms hostname: `https://forms.allanbpediniv.com`
+- Private n8n editor: `https://workflows.lobst3rs.com`
+- n8n OpenTofu state prefix: `infra/n8n`
 - GCP project: `abpiv-personal-brand`
 - Analytics VM: `plausible-analytics-vm` in `us-east1-b`
 - Analytics OpenTofu state bucket: `abpiv-personal-brand-opentofu-state`
@@ -25,9 +29,14 @@ Do not expose `analytics.lobst3rs.com` in public site HTML, JavaScript, or brows
 - `infra/analytics/README.md`: analytics architecture, GitHub/GCP settings, operator workflow, verification.
 - `infra/analytics/opentofu/`: GCP and Cloudflare infrastructure.
 - `infra/analytics/worker/src/index.ts`: Cloudflare Worker that proxies same-origin analytics requests.
-- `.github/workflows/deploy.yml`: combined site build/deploy plus analytics validation workflow. The workflow name is `Site and Analytics`.
+- `.github/workflows/deploy.yml`: content-site CI plus preview auto-deploy and manual production deploy.
+- `.github/workflows/main-source-guard.yml`: allows PRs into `main` only from `preview`.
+- `.github/workflows/content-site-setup.yml`: manual Cloudflare Pages/domain/DNS bootstrap.
 - `.github/workflows/analytics-apply.yml`: manual OpenTofu apply workflow. The workflow name is `Apply Analytics Infrastructure`.
 - `.github/workflows/analytics-provision.yml`: manual VM/Plausible/cloudflared convergence workflow. The workflow name is `Provision Analytics Host`.
+- `.github/workflows/n8n-validate.yml`: validates n8n OpenTofu changes.
+- `.github/workflows/n8n-apply.yml`: manual production apply for n8n OpenTofu.
+- `.github/workflows/n8n-redeploy.yml`: manual n8n Cloud Run stable-image redeploy.
 
 ## Recent Analytics Work Completed
 
@@ -50,9 +59,9 @@ That `data-api` attribute matters. Without it, Plausible derives the collector U
 
 ## GitHub Actions Flow
 
-`Site and Analytics` runs on pushes to `main`, PRs, and manual dispatch when relevant site or analytics paths change.
+`Content Site` runs content-site CI, auto-deploys `preview` to `https://content-site.lobst3rs.com/info/`, and deploys production only by manual workflow dispatch from `main` with `target=production`.
 
-On `main`, the deploy job uses the GitHub `production` environment. It can pause in `waiting` until `BrewDogDev` approves the environment deployment.
+Pull requests into `main` must come from `preview`; `.github/workflows/main-source-guard.yml` enforces that branch flow.
 
 Useful commands:
 
@@ -98,6 +107,14 @@ OpenTofu checks:
 tofu fmt -check -recursive infra/analytics/opentofu
 tofu -chdir=infra/analytics/opentofu init -input=false
 tofu -chdir=infra/analytics/opentofu validate
+```
+
+n8n OpenTofu checks:
+
+```bash
+tofu fmt -check -recursive infra/n8n/opentofu
+tofu -chdir=infra/n8n/opentofu init -input=false
+tofu -chdir=infra/n8n/opentofu validate
 ```
 
 Live analytics checks:
