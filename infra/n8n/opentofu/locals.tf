@@ -62,6 +62,19 @@ locals {
     ]
   )
 
+  public_forms_path_expression = join(" or ", [
+    "http.request.uri.path eq \"/form\"",
+    "starts_with(http.request.uri.path, \"/form/\")",
+    "http.request.uri.path eq \"/form-waiting\"",
+    "starts_with(http.request.uri.path, \"/form-waiting/\")",
+    "http.request.uri.path eq \"/webhook\"",
+    "starts_with(http.request.uri.path, \"/webhook/\")",
+    "http.request.uri.path eq \"/webhook-waiting\"",
+    "starts_with(http.request.uri.path, \"/webhook-waiting/\")",
+  ])
+
+  public_forms_request_expression = "(http.host eq \"${var.forms_hostname}\" and (${local.public_forms_path_expression}))"
+
   required_services = toset([
     "certificatemanager.googleapis.com",
     "compute.googleapis.com",

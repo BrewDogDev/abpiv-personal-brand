@@ -12,7 +12,7 @@ Public user
   -> Cloud SQL PostgreSQL private IP
 ```
 
-The public forms hostname is `forms.allanbpediniv.com`. When `N8N_ENABLE_CLOUDFLARE_EDGE=true`, OpenTofu manages Cloudflare DNS plus hostname-specific WAF and rate-limit rules.
+The public forms hostname is `forms.allanbpediniv.com`. When `N8N_ENABLE_CLOUDFLARE_EDGE=true`, OpenTofu manages Cloudflare DNS plus hostname-specific WAF and rate-limit rules. The public hostname is limited at Cloudflare to n8n form and production webhook paths; editor, internal API, static editor UI, and other non-public paths are blocked on that hostname.
 
 The editor/admin hostname is `workflows.lobst3rs.com`. It points to the same backend, is protected by Cloudflare Access before n8n's own login, and allows `allanblankpedin@gmail.com`.
 
@@ -103,6 +103,6 @@ tofu -chdir=infra/n8n/opentofu init -input=false
 tofu -chdir=infra/n8n/opentofu validate
 ```
 
-Post-deploy checks should confirm that `forms.allanbpediniv.com` resolves through Cloudflare, loads a public n8n-created form, uses the public forms hostname in generated production URLs, writes binary data to the mounted path, and does not expose secret values in logs.
+Post-deploy checks should confirm that `forms.allanbpediniv.com` resolves through Cloudflare, loads a public n8n-created form, uses the public forms hostname in generated production URLs, blocks editor and internal API paths on the forms hostname, writes binary data to the mounted path, and does not expose secret values in logs.
 
 Before the first successful Cloud Run startup, create the `n8n` Cloud SQL user out of band and populate the `abpiv-n8n-postgres-password` and `abpiv-n8n-encryption-key` Secret Manager secrets. Keep a separate personal recovery copy of the n8n encryption key and bootstrap credentials outside this repo and outside GitHub.

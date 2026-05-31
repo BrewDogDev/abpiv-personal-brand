@@ -12,7 +12,7 @@ This OpenTofu project provisions ABPIV's self-hosted n8n Community Edition infra
 - Private GCS bucket mounted into Cloud Run for filesystem binary data.
 - Global external HTTPS load balancer with a serverless NEG pointing at Cloud Run.
 - Certificate Manager DNS-authorized Google-managed certificate.
-- Optional Cloudflare DNS, forms WAF/rate-limit rules, and optional Cloudflare Access protection for the editor hostname.
+- Optional Cloudflare DNS, forms WAF/rate-limit/path allowlist rules, and optional Cloudflare Access protection for the editor hostname.
 - Dedicated runtime and GitHub deployer service accounts plus IAM bindings.
 
 ## Authentication
@@ -118,6 +118,8 @@ Cloudflare resources are disabled by default. Set `enable_cloudflare_edge = true
 `docker.io/n8nio/n8n:stable` is used for Cloud Run compatibility. On May 27, 2026, `docker.n8n.io/n8nio/n8n:stable` and `docker.io/n8nio/n8n:stable` resolved to the same image manifests, while Cloud Run rejected `docker.n8n.io` directly and returned an internal error when deploying the same image through an Artifact Registry remote repository.
 
 Cloudflare allows only one zone entry-point ruleset per phase. If `allanbpediniv.com` already has Terraform-managed or manually-created `http_request_firewall_custom` or `http_ratelimit` rulesets, import and merge them instead of applying duplicate zone rulesets.
+
+The public forms hostname is allowlisted to `/form/*`, `/form-waiting/*`, `/webhook/*`, and `/webhook-waiting/*`, with exact root-path variants included. Those paths cover public n8n forms, multi-step/waiting forms, production webhooks, and production waiting webhooks. Editor, internal API, static editor UI, test webhook, and other non-public paths are blocked on `forms.allanbpediniv.com`; use the Access-protected editor hostname for n8n administration and manual test URLs.
 
 The default public forms rate limit blocks clients after 20 requests per client IP and Cloudflare colo per 10 seconds, with a 10-second mitigation timeout, because Cloudflare may restrict zone rate-limit periods, mitigation windows, and challenge actions by account plan. Suspicious non-rate-limited traffic still receives the separate managed challenge rule.
 

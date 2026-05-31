@@ -45,17 +45,25 @@ resource "cloudflare_ruleset" "forms_firewall_custom" {
   count = var.enable_cloudflare_edge ? 1 : 0
 
   zone_id     = var.allanbpediniv_zone_id
-  name        = "n8n public forms bot protection"
-  description = "Managed challenge suspicious traffic to the public n8n forms hostname."
+  name        = "n8n public forms protection"
+  description = "Allow only public n8n form and production webhook paths on the forms hostname, then challenge suspicious clients."
   kind        = "zone"
   phase       = "http_request_firewall_custom"
 
-  rules = [{
-    ref         = "n8n_forms_suspicious_clients"
-    description = "Managed challenge suspicious non-verified-bot requests to public n8n forms."
-    expression  = "(http.host eq \"${var.forms_hostname}\" and not cf.client.bot and cf.threat_score gt ${var.forms_threat_score_challenge_threshold})"
-    action      = "managed_challenge"
-  }]
+  rules = [
+    {
+      ref         = "n8n_forms_block_non_public_paths"
+      description = "Block editor, API, static UI, and other non-public n8n paths on the public forms hostname."
+      expression  = "(http.host eq \"${var.forms_hostname}\" and not (${local.public_forms_path_expression}))"
+      action      = "block"
+    },
+    {
+      ref         = "n8n_forms_suspicious_clients"
+      description = "Managed challenge suspicious non-verified-bot requests to public n8n forms and production webhooks."
+      expression  = "(${local.public_forms_request_expression} and not cf.client.bot and cf.threat_score gt ${var.forms_threat_score_challenge_threshold})"
+      action      = "managed_challenge"
+    },
+  ]
 }
 
 resource "cloudflare_ruleset" "forms_rate_limit" {
@@ -70,7 +78,7 @@ resource "cloudflare_ruleset" "forms_rate_limit" {
   rules = [{
     ref         = "n8n_forms_ip_rate_limit"
     description = "Block clients that exceed public forms request thresholds."
-    expression  = "(http.host eq \"${var.forms_hostname}\")"
+    expression  = local.public_forms_request_expression
     action      = "block"
 
     ratelimit = {
