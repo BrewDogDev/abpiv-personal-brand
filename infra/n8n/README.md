@@ -43,26 +43,24 @@ All GCP authentication uses GitHub OIDC. Do not add service account JSON keys.
 
 ## Required GitHub Settings
 
-Repository variables:
-
-- `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_ZONE_ID_ALLANBPEDINIV`
-- `CLOUDFLARE_ZONE_ID_LOBST3RS`
-- `N8N_GCP_PROJECT_ID`
-- `N8N_GCP_REGION`
-- `N8N_GCP_SERVICE_ACCOUNT`
-- `N8N_GCP_WORKLOAD_IDENTITY_PROVIDER`
-- `N8N_EDITOR_HOSTNAME`
-- `N8N_EDITOR_ACCESS_ALLOWED_EMAILS`
-- `N8N_ENABLE_CLOUDFLARE_EDGE`
-
-Expected values:
-
-- `N8N_GCP_PROJECT_ID=abpiv-personal-brand`
-- `N8N_GCP_REGION=us-east1`
-- `N8N_EDITOR_HOSTNAME=workflows.lobst3rs.com`
-- `N8N_EDITOR_ACCESS_ALLOWED_EMAILS=["allanblankpedin@gmail.com"]`
-- `N8N_ENABLE_CLOUDFLARE_EDGE=true`
+| Name | Type | Expected value |
+| --- | --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | variable | Cloudflare account ID |
+| `CLOUDFLARE_ZONE_ID_ALLANBPEDINIV` | variable | Zone ID for `allanbpediniv.com` |
+| `CLOUDFLARE_ZONE_ID_LOBST3RS` | variable | Zone ID for `lobst3rs.com` |
+| `CLOUDFLARE_PAGES_PROJECT` | variable | `abpiv-personal-brand` |
+| `PRODUCTION_DOMAIN` | variable | Discovered live production domain, usually `allanbpediniv.com` |
+| `SITE_URL` | environment variable | Production: `https://<PRODUCTION_DOMAIN>`; Preview: `https://content-site.lobst3rs.com` |
+| `PLAUSIBLE_SITE_DOMAIN` | environment variable | Production: `<PRODUCTION_DOMAIN>`; Preview: `content-site.lobst3rs.com` if analytics route exists |
+| `N8N_GCP_PROJECT_ID` | variable | `abpiv-personal-brand` |
+| `N8N_GCP_REGION` | variable | `us-east1` |
+| `N8N_GCP_SERVICE_ACCOUNT` | variable | GitHub deployer service account email after bootstrap |
+| `N8N_GCP_WORKLOAD_IDENTITY_PROVIDER` | variable | Workload Identity provider resource |
+| `N8N_EDITOR_HOSTNAME` | variable | `workflows.lobst3rs.com` |
+| `N8N_EDITOR_ZONE_ID` | variable | same value as `CLOUDFLARE_ZONE_ID_LOBST3RS` |
+| `N8N_EDITOR_ACCESS_ALLOWED_EMAILS` | variable | `["allanblankpedin@gmail.com"]` |
+| `N8N_ENABLE_CLOUDFLARE_EDGE` | variable | `true` when ready to manage DNS/WAF/Access |
+| `CLOUDFLARE_API_TOKEN` | secret | Cloudflare token for Pages, DNS, WAF, and Access resources |
 
 Optional repository variables:
 
@@ -70,9 +68,19 @@ Optional repository variables:
 - `N8N_GITHUB_OIDC_PRINCIPAL_SET`
 - `N8N_CLOUD_RUN_SERVICE`
 
-Repository secrets:
+Preview analytics collection uses `PLAUSIBLE_SITE_DOMAIN=content-site.lobst3rs.com` and same-origin `/_analytics/*` paths, but the current analytics infrastructure only provisions `allanbpediniv.com/_analytics/*`. Extend the separate analytics infrastructure/route before expecting preview analytics collection.
 
-- `CLOUDFLARE_API_TOKEN`
+## Bootstrap Sequence
+
+1. Confirm or create the GCS state bucket `abpiv-personal-brand-opentofu-state`.
+2. Run `n8n-validate`.
+3. Run `n8n-apply` with `confirm_apply=apply`.
+4. Create the Cloud SQL user `n8n` out of band.
+5. Populate Secret Manager secret `abpiv-n8n-postgres-password`.
+6. Populate Secret Manager secret `abpiv-n8n-encryption-key`.
+7. Re-run or redeploy n8n after secrets exist.
+8. Confirm `https://forms.allanbpediniv.com` loads public n8n form/webhook surfaces.
+9. Confirm `https://workflows.lobst3rs.com` is Cloudflare Access protected and admits only `allanblankpedin@gmail.com`.
 
 ## Verification
 

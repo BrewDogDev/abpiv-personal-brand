@@ -6,12 +6,16 @@ This document captures the current deployment setup for the Docusaurus site in `
 
 - Framework: Docusaurus v3 with TypeScript.
 - Production domain: `https://allanbpediniv.com/info/`.
+- Preview branch: `preview`.
+- Preview URL: `https://content-site.lobst3rs.com/info/`.
+- Production branch: `main`.
+- Production URL: `https://allanbpediniv.com/info/`.
+- Production deploys: manual `Content Site` workflow dispatch from `main` with `target=production`.
 - Cloudflare Pages project: `abpiv-personal-brand`.
 - Cloudflare Pages subdomain: `abpiv-personal-brand.pages.dev`.
-- Production branch: `main`.
 - GitHub repository: `BrewDogDev/abpiv-personal-brand`.
 
-The site intentionally lives under `/info/`, not at the domain root. The domain root redirects to `/info/`.
+The site intentionally lives under `/info/`, not at the domain root. The domain root redirects to `/info/`. Production domain discovery should choose the live domain that returns `200`; apex `allanbpediniv.com` is the current production domain because `www.allanbpediniv.com` did not resolve during discovery.
 
 ## Important Paths
 
@@ -74,13 +78,14 @@ During CI this is copied to `content-site/cloudflare-pages/_headers`.
 
 ## GitHub Actions Setup
 
-The workflow is `Site and Analytics`.
+The workflow is `Content Site`.
 
 It runs on:
 
-- Pushes to `main` when `content-site/**` or `.github/workflows/deploy.yml` changes.
+- Pushes to `main` when content-site CI paths change.
+- Pushes to `preview` auto-deploy to `https://content-site.lobst3rs.com/info/`.
 - Pull requests touching the same paths.
-- Manual `workflow_dispatch`.
+- Manual `workflow_dispatch`; production deploys run from `main` with `target=production`.
 
 Build job:
 
@@ -105,9 +110,9 @@ pages deploy content-site/cloudflare-pages \
   --commit-hash=<current sha>
 ```
 
-Production deploys use the GitHub `production` environment. That environment has a required-reviewer gate for `BrewDogDev`, so pushes to `main` can pause until approved.
+Production deploys use the GitHub `production` environment and run only by manual `Content Site` workflow dispatch from `main` with `target=production`.
 
-The same workflow validates shared analytics infrastructure. It authenticates to GCP through GitHub OIDC using `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT`, then runs OpenTofu validation, Worker tests, content-site typecheck/build, and a blocked-domain scan. OpenTofu apply and Plausible VM provisioning are handled by the manual `Apply Analytics Infrastructure` and `Provision Analytics Host` workflows.
+The existing Plausible analytics stack remains separate in `infra/analytics/`. Preview deploys intentionally inject Plausible with `PLAUSIBLE_SITE_DOMAIN=content-site.lobst3rs.com` and same-origin `/_analytics/*` paths, but the current analytics infrastructure only provisions `allanbpediniv.com/_analytics/*`. Preview analytics collection requires extending the separate analytics infrastructure/route first.
 
 ## Analytics Behavior
 
