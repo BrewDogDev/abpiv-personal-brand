@@ -6,10 +6,12 @@ import {LatestPosts} from '@site/src/components/LatestPosts';
 
 export default function Home(): ReactNode {
   return (
-    <Layout title="Home" description="CEO | Redefining the Internet">
-      <main style={{padding: '2rem 0'}}>
+    <Layout
+      title="Home"
+      description="Insights, news and publications, appearances, and project updates from Allan B. Pedin IV.">
+      <main>
+        <HomeHero />
         <div className="container">
-          <HomeHero />
           <SectionCards />
           <LatestPosts />
         </div>

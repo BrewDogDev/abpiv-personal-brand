@@ -185,7 +185,7 @@ Expected known warnings from `npm run build`:
 
 - Docusaurus warns that the default `blogDir` does not exist.
 - Some tags are not defined in `tags.yml`.
-- Footer RSS links appear as broken links to Docusaurus even though RSS files are generated.
+- The site emits one combined News & Publications RSS feed at `/news-publications/rss.xml`.
 - Docusaurus may fail its update-check write under sandboxed local environments.
 
 These warnings did not block builds during setup.

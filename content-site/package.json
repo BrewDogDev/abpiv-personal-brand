@@ -11,6 +11,7 @@
     "clear": "docusaurus clear",
     "check:author-images": "node scripts/check-local-author-images.mjs",
     "check:brand-casing": "node scripts/check-brand-casing.mjs",
+    "check:visionary-brand": "node scripts/check-visionary-brand-content.mjs",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",

@@ -14,7 +14,7 @@ export const FeaturedItems: FeaturedItem[] = [
   {
     title: 'Why Blockchains Can\'t Be Random (And Why It Matters for Trust)',
     outlet: 'NDK CYBER - Secure Insights',
-    description: 'An in-depth discussion on why blockchains cannot be random and why this matters for trust in decentralized systems.',
+    description: 'A practical explanation of why randomness matters in decentralized systems and what builders need to know when evaluating it.',
     preview: 'https://i.ytimg.com/vi/3knbD6F4cUo/hqdefault.jpg',
     website: 'https://www.youtube.com/watch?v=3knbD6F4cUo',
     tags: ['podcast', 'video'],
@@ -23,7 +23,7 @@ export const FeaturedItems: FeaturedItem[] = [
   {
     title: 'RandAO Builder Spotlight with Allan Pedin',
     outlet: 'Community Labs',
-    description: 'Builder spotlight featuring Allan Pedin discussing RandAO and decentralized random number generation.',
+    description: 'Builder conversation on RANDAO, decentralized random number generation, and the tradeoffs behind trustless infrastructure.',
     preview: 'https://i.ytimg.com/vi/LOlYGTt1LIc/hqdefault.jpg',
     website: 'https://www.youtube.com/watch?v=LOlYGTt1LIc',
     tags: ['podcast', 'video'],
@@ -32,16 +32,16 @@ export const FeaturedItems: FeaturedItem[] = [
   {
     title: 'RandAO Keynote — ETH Denver 2025',
     outlet: 'RandAO',
-    description: 'Keynote presentation at ETH Denver 2025 on RandAO and the future of decentralized applications.',
+    description: 'Keynote presentation at ETH Denver 2025 on RANDAO and the future of decentralized applications.',
     preview: 'https://i.ytimg.com/vi/z9hJnxGRxj4/hqdefault.jpg',
     website: 'https://www.youtube.com/watch?v=z9hJnxGRxj4',
-    tags: ['podcast', 'video'],
+    tags: ['keynote', 'video', 'favorite'],
     date: '2025-03-03',
   },
   {
     title: 'A Round Solve Session | Problem: Scale Founder Led Growth',
     outlet: 'A-Round | Leaders at software startups',
-    description: 'Problem-solving session on scaling founder-led growth strategies.',
+    description: 'Problem-solving session on customer learning, sales motion, and scaling founder-led growth.',
     preview: 'https://i.ytimg.com/vi/vdnfdG7SfiU/hqdefault.jpg',
     website: 'https://www.youtube.com/watch?v=vdnfdG7SfiU',
     tags: ['podcast', 'video'],
@@ -50,7 +50,7 @@ export const FeaturedItems: FeaturedItem[] = [
   {
     title: 'SE02E15 How To Sell When You Sell Random Numbers',
     outlet: 'Colin Davis',
-    description: 'Episode 15 discussing how to sell products or services when your offering is based on random numbers.',
+    description: 'A commercialization discussion about explaining technical infrastructure in plain language.',
     preview: 'https://i.ytimg.com/vi/P1aC2AMTdgE/hqdefault.jpg',
     website: 'https://www.youtube.com/watch?v=P1aC2AMTdgE',
     tags: ['podcast', 'video'],

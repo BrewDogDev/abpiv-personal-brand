@@ -1,9 +1,22 @@
 import React from 'react';
 import type {FeaturedItem} from '@site/src/data/featured';
+import {Tags} from '@site/src/data/featuredTags';
 import styles from './styles.module.css';
 
 interface FeaturedCardProps {
   item: FeaturedItem;
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
 export function FeaturedCard({item}: FeaturedCardProps): React.JSX.Element {
@@ -14,32 +27,30 @@ export function FeaturedCard({item}: FeaturedCardProps): React.JSX.Element {
       rel="noreferrer noopener"
       className={styles.featuredCard}
       style={{textDecoration: 'none'}}>
-      <img
-        src={item.preview}
-        alt={`${item.title} preview`}
-        className={styles.cardImage}
-      />
+      <div className={styles.imageWrap}>
+        <img
+          src={item.preview}
+          alt={`${item.title} appearance preview`}
+          className={styles.cardImage}
+        />
+      </div>
       <div className={styles.cardBody}>
+        <div className={styles.cardMeta}>
+          <span>{item.outlet}</span>
+          <span>{formatDate(item.date)}</span>
+        </div>
         <h3 className={styles.cardTitle}>{item.title}</h3>
-        <p className={styles.cardOutlet}>{item.outlet}</p>
         <p className={styles.cardDescription}>{item.description}</p>
         <div className={styles.cardTags}>
           {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className={styles.tag}
-              style={{
-                backgroundColor: `color-mix(in srgb, var(--ifm-color-primary) 15%, transparent)`,
-                color: 'var(--ifm-color-primary)',
-              }}>
-              {tag}
+            <span key={tag} className={styles.tag}>
+              {Tags[tag].label}
             </span>
           ))}
         </div>
         <div className={styles.cardFooter}>
-          <span className={styles.cardDate}>{item.date}</span>
           <span className={styles.externalLink}>
-            Visit
+            Watch / listen
             <svg
               width="12"
               height="12"

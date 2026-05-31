@@ -10,19 +10,22 @@ This is a Docusaurus v3 (TypeScript) personal brand site located in `content-sit
 
 ### Routes & Plugins
 
-| Route       | Plugin                                             | Notes                                          |
-| ----------- | -------------------------------------------------- | ---------------------------------------------- |
-| `/research` | `@docusaurus/plugin-content-blog` (id: `research`) | Long-form research, RSS at `/research/rss.xml` |
-| `/insights` | `@docusaurus/plugin-content-blog` (id: `default`)  | Blog-style posts, RSS at `/insights/rss.xml`   |
-| `/newsroom` | `@docusaurus/plugin-content-blog` (id: `newsroom`) | Announcements, RSS at `/newsroom/rss.xml`      |
-| `/featured` | Custom React page `src/pages/featured/index.tsx`   | Showcase of appearances                        |
-| `/about`    | MDX page `src/pages/about.mdx`                     | Bio page                                       |
-| `/`         | Custom `src/pages/index.tsx`                       | Homepage with Hero, SectionCards, LatestPosts  |
+| Route                | Plugin                                             | Notes                                                                 |
+| -------------------- | -------------------------------------------------- | --------------------------------------------------------------------- |
+| `/research`          | `@docusaurus/plugin-content-blog` (id: `research`) | Long-form research; feed output is disabled here                      |
+| `/insights`          | `@docusaurus/plugin-content-blog` (id: `default`)  | Blog-style posts; feed output is disabled here                        |
+| `/newsroom`          | `@docusaurus/plugin-content-blog` (id: `newsroom`) | Announcements; feed output is disabled here                           |
+| `/news-publications` | Custom React page `src/pages/news-publications/`   | Combined newsroom + research listing; RSS at `/news-publications/rss.xml` |
+| `/featured`          | Custom React page `src/pages/featured/index.tsx`   | Showcase of appearances                                               |
+| `/about`             | MDX page `src/pages/about.mdx`                     | Bio page                                                              |
+| `/`                  | Custom `src/pages/index.tsx`                       | Homepage with Hero, SectionCards, LatestPosts                         |
 
 ### Key Files
 
 - **`docusaurus.config.ts`** - Main configuration. All social links are imported from `links.ts`. Footer displays navigation + RSS links only. Social icons are rendered via swizzled Footer component.
 - **`links.ts`** - Single source of truth for all social/website URLs. Contains: github, linkedin, x, facebook, instagram, youtube, hackernoon, hackernews, crunchbase, f6s, strava, tiktok, email
+- **`plugins/news-publications-feed/index.js`** - Emits the single combined News & Publications RSS feed from `newsroom/` and `research/`.
+- **`src/utils/contentPosts.ts`** - Shared helpers for loading and merging blog-instance content.
 - **`src/theme/Footer/index.tsx`** - Ejected and customized Footer. Replaces standard footer links with a centered row of social icons using FontAwesome. Uses `@fortawesome/react-fontawesome` package.
 - **`src/css/custom.css`** - Dark theme with electric blue (`#00AAFF`) primary color. Dark-only mode (no theme switching).
 
@@ -31,9 +34,9 @@ This is a Docusaurus v3 (TypeScript) personal brand site located in `content-sit
 ## Custom Components
 
 ### `src/components/`
-- **HomeHero** - Hero section on homepage with name "Allan B. Pedin IV" and tagline: `CEO | Redefining the Internet to be: Intelligent • Transparent • Inclusive • Decentralized | CEO & Co-Founder at CipherPlay & randao.net | Published AI & Blockchain Researcher`
-- **SectionCards** - Four section cards for Research, Featured, Insights, Newsroom
-- **LatestPosts** - Shows recent posts from all three blog instances
+- **HomeHero** - Hero section on homepage with Allan's CEO narrative, research credentials, founder work, and core thesis.
+- **SectionCards** - Cards for Insights, News & Publications, and Featured On
+- **LatestPosts** - Shows recent insights, the combined News & Publications stream, and featured appearances
 - **FeaturedFilters** - Tag multi-select + search bar for featured page
 - **FeaturedCard** - Card component for featured items
 
@@ -45,11 +48,16 @@ This is a Docusaurus v3 (TypeScript) personal brand site located in `content-sit
 
 ## Content Sections
 
+### News & Publications Feed
+- One RSS feed is generated at `/news-publications/rss.xml`.
+- The feed combines `newsroom/` and `research/` entries.
+- Individual `/insights/rss.xml`, `/newsroom/rss.xml`, and `/research/rss.xml` feeds are disabled in `docusaurus.config.ts`.
+
 ### Research (`research/` directory)
 - Blog-style posts for published research
 - Currently contains 3 published papers:
-  1. "Secure and Decentralized Anonymous E-Voting Scheme" - ACM 2023, CNU
-  2. "Smart Contract-Based Social Recovery Wallet Management Scheme" - ACM 2023, CNU
+  1. "Secure Digital Voting" - ACM 2023, CNU
+  2. "Digital Asset Ownership" - ACM 2023, CNU
   3. "Predicting Road Quality Using High Resolution Satellite Imagery" - PLOS ONE 2021, William & Mary (under Ethan Brewer)
 
 ### Insights (`insights/` directory)
@@ -105,7 +113,6 @@ npm run clear    # Clear cache
 
 ## Known Issues / Notes
 
-- Footer RSS links generate `onBrokenLinks` warnings - these are harmless, the RSS files are generated but Docusaurus SSG checker doesn't recognize them as static files
 - `blogDir` warning refers to old default path - harmless
 - Dark-only theme enforced via `colorMode.disableSwitch: true`
 - Social icons in footer use `@fortawesome/react-fontawesome` (brands + solid packages installed)

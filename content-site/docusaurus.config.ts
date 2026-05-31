@@ -6,7 +6,7 @@ import { links } from './links';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const config: Config = {
-  title: 'abpiv',
+  title: 'Allan B. Pedin IV',
 
   favicon: 'img/headshot.png',
 
@@ -31,6 +31,8 @@ const config: Config = {
   },
 
   customFields: {},
+
+  clientModules: ['./src/clientModules/mobileSidebarFallback.js'],
 
   headTags: isProduction
     ? [
@@ -72,7 +74,7 @@ const config: Config = {
           showReadingTime: true,
           authorsMapPath: '../authors.yml',
           feedOptions: {
-            type: ['rss', 'atom'],
+            type: null,
             title: 'Insights',
           },
           onInlineTags: 'warn',
@@ -100,7 +102,7 @@ const config: Config = {
         blogSidebarCount: 'ALL',
         authorsMapPath: '../authors.yml',
         feedOptions: {
-          type: ['rss', 'atom'],
+          type: null,
           title: 'Research',
         },
         onInlineTags: 'warn',
@@ -118,12 +120,20 @@ const config: Config = {
         blogDescription: 'Announcements and milestones.',
         authorsMapPath: '../authors.yml',
         feedOptions: {
-          type: ['rss', 'atom'],
+          type: null,
           title: 'Newsroom',
         },
         onInlineTags: 'warn',
         onInlineAuthors: 'warn',
         onUntruncatedBlogPosts: 'ignore',
+      },
+    ],
+    [
+      './plugins/news-publications-feed',
+      {
+        feedPath: 'news-publications/rss.xml',
+        title: 'News & Publications',
+        description: 'Research papers, launch notes, and project milestones from Allan B. Pedin IV.',
       },
     ],
     [
@@ -145,7 +155,7 @@ const config: Config = {
       respectPrefersColorScheme: false,
     },
     navbar: {
-      title: 'abpiv',
+      title: 'ABPIV',
       logo: {
         alt: 'Allan B. Pedin IV',
         src: 'img/headshot.png',
@@ -153,23 +163,18 @@ const config: Config = {
       },
       items: [
         {
-          to: '/research',
-          label: 'Research',
-          position: 'left',
-        },
-        {
-          to: '/featured',
-          label: 'Featured on',
-          position: 'left',
-        },
-        {
           to: '/insights',
           label: 'Insights',
           position: 'left',
         },
         {
-          to: '/newsroom',
-          label: 'Newsroom',
+          to: '/news-publications',
+          label: 'News & Publications',
+          position: 'left',
+        },
+        {
+          to: '/featured',
+          label: 'Featured On',
           position: 'left',
         },
       ],
@@ -180,18 +185,15 @@ const config: Config = {
         {
           title: 'Navigation',
           items: [
-            { to: '/research', label: 'Research' },
-            { to: '/featured', label: 'Featured' },
             { to: '/insights', label: 'Insights' },
-            { to: '/newsroom', label: 'Newsroom' },
+            { to: '/news-publications', label: 'News & Publications' },
+            { to: '/featured', label: 'Featured On' },
           ],
         },
         {
-          title: 'RSS Feeds',
+          title: 'RSS Feed',
           items: [
-            { to: '/research/rss.xml', label: 'Research' },
-            { to: '/insights/rss.xml', label: 'Insights' },
-            { to: '/newsroom/rss.xml', label: 'Newsroom' },
+            { to: '/news-publications/rss.xml', label: 'News & Publications' },
           ],
         },
       ],
