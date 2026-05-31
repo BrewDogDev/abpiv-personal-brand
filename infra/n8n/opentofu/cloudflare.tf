@@ -90,6 +90,27 @@ resource "cloudflare_ruleset" "forms_rate_limit" {
   }]
 }
 
+resource "cloudflare_ruleset" "editor_origin_tls" {
+  count = var.enable_cloudflare_edge && local.editor_enabled ? 1 : 0
+
+  zone_id     = local.editor_cloudflare_zone_id
+  name        = "n8n editor origin TLS"
+  description = "Force Cloudflare to use strict HTTPS to the n8n editor origin."
+  kind        = "zone"
+  phase       = "http_config_settings"
+
+  rules = [{
+    ref         = "n8n_editor_origin_tls_strict"
+    description = "Use strict origin TLS for the private n8n editor hostname."
+    expression  = "http.host eq \"${var.editor_hostname}\""
+    action      = "set_config"
+
+    action_parameters = {
+      ssl = "strict"
+    }
+  }]
+}
+
 resource "cloudflare_zero_trust_organization" "n8n" {
   count = var.enable_cloudflare_edge && local.editor_enabled && var.manage_cloudflare_access_organization ? 1 : 0
 
