@@ -12,7 +12,7 @@ The `Content Site` workflow in [`.github/workflows/deploy.yml`](.github/workflow
 
 ## Deployment and Forms Infrastructure
 
-The content site uses the CipherPlay-style branch model:
+The content site uses the preview/main branch model:
 
 - `preview` auto-deploys to `https://content-site.lobst3rs.com/info/`.
 - `main` runs CI.

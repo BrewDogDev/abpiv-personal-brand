@@ -16,7 +16,7 @@ jobs:
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
-          if [ "$HEAD_REF" != "preview" ]; then
+          if [[ $HEAD_REF != "preview" ]]; then
             echo "::error title=Invalid source branch::Only the preview branch may open pull requests into main. Current source branch: ${HEAD_REF}"
             exit 1
           fi
