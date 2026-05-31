@@ -218,7 +218,8 @@ rg -n "lobst3rs|analytics\\.lobst3rs\\.com" build
 Expected:
 
 - The first command finds the same-origin analytics script.
-- The second command returns no matches.
+- The second command finds the same-origin collector attribute.
+- The third command returns no matches.
 
 Expected known warnings from `npm run build`:
 
