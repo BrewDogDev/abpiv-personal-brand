@@ -83,7 +83,9 @@ Expected local config shape, with secret values redacted:
 }
 ```
 
-Current caveat: Cloudflare Access protects `workflows.lobst3rs.com`. A non-browser smoke check with only the n8n `Authorization` bearer token returned `302` to Access, which means Access intercepted the request before n8n saw the token. If a future agent needs non-interactive MCP access, add Cloudflare Access service-token headers to the local config, matching the CipherPlay pattern:
+Cloudflare Access protects `workflows.lobst3rs.com`, so non-browser MCP clients must send both the n8n MCP bearer token and Cloudflare Access service-token headers. The Access service token is managed by `infra/n8n/opentofu`, and the n8n apply workflow stores the current local-client header values in Secret Manager secret `abpiv-n8n-mcp-cloudflare-access`.
+
+If `.codex-local/n8n-mcp.json` needs to be recreated, keep this shape:
 
 ```json
 {
@@ -100,7 +102,7 @@ Safe local checks:
 
 ```bash
 git check-ignore -v .codex-local/n8n-mcp.json
-jq '(.mcpServers."n8n-mcp".headers.Authorization)="Bearer <redacted>"' .codex-local/n8n-mcp.json
+jq '(.mcpServers."n8n-mcp".headers.Authorization)="Bearer <redacted>" | .mcpServers."n8n-mcp".headers."CF-Access-Client-Id"="<redacted>" | .mcpServers."n8n-mcp".headers."CF-Access-Client-Secret"="<redacted>"' .codex-local/n8n-mcp.json
 ```
 
 ## GitHub Actions Flow
