@@ -4,13 +4,15 @@ import type * as Preset from '@docusaurus/preset-classic';
 import { links } from './links';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const siteUrl = process.env.SITE_URL || 'https://allanbpediniv.com';
+const plausibleSiteDomain = process.env.PLAUSIBLE_SITE_DOMAIN || new URL(siteUrl).hostname;
 
 const config: Config = {
   title: 'Allan B. Pedin IV',
 
   favicon: 'img/headshot.png',
 
-  url: 'https://allanbpediniv.com',
+  url: siteUrl,
   baseUrl: '/info/',
 
   projectName: 'abpiv-personal-brand',
@@ -50,7 +52,7 @@ const config: Config = {
         {
           src: '/_analytics/js/script.js',
           defer: true,
-          'data-domain': 'allanbpediniv.com',
+          'data-domain': plausibleSiteDomain,
           'data-api': '/_analytics/api/event',
         },
       ]

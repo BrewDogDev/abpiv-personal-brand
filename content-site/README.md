@@ -92,8 +92,15 @@ All blog posts frontmatter should use `author: allan`.
 ## Deployment
 
 - **baseUrl**: `/info/`
-- **url**: `https://allanbpediniv.com`
-- GitHub Actions workflow in `.github/workflows/deploy.yml` deploys to Cloudflare Pages on push to `main`
+- **url**: defaults to the production `SITE_URL` value, `https://allanbpediniv.com`
+- Preview branch: `preview`
+- Preview URL: `https://content-site.lobst3rs.com/info/`
+- Production branch: `main`
+- Production URL: `https://allanbpediniv.com/info/`
+- Production domain discovery: use the live domain that returns `200`; apex `allanbpediniv.com` is the current chosen production domain because `www.allanbpediniv.com` did not resolve during discovery.
+- Production deploys: manual `Content Site` workflow dispatch from `main` with `target=production`
+- GitHub Actions workflow in `.github/workflows/deploy.yml` runs content-site CI, preview auto-deploys, and manual production deploys to Cloudflare Pages.
+- Preview analytics collection uses `PLAUSIBLE_SITE_DOMAIN=content-site.lobst3rs.com` and same-origin `/_analytics/*` paths, but the current analytics infrastructure only provisions `allanbpediniv.com/_analytics/*`. Extend the separate analytics infrastructure/route before expecting preview analytics collection.
 - Cloudflare Pages project: `abpiv-personal-brand`
 - See [`AI_HANDOFF.md`](./AI_HANDOFF.md) for the current deployment architecture, packaging details, credentials, and verification commands.
 
