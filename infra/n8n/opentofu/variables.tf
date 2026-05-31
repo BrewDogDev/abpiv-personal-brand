@@ -136,6 +136,17 @@ variable "editor_access_allowed_group_ids" {
   default     = []
 }
 
+variable "editor_mcp_service_token_duration" {
+  description = "Lifetime for the Cloudflare Access service token used by Codex n8n MCP clients."
+  type        = string
+  default     = "8760h"
+
+  validation {
+    condition     = can(regex("^[0-9]+(ns|us|µs|ms|s|m|h)$", var.editor_mcp_service_token_duration))
+    error_message = "editor_mcp_service_token_duration must be a Cloudflare duration such as 8760h."
+  }
+}
+
 variable "github_oidc_principal_set" {
   description = "Optional Workload Identity principalSet member allowed to impersonate the n8n GitHub deployer service account."
   type        = string

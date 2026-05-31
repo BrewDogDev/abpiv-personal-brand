@@ -48,6 +48,18 @@ output "runtime_secret_ids" {
   value       = { for key, secret in google_secret_manager_secret.runtime : key => secret.secret_id }
 }
 
+output "n8n_mcp_cf_access_client_id" {
+  description = "Cloudflare Access service-token client ID for non-browser n8n MCP access."
+  value       = one(cloudflare_zero_trust_access_service_token.n8n_mcp[*].client_id)
+  sensitive   = true
+}
+
+output "n8n_mcp_cf_access_client_secret" {
+  description = "Cloudflare Access service-token client secret for non-browser n8n MCP access."
+  value       = one(cloudflare_zero_trust_access_service_token.n8n_mcp[*].client_secret)
+  sensitive   = true
+}
+
 output "certificate_dns_authorization_records" {
   description = "DNS authorization CNAMEs for the Google-managed certificate. These are also managed in Cloudflare DNS."
   value = {

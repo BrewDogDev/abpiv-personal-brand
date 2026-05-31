@@ -121,6 +121,18 @@ resource "cloudflare_zero_trust_organization" "n8n" {
   deny_unmatched_requests = false
 }
 
+resource "cloudflare_zero_trust_access_service_token" "n8n_mcp" {
+  count = var.enable_cloudflare_edge && local.editor_enabled ? 1 : 0
+
+  account_id = var.cloudflare_account_id
+  name       = "ABPIV Codex n8n MCP"
+  duration   = var.editor_mcp_service_token_duration
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "cloudflare_zero_trust_access_application" "editor" {
   count = var.enable_cloudflare_edge && local.editor_enabled ? 1 : 0
 
@@ -135,9 +147,21 @@ resource "cloudflare_zero_trust_access_application" "editor" {
 
   policies = [
     {
+      name       = "Allow n8n MCP service token"
+      decision   = "non_identity"
+      precedence = 1
+      include = [
+        {
+          service_token = {
+            token_id = cloudflare_zero_trust_access_service_token.n8n_mcp[0].id
+          }
+        }
+      ]
+    },
+    {
       name       = "Allow n8n operators"
       decision   = "allow"
-      precedence = 1
+      precedence = 2
       include    = local.editor_access_include_rules
     }
   ]

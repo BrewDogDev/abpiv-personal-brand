@@ -123,5 +123,38 @@ jobs:
       - name: Apply n8n infrastructure
         run: tofu -chdir=${{ env.TOFU_DIR }} apply -input=false -auto-approve tfplan
 
+      - name: Store n8n MCP Cloudflare Access credentials
+        run: |
+          set -euo pipefail
+
+          secret_name="abpiv-n8n-mcp-cloudflare-access"
+          tmp_file="$(mktemp)"
+          trap 'rm -f "$tmp_file"' EXIT
+          chmod 600 "$tmp_file"
+
+          client_id="$(tofu -chdir="${TOFU_DIR}" output -raw n8n_mcp_cf_access_client_id)"
+          client_secret="$(tofu -chdir="${TOFU_DIR}" output -raw n8n_mcp_cf_access_client_secret)"
+
+          jq -n \
+            --arg client_id "$client_id" \
+            --arg client_secret "$client_secret" \
+            --arg user_agent "Codex-n8n-MCP/1.0" \
+            '{
+              "CF-Access-Client-Id": $client_id,
+              "CF-Access-Client-Secret": $client_secret,
+              "User-Agent": $user_agent
+            }' > "$tmp_file"
+
+          if ! gcloud secrets describe "$secret_name" --project="${TF_VAR_gcp_project_id}" >/dev/null 2>&1; then
+            gcloud secrets create "$secret_name" \
+              --project="${TF_VAR_gcp_project_id}" \
+              --replication-policy=automatic \
+              --labels=app=n8n,component=automation,environment=production,managed_by=github-actions
+          fi
+
+          gcloud secrets versions add "$secret_name" \
+            --project="${TF_VAR_gcp_project_id}" \
+            --data-file="$tmp_file"
+
       - name: Show n8n outputs
         run: tofu -chdir=${{ env.TOFU_DIR }} output
