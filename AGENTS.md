@@ -57,6 +57,52 @@ The analytics stack has been brought up end to end:
 
 That `data-api` attribute matters. Without it, Plausible derives the collector URL from the script origin and posts to `https://allanbpediniv.com/api/event`, which returns `405 Method Not Allowed`.
 
+## Local n8n MCP Access
+
+This workspace mirrors the CipherPlay local-agent pattern with a git-ignored `.codex-local/` directory at the repo root.
+
+- Local MCP config path: `.codex-local/n8n-mcp.json`
+- Directory and file permissions should stay restrictive: `.codex-local` at `0700`, config files at `0600`.
+- The file contains the n8n MCP bearer token for `https://workflows.lobst3rs.com/mcp-server/http`.
+- Never commit or paste the bearer token into tracked files, logs, PRs, or docs.
+- `.gitignore` excludes `.codex-local/`; `.git/info/exclude` may also exclude it on this workstation.
+
+Expected local config shape, with secret values redacted:
+
+```json
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "http",
+      "url": "https://workflows.lobst3rs.com/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer <redacted>"
+      }
+    }
+  }
+}
+```
+
+Current caveat: Cloudflare Access protects `workflows.lobst3rs.com`. A non-browser smoke check with only the n8n `Authorization` bearer token returned `302` to Access, which means Access intercepted the request before n8n saw the token. If a future agent needs non-interactive MCP access, add Cloudflare Access service-token headers to the local config, matching the CipherPlay pattern:
+
+```json
+{
+  "headers": {
+    "Authorization": "Bearer <n8n-mcp-token>",
+    "CF-Access-Client-Id": "<cloudflare-access-client-id>",
+    "CF-Access-Client-Secret": "<cloudflare-access-client-secret>",
+    "User-Agent": "Codex-n8n-MCP/1.0"
+  }
+}
+```
+
+Safe local checks:
+
+```bash
+git check-ignore -v .codex-local/n8n-mcp.json
+jq '(.mcpServers."n8n-mcp".headers.Authorization)="Bearer <redacted>"' .codex-local/n8n-mcp.json
+```
+
 ## GitHub Actions Flow
 
 `Content Site` runs content-site CI, auto-deploys `preview` to `https://content-site.lobst3rs.com/info/`, and deploys production only by manual workflow dispatch from `main` with `target=production`.
