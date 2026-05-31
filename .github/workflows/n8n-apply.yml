@@ -87,17 +87,17 @@ jobs:
                 missing=1
               fi
             done
+          fi
 
-            if [ -n "$N8N_EDITOR_HOSTNAME" ]; then
-              if [ -z "$N8N_EDITOR_ZONE_ID" ] && [ -z "$N8N_EDITOR_ZONE_NAME" ]; then
-                echo "::error title=Missing required editor Cloudflare configuration::Set N8N_EDITOR_ZONE_ID or N8N_EDITOR_ZONE_NAME when N8N_EDITOR_HOSTNAME is configured"
-                missing=1
-              fi
+          if [ -n "$N8N_EDITOR_HOSTNAME" ]; then
+            if [ -z "$N8N_EDITOR_ZONE_ID" ] && [ -z "$N8N_EDITOR_ZONE_NAME" ]; then
+              echo "::error title=Missing required editor Cloudflare configuration::Set N8N_EDITOR_ZONE_ID or N8N_EDITOR_ZONE_NAME when N8N_EDITOR_HOSTNAME is configured"
+              missing=1
+            fi
 
-              if [ "$N8N_EDITOR_ACCESS_ALLOWED_EMAILS" = "[]" ] && [ "$N8N_EDITOR_ACCESS_ALLOWED_GROUP_IDS" = "[]" ]; then
-                echo "::error title=Missing required editor Access configuration::Set N8N_EDITOR_ACCESS_ALLOWED_EMAILS or N8N_EDITOR_ACCESS_ALLOWED_GROUP_IDS when N8N_EDITOR_HOSTNAME is configured"
-                missing=1
-              fi
+            if [ "$N8N_EDITOR_ACCESS_ALLOWED_EMAILS" = "[]" ] && [ "$N8N_EDITOR_ACCESS_ALLOWED_GROUP_IDS" = "[]" ]; then
+              echo "::error title=Missing required editor Access configuration::Set N8N_EDITOR_ACCESS_ALLOWED_EMAILS or N8N_EDITOR_ACCESS_ALLOWED_GROUP_IDS when N8N_EDITOR_HOSTNAME is configured"
+              missing=1
             fi
           fi
 
