@@ -186,15 +186,6 @@ resource "google_cloud_run_v2_service" "n8n" {
       }
 
       dynamic "env" {
-        for_each = local.editor_enabled ? [1] : []
-
-        content {
-          name  = "N8N_EDITOR_BASE_URL"
-          value = "https://${var.editor_hostname}/"
-        }
-      }
-
-      dynamic "env" {
         for_each = local.runtime_secrets
 
         content {

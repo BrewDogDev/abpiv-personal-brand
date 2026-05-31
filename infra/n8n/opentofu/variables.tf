@@ -84,6 +84,16 @@ variable "editor_hostname" {
     )
     error_message = "editor_hostname must be empty or a lowercase DNS hostname."
   }
+
+  validation {
+    condition = (
+      !var.enable_cloudflare_edge ||
+      var.editor_hostname == "" ||
+      var.editor_zone_id != "" ||
+      var.editor_zone_name != ""
+    )
+    error_message = "Set editor_zone_id or editor_zone_name when enable_cloudflare_edge is true and editor_hostname is set."
+  }
 }
 
 variable "editor_zone_id" {
