@@ -43,6 +43,13 @@ All GCP authentication uses GitHub OIDC. Do not add service account JSON keys.
 
 ## Required GitHub Settings
 
+Use the table below as the complete operations checklist across content-site and n8n workflows. The settings fall into these categories:
+
+- Required for n8n workflows: `N8N_GCP_PROJECT_ID`, `N8N_GCP_REGION`, `N8N_GCP_SERVICE_ACCOUNT`, and `N8N_GCP_WORKLOAD_IDENTITY_PROVIDER`.
+- Required when `N8N_ENABLE_CLOUDFLARE_EDGE=true`: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID_ALLANBPEDINIV`, `CLOUDFLARE_ZONE_ID_LOBST3RS`, and `CLOUDFLARE_API_TOKEN`.
+- Editor/defaulted n8n variables: `N8N_EDITOR_HOSTNAME`, `N8N_EDITOR_ZONE_ID` defaulting to `CLOUDFLARE_ZONE_ID_LOBST3RS`, `N8N_EDITOR_ZONE_NAME`, `N8N_EDITOR_ACCESS_ALLOWED_EMAILS`, `N8N_EDITOR_ACCESS_ALLOWED_GROUP_IDS`, `N8N_CLOUDFLARE_ACCESS_AUTH_DOMAIN`, `N8N_CLOUDFLARE_ACCESS_ORGANIZATION_NAME`, `N8N_MANAGE_CLOUDFLARE_ACCESS_ORGANIZATION`, and `N8N_ENABLE_CLOUDFLARE_EDGE`.
+- Content-site deployment variables/env: `CLOUDFLARE_PAGES_PROJECT`, `PRODUCTION_DOMAIN`, `SITE_URL`, and `PLAUSIBLE_SITE_DOMAIN`.
+
 | Name | Type | Expected value |
 | --- | --- | --- |
 | `CLOUDFLARE_ACCOUNT_ID` | variable | Cloudflare account ID |
@@ -65,6 +72,10 @@ All GCP authentication uses GitHub OIDC. Do not add service account JSON keys.
 Optional repository variables:
 
 - `N8N_EDITOR_ACCESS_ALLOWED_GROUP_IDS` as a JSON list
+- `N8N_EDITOR_ZONE_NAME`
+- `N8N_CLOUDFLARE_ACCESS_AUTH_DOMAIN`
+- `N8N_CLOUDFLARE_ACCESS_ORGANIZATION_NAME`
+- `N8N_MANAGE_CLOUDFLARE_ACCESS_ORGANIZATION`
 - `N8N_GITHUB_OIDC_PRINCIPAL_SET`
 - `N8N_CLOUD_RUN_SERVICE`
 
@@ -81,6 +92,8 @@ Preview analytics collection uses `PLAUSIBLE_SITE_DOMAIN=content-site.lobst3rs.c
 7. Re-run or redeploy n8n after secrets exist.
 8. Confirm `https://forms.allanbpediniv.com` loads public n8n form/webhook surfaces.
 9. Confirm `https://workflows.lobst3rs.com` is Cloudflare Access protected and admits only `allanblankpedin@gmail.com`.
+
+The first apply creates infrastructure and Secret Manager containers; n8n should not be considered healthy until the Cloud SQL user exists, both secret versions exist, and apply or redeploy has run again.
 
 ## Verification
 

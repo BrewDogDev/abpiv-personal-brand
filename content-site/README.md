@@ -92,7 +92,7 @@ All blog posts frontmatter should use `author: allan`.
 ## Deployment
 
 - **baseUrl**: `/info/`
-- **url**: `https://allanbpediniv.com`
+- **url**: defaults to the production `SITE_URL` value, `https://allanbpediniv.com`
 - Preview branch: `preview`
 - Preview URL: `https://content-site.lobst3rs.com/info/`
 - Production branch: `main`
