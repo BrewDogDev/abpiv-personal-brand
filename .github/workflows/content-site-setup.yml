@@ -324,7 +324,7 @@ jobs:
 
           exit "$missing"
 
-      - name: Point preview DNS at Pages alias
+      - name: Point preview DNS at Pages validation alias
         run: |
           set -euo pipefail
 
@@ -478,7 +478,7 @@ jobs:
           }
 
           preview_zone_name="$(zone_name_from_domain "$PREVIEW_DOMAIN")"
-          upsert_cname "$preview_zone_name" "$PREVIEW_DOMAIN" "${PREVIEW_BRANCH}.${CLOUDFLARE_PAGES_PROJECT}.pages.dev"
+          upsert_cname "$preview_zone_name" "$PREVIEW_DOMAIN" "${CLOUDFLARE_PAGES_PROJECT}.pages.dev"
 
       - name: Attach preview Pages custom domain
         run: |
@@ -504,36 +504,158 @@ jobs:
 
           if [[ "$status" == 2* ]] && jq -e '.success == true' /tmp/pages-preview-domain.json >/dev/null; then
             echo "${PREVIEW_DOMAIN} is already attached to ${CLOUDFLARE_PAGES_PROJECT}."
-            exit 0
-          fi
+          elif [ "$status" = "404" ]; then
+            jq -n --arg name "$PREVIEW_DOMAIN" '{name: $name}' > /tmp/pages-preview-domain-create.json
 
-          if [ "$status" != "404" ]; then
+            for attempt in 1 2 3; do
+              status="$(
+                curl -sS -o /tmp/pages-preview-domain-create-response.json -w "%{http_code}" \
+                  "${domains_url}" \
+                  --request POST \
+                  --header "${auth_header}" \
+                  --header "Content-Type: application/json" \
+                  --data @/tmp/pages-preview-domain-create.json || true
+              )"
+
+              if [[ "$status" == 2* ]] && jq -e '.success == true' /tmp/pages-preview-domain-create-response.json >/dev/null; then
+                echo "Attached ${PREVIEW_DOMAIN} to ${CLOUDFLARE_PAGES_PROJECT}."
+                break
+              fi
+
+              echo "Attach attempt ${attempt} returned HTTP ${status}." >&2
+              show_cloudflare_errors /tmp/pages-preview-domain-create-response.json
+              sleep 10
+            done
+
+            if ! [[ "$status" == 2* ]] || ! jq -e '.success == true' /tmp/pages-preview-domain-create-response.json >/dev/null; then
+              echo "::error title=Cloudflare Pages domain attach failed::Could not attach ${PREVIEW_DOMAIN}" >&2
+              exit 1
+            fi
+          else
             echo "::error title=Cloudflare Pages domain lookup failed::Read ${PREVIEW_DOMAIN} returned HTTP ${status}" >&2
             show_cloudflare_errors /tmp/pages-preview-domain.json
             exit 1
           fi
 
-          jq -n --arg name "$PREVIEW_DOMAIN" '{name: $name}' > /tmp/pages-preview-domain-create.json
+          status="$(
+            curl -sS -o /tmp/pages-preview-domain-retry.json -w "%{http_code}" \
+              "${domain_url}" \
+              --request PATCH \
+              --header "${auth_header}" \
+              --header "Content-Type: application/json" || true
+          )"
 
-          for attempt in 1 2 3; do
+          if ! [[ "$status" == 2* ]] || ! jq -e '.success == true' /tmp/pages-preview-domain-retry.json >/dev/null; then
+            echo "::warning title=Cloudflare Pages validation retry skipped::PATCH returned HTTP ${status}"
+            show_cloudflare_errors /tmp/pages-preview-domain-retry.json
+          fi
+
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
             status="$(
-              curl -sS -o /tmp/pages-preview-domain-create-response.json -w "%{http_code}" \
-                "${domains_url}" \
-                --request POST \
+              curl -sS -o /tmp/pages-preview-domain-status.json -w "%{http_code}" \
+                "${domain_url}" \
                 --header "${auth_header}" \
-                --header "Content-Type: application/json" \
-                --data @/tmp/pages-preview-domain-create.json || true
+                --header "Content-Type: application/json" || true
             )"
 
-            if [[ "$status" == 2* ]] && jq -e '.success == true' /tmp/pages-preview-domain-create-response.json >/dev/null; then
-              echo "Attached ${PREVIEW_DOMAIN} to ${CLOUDFLARE_PAGES_PROJECT}."
-              exit 0
+            if [[ "$status" == 2* ]] && jq -e '.success == true' /tmp/pages-preview-domain-status.json >/dev/null; then
+              domain_status="$(jq -r '.result.status // empty' /tmp/pages-preview-domain-status.json)"
+              validation_status="$(jq -r '.result.validation_data.status // empty' /tmp/pages-preview-domain-status.json)"
+              verification_status="$(jq -r '.result.verification_data.status // empty' /tmp/pages-preview-domain-status.json)"
+
+              echo "Domain status: ${domain_status}; validation: ${validation_status}; verification: ${verification_status}"
+
+              if [ "$domain_status" = "active" ] || [ "$validation_status" = "active" ] || [ "$verification_status" = "active" ]; then
+                exit 0
+              fi
+            else
+              echo "Status attempt ${attempt} returned HTTP ${status}." >&2
+              show_cloudflare_errors /tmp/pages-preview-domain-status.json
             fi
 
-            echo "Attach attempt ${attempt} returned HTTP ${status}." >&2
-            show_cloudflare_errors /tmp/pages-preview-domain-create-response.json
             sleep 10
           done
 
-          echo "::error title=Cloudflare Pages domain attach failed::Could not attach ${PREVIEW_DOMAIN} after DNS repair" >&2
+          echo "::error title=Cloudflare Pages domain did not activate::${PREVIEW_DOMAIN} did not become active after validation retry" >&2
+          show_cloudflare_errors /tmp/pages-preview-domain-status.json
           exit 1
+
+      - name: Point preview DNS at preview branch alias
+        run: |
+          set -euo pipefail
+
+          api_root="https://api.cloudflare.com/client/v4"
+          auth_header="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+
+          zone_name="${PREVIEW_DOMAIN#*.}"
+          encoded_zone="$(jq -nr --arg v "$zone_name" '$v|@uri')"
+          zone_response="/tmp/preview-zone.json"
+          zone_status="$(
+            curl -sS -o "$zone_response" -w "%{http_code}" \
+              "${api_root}/zones?name=${encoded_zone}" \
+              --header "${auth_header}" \
+              --header "Content-Type: application/json" || true
+          )"
+
+          if ! [[ "$zone_status" == 2* ]] || ! jq -e '.success == true' "$zone_response" >/dev/null; then
+            echo "::error title=Cloudflare zone lookup failed::Read zone ${zone_name} returned HTTP ${zone_status}" >&2
+            jq -r '.errors[]? | "- \(.code): \(.message)"' "$zone_response" >&2 || cat "$zone_response" >&2
+            exit 1
+          fi
+
+          zone_id="$(jq -r '.result[0].id // empty' "$zone_response")"
+          if [ -z "$zone_id" ]; then
+            echo "::error title=Cloudflare zone not found::${zone_name} was not returned by the Cloudflare API" >&2
+            exit 1
+          fi
+
+          encoded_record="$(jq -nr --arg v "$PREVIEW_DOMAIN" '$v|@uri')"
+          dns_response="/tmp/preview-dns.json"
+          dns_status="$(
+            curl -sS -o "$dns_response" -w "%{http_code}" \
+              "${api_root}/zones/${zone_id}/dns_records?name=${encoded_record}&per_page=100" \
+              --header "${auth_header}" \
+              --header "Content-Type: application/json" || true
+          )"
+
+          if ! [[ "$dns_status" == 2* ]] || ! jq -e '.success == true' "$dns_response" >/dev/null; then
+            echo "::error title=Cloudflare DNS lookup failed::Read ${PREVIEW_DOMAIN} returned HTTP ${dns_status}" >&2
+            jq -r '.errors[]? | "- \(.code): \(.message)"' "$dns_response" >&2 || cat "$dns_response" >&2
+            exit 1
+          fi
+
+          record_id="$(jq -r '[.result[] | select(.type == "CNAME") | .id][0] // empty' "$dns_response")"
+          jq -n \
+            --arg type CNAME \
+            --arg name "$PREVIEW_DOMAIN" \
+            --arg content "${PREVIEW_BRANCH}.${CLOUDFLARE_PAGES_PROJECT}.pages.dev" \
+            '{type: $type, name: $name, content: $content, ttl: 1, proxied: true}' \
+            > /tmp/preview-dns-body.json
+
+          if [ -n "$record_id" ]; then
+            upsert_status="$(
+              curl -sS -o /tmp/preview-dns-upsert.json -w "%{http_code}" \
+                "${api_root}/zones/${zone_id}/dns_records/${record_id}" \
+                --request PATCH \
+                --header "${auth_header}" \
+                --header "Content-Type: application/json" \
+                --data @/tmp/preview-dns-body.json || true
+            )"
+          else
+            upsert_status="$(
+              curl -sS -o /tmp/preview-dns-upsert.json -w "%{http_code}" \
+                "${api_root}/zones/${zone_id}/dns_records" \
+                --request POST \
+                --header "${auth_header}" \
+                --header "Content-Type: application/json" \
+                --data @/tmp/preview-dns-body.json || true
+            )"
+          fi
+
+          if ! [[ "$upsert_status" == 2* ]] || ! jq -e '.success == true' /tmp/preview-dns-upsert.json >/dev/null; then
+            echo "::error title=Cloudflare DNS update failed::Update ${PREVIEW_DOMAIN} returned HTTP ${upsert_status}" >&2
+            jq -r '.errors[]? | "- \(.code): \(.message)"' /tmp/preview-dns-upsert.json >&2 || cat /tmp/preview-dns-upsert.json >&2
+            exit 1
+          fi
+
+          echo "Updated ${PREVIEW_DOMAIN} to ${PREVIEW_BRANCH}.${CLOUDFLARE_PAGES_PROJECT}.pages.dev."
