@@ -84,7 +84,12 @@ main {
 
 .navbar {
   border-bottom: 1px solid var(--brand-line);
-  backdrop-filter: blur(18px);
+}
+
+@media (min-width: 997px) {
+  .navbar {
+    backdrop-filter: blur(18px);
+  }
 }
 
 .navbar__brand {

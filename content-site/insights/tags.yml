@@ -3,6 +3,11 @@ thoughts:
   permalink: /thoughts
   description: Personal thoughts and perspectives
 
+strategy:
+  label: Strategy
+  permalink: /strategy
+  description: Strategic thinking for life, business, and technology
+
 tutorial:
   label: Tutorial
   permalink: /tutorial
