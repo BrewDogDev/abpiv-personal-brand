@@ -1,9 +1,11 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useGlobalData from '@docusaurus/useGlobalData';
 import {FeaturedItems} from '@site/src/data/featured';
 import {
   type BlogGlobalDataMap,
+  type ContentPostsCustomFields,
   formatPostDate,
   getBlogPosts,
   getNewsPublications,
@@ -18,8 +20,8 @@ interface LatestPostsProps {
 }
 
 function LatestPostsSection({instanceId, sectionTitle, basePath, kicker}: LatestPostsProps): React.JSX.Element | null {
-  const globalData = useGlobalData() as unknown as BlogGlobalDataMap;
-  const posts = getBlogPosts(globalData, instanceId).slice(0, 3);
+  const {siteConfig} = useDocusaurusContext();
+  const posts = getBlogPosts(siteConfig.customFields as ContentPostsCustomFields, instanceId).slice(0, 3);
 
   if (!posts.length) {
     return null;

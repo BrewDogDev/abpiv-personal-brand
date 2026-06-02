@@ -22,6 +22,10 @@ export interface NewsPublicationItem {
   sourceLabel: 'News' | 'Publication';
 }
 
+export interface ContentPostsCustomFields {
+  insightPosts?: BlogPost[];
+}
+
 export const fallbackPosts: Record<string, BlogPost[]> = {
   research: [
     {
@@ -65,8 +69,8 @@ export const fallbackPosts: Record<string, BlogPost[]> = {
     {
       metadata: {
         permalink: '/insights/icap-va-entrepreneurial-scientists',
-        title: 'ICAP, Virginia, and Entrepreneurial Scientists',
-        description: 'A reflection on learning from customers and building around problems people actually feel.',
+        title: 'ICAP VA: Where Science Meets Business',
+        description: 'ICAP VA taught me that tech only matters when it solves real problems for real people.',
         date: '2025-07-01',
         tags: [],
       },
@@ -85,11 +89,20 @@ export const fallbackPosts: Record<string, BlogPost[]> = {
   ],
 };
 
-export function getBlogPosts(globalData: BlogGlobalDataMap, instanceId: string): BlogPost[] {
-  const key = `docusaurus-plugin-content-blog-instance-${instanceId}`;
-  const instanceData = globalData[key];
+export function getBlogPosts(
+  contentData: BlogGlobalDataMap | ContentPostsCustomFields,
+  instanceId: string,
+): BlogPost[] {
+  const insightPosts = (contentData as ContentPostsCustomFields).insightPosts;
 
-  return instanceData?.posts?.length ? instanceData.posts : fallbackPosts[instanceId] ?? [];
+  if (instanceId === 'default' && Array.isArray(insightPosts) && insightPosts.length) {
+    return sortBlogPostsByDate(insightPosts);
+  }
+
+  const key = `docusaurus-plugin-content-blog-instance-${instanceId}`;
+  const instanceData = (contentData as BlogGlobalDataMap)[key];
+
+  return sortBlogPostsByDate(instanceData?.posts?.length ? instanceData.posts : fallbackPosts[instanceId] ?? []);
 }
 
 export function sortBlogPostsByDate(posts: BlogPost[]): BlogPost[] {

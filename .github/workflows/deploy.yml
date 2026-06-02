@@ -62,6 +62,10 @@ jobs:
         run: npm run build
         working-directory: ${{ env.CONTENT_DIR }}
 
+      - name: Check homepage Insights alignment
+        run: npm run check:homepage-insights
+        working-directory: ${{ env.CONTENT_DIR }}
+
   deploy-preview:
     name: Deploy preview
     if: >-
