@@ -44,11 +44,11 @@ export function HomeHero(): React.JSX.Element {
           <p className={styles.eyebrow}>Visionary Operator CEO</p>
           <h1 className={styles.name}>Allan B. Pedin IV</h1>
           <p className={styles.positioning}>
-            Expanding individual agency through emerging technologies that help people and systems coordinate.
+            Expanding humanity&apos;s reach to exceed its grasp.
           </p>
           <p className={styles.supporting}>
-            Allan connects published research, infrastructure work, and founder experience to make complex technology
-            easier to use, evaluate, and build on.
+            Technological innovation has rapidly transformed what is within humanity&apos;s grasp. All we need to do is
+            reach.
           </p>
 
           <div className={styles.credibilityChips} aria-label="Credibility signals">
