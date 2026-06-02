@@ -1,11 +1,12 @@
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {FeaturedCard} from '@site/src/components/FeaturedCard';
 import {FeaturedItems} from '@site/src/data/featured';
 import type {FeaturedItem} from '@site/src/data/featured';
-import {links} from '@site/links';
 import Layout from '@theme/Layout';
 import Head from '@docusaurus/Head';
 import styles from './styles.module.css';
+
+const FEATURED_INTAKE_FORM_URL = 'https://forms.allanbpediniv.com/form/featured-intake';
 
 function sortItems(items: FeaturedItem[]): FeaturedItem[] {
   return [...items].sort((a, b) => {
@@ -19,6 +20,11 @@ function sortItems(items: FeaturedItem[]): FeaturedItem[] {
 
 export default function FeaturedPage(): React.JSX.Element {
   const sorted = useMemo(() => sortItems(FeaturedItems), []);
+  const [intakeReceived, setIntakeReceived] = useState(false);
+
+  useEffect(() => {
+    setIntakeReceived(new URLSearchParams(window.location.search).get('intake') === 'received');
+  }, []);
 
   return (
     <Layout
@@ -47,10 +53,15 @@ export default function FeaturedPage(): React.JSX.Element {
               <span>Founder-led growth</span>
               <span>Randomness infrastructure</span>
             </div>
-            <a href={links.email} className={styles.cta}>
+            <a href={FEATURED_INTAKE_FORM_URL} className={styles.cta}>
               Invite Allan
               <span aria-hidden="true">-&gt;</span>
             </a>
+            {intakeReceived ? (
+              <p className={styles.receiptNotice} role="status">
+                Intake received. The invitation is logged for review.
+              </p>
+            ) : null}
           </div>
         </section>
 

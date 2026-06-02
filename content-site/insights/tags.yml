@@ -17,3 +17,8 @@ announcement:
   label: Announcement
   permalink: /announcement
   description: Announcements and updates
+
+poem:
+  label: Poem
+  permalink: /poem
+  description: Poems and creative reflections
