@@ -8,6 +8,11 @@ strategy:
   permalink: /strategy
   description: Strategic thinking for life, business, and technology
 
+philosophy:
+  label: Philosophy
+  permalink: /philosophy
+  description: Notes on truth, meaning, reasoning, and judgment
+
 tutorial:
   label: Tutorial
   permalink: /tutorial
