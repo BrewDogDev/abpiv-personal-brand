@@ -1,0 +1,184 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "ui_kits/site/**",
+              "ui_kits/social/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Schibsted Grotesk|IBM Plex Mono))/i]",
+        "message": "Font not provided by the design system. Available: Schibsted Grotesk, IBM Plex Mono."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--amber",
+      "--amber-bright",
+      "--amber-deep",
+      "--amber-glow",
+      "--bg-0",
+      "--bg-1",
+      "--bg-2",
+      "--bg-3",
+      "--bg-void",
+      "--cyan",
+      "--cyan-bright",
+      "--cyan-deep",
+      "--cyan-glow",
+      "--cyan-ink",
+      "--cyan-line",
+      "--dur",
+      "--dur-fast",
+      "--dur-slow",
+      "--ease-in-out",
+      "--ease-out",
+      "--fg-0",
+      "--fg-1",
+      "--fg-2",
+      "--fg-3",
+      "--font-mono",
+      "--font-sans",
+      "--line",
+      "--line-faint",
+      "--line-strong",
+      "--ok",
+      "--r-lg",
+      "--r-md",
+      "--r-pill",
+      "--r-sm",
+      "--r-xs",
+      "--s-1",
+      "--s-10",
+      "--s-2",
+      "--s-3",
+      "--s-4",
+      "--s-5",
+      "--s-6",
+      "--s-7",
+      "--s-8",
+      "--s-9",
+      "--shadow-amber",
+      "--shadow-cyan",
+      "--shadow-lg",
+      "--shadow-md",
+      "--shadow-sm",
+      "--t-body",
+      "--t-body-lg",
+      "--t-chip",
+      "--t-display",
+      "--t-h1",
+      "--t-h2",
+      "--t-h3",
+      "--t-meta",
+      "--t-small",
+      "--warn"
+    ],
+    "tokenKinds": {
+      "--font-sans": "font",
+      "--font-mono": "font",
+      "--bg-void": "color",
+      "--bg-0": "color",
+      "--bg-1": "color",
+      "--bg-2": "color",
+      "--bg-3": "color",
+      "--line-faint": "color",
+      "--line": "color",
+      "--line-strong": "color",
+      "--fg-0": "color",
+      "--fg-1": "color",
+      "--fg-2": "color",
+      "--fg-3": "color",
+      "--cyan-bright": "color",
+      "--cyan": "color",
+      "--cyan-deep": "color",
+      "--cyan-ink": "color",
+      "--cyan-glow": "color",
+      "--cyan-line": "color",
+      "--amber-bright": "color",
+      "--amber": "color",
+      "--amber-deep": "color",
+      "--amber-glow": "color",
+      "--ok": "color",
+      "--warn": "color",
+      "--r-xs": "spacing",
+      "--r-sm": "spacing",
+      "--r-md": "spacing",
+      "--r-lg": "spacing",
+      "--r-pill": "spacing",
+      "--shadow-sm": "shadow",
+      "--shadow-md": "shadow",
+      "--shadow-lg": "shadow",
+      "--shadow-cyan": "shadow",
+      "--shadow-amber": "shadow",
+      "--s-1": "spacing",
+      "--s-2": "spacing",
+      "--s-3": "spacing",
+      "--s-4": "spacing",
+      "--s-5": "spacing",
+      "--s-6": "spacing",
+      "--s-7": "spacing",
+      "--s-8": "spacing",
+      "--s-9": "spacing",
+      "--s-10": "spacing",
+      "--ease-out": "other",
+      "--ease-in-out": "other",
+      "--dur-fast": "other",
+      "--dur": "other",
+      "--dur-slow": "other",
+      "--t-display": "other",
+      "--t-h1": "other",
+      "--t-h2": "other",
+      "--t-h3": "spacing",
+      "--t-body-lg": "spacing",
+      "--t-body": "spacing",
+      "--t-small": "spacing",
+      "--t-chip": "spacing",
+      "--t-meta": "spacing"
+    },
+    "fontFamilies": [
+      "IBM Plex Mono",
+      "Schibsted Grotesk"
+    ]
+  }
+}

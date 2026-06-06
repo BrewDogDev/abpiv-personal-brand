@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Work Cards" subtitle="Insights / Publications cards + hover" viewport="700x230" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  body{background:var(--bg-1);padding:22px 24px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;transition:all var(--dur) var(--ease-out)}
+  .card:hover{border-color:var(--line-strong);background:var(--bg-3);transform:translateY(-2px)}
+  .idx{font-family:var(--font-mono);font-size:12px;color:var(--cyan);letter-spacing:.1em}
+  .meta{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+  .title{font-family:var(--font-sans);font-weight:700;font-size:19px;letter-spacing:-.02em;color:var(--fg-0);line-height:1.15}
+  .desc{font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--fg-2)}
+  .more{font-family:var(--font-sans);font-weight:600;font-size:14px;color:var(--cyan);margin-top:auto}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="idx">01 — Insights</div>
+      <div class="title">ICAP, Virginia, and Entrepreneurial Scientists</div>
+      <div class="desc">A reflection on learning from customers and building around problems people actually feel.</div>
+      <div class="more">Explore →</div>
+    </div>
+    <div class="card">
+      <div class="meta">Publication · Apr 30, 2026</div>
+      <div class="title">Truly Random Number Generation</div>
+      <div class="desc">Research on truly random number generation for decentralized applications.</div>
+      <div class="more">Read paper →</div>
+    </div>
+  </div>
+</body></html>

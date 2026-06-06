@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Top Navigation" subtitle="Sticky blurred nav + wordmark" viewport="700x75" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  body{padding:0}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--line);background:rgba(7,11,20,.72);backdrop-filter:blur(10px)}
+  .brand{font-family:var(--font-sans);font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--fg-0);display:flex;align-items:center;gap:10px}
+  .links{display:flex;gap:26px;align-items:center}
+  .lk{font-family:var(--font-sans);font-size:15px;color:var(--fg-2);text-decoration:none;transition:color var(--dur-fast)}
+  .lk:hover{color:var(--cyan-bright)}
+  .lk.active{color:var(--fg-0)}
+  .cta{font-family:var(--font-sans);font-weight:600;font-size:14px;color:var(--cyan-ink);background:var(--cyan);padding:9px 16px;border-radius:var(--r-sm);text-decoration:none}
+</style></head>
+<body>
+  <div class="nav">
+    <div class="brand">ABPIV</div>
+    <div class="links">
+      <a class="lk active" href="#">Insights</a>
+      <a class="lk" href="#">News &amp; Publications</a>
+      <a class="lk" href="#">Featured On</a>
+      <a class="cta" href="#">Start here</a>
+    </div>
+  </div>
+</body></html>

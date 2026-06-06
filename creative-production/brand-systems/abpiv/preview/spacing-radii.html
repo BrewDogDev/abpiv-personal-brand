@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- @dsCard group="Spacing" name="Corner Radii" subtitle="4 / 8 / 12 / 18 / pill" viewport="700x150" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  .row{display:flex;gap:18px;align-items:flex-end}
+  .item{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .box{width:84px;height:64px;background:var(--bg-2);border:1px solid var(--line-strong);border-top:2px solid var(--cyan)}
+</style></head>
+<body>
+  <div class="row">
+    <div class="item"><div class="box" style="border-radius:var(--r-xs)"></div><span class="cap">xs · 4</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--r-sm)"></div><span class="cap">sm · 8</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--r-md)"></div><span class="cap">md · 12</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--r-lg)"></div><span class="cap">lg · 18</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--r-pill);width:64px"></div><span class="cap">pill · 999</span></div>
+  </div>
+</body></html>

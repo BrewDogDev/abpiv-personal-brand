@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- @dsCard group="Colors" name="Text & Lines" subtitle="High-contrast light text + hairlines" viewport="700x210" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  .rows { display: flex; flex-direction: column; gap: 14px; }
+  .tr { display: flex; align-items: baseline; gap: 16px; }
+  .tr .sample { font-family: var(--font-sans); font-weight: 600; width: 320px; }
+  .tr .meta { font-family: var(--font-mono); font-size: 11px; color: var(--fg-3); }
+  .chip { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); }
+  .ln { display:flex; align-items:center; gap:10px; }
+</style></head>
+<body>
+  <div class="rows">
+    <div class="tr"><span class="sample" style="color:var(--fg-0); font-size:24px">fg-0 — Primary heading</span><span class="meta">#F3F7FC</span></div>
+    <div class="tr"><span class="sample" style="color:var(--fg-1); font-size:18px">fg-1 — Body copy text</span><span class="meta">#C6D2E2</span></div>
+    <div class="tr"><span class="sample" style="color:var(--fg-2); font-size:15px">fg-2 — Secondary / meta</span><span class="meta">#8593A8</span></div>
+    <div class="tr"><span class="sample" style="color:var(--fg-3); font-size:14px">fg-3 — Faint / disabled</span><span class="meta">#56627A</span></div>
+    <div class="ln"><span class="chip" style="background:var(--line-strong)"></span><span class="lbl" style="text-transform:none">line-strong</span><span class="chip" style="background:var(--line)"></span><span class="lbl" style="text-transform:none">line</span><span class="chip" style="background:var(--line-faint)"></span><span class="lbl" style="text-transform:none">line-faint</span></div>
+  </div>
+</body></html>

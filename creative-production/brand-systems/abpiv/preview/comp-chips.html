@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Proof & Signal Chips" subtitle="Mono chips — cyan, amber, plain" viewport="700x170" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  body{padding:22px 26px}
+  .lbl{margin-bottom:12px;display:block}
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .chip{font-family:var(--font-mono);font-weight:500;font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:6px 12px;border-radius:var(--r-pill);display:inline-flex;align-items:center;gap:7px}
+  .c-cyan{color:var(--cyan-bright);border:1px solid var(--line);background:var(--cyan-ink)}
+  .c-amber{color:var(--amber-bright);border:1px solid var(--amber-glow);background:rgba(244,166,60,.08)}
+  .c-plain{color:var(--fg-2);border:1px solid var(--line)}
+  .dot{width:6px;height:6px;border-radius:50%}
+</style></head>
+<body>
+  <span class="lbl">Proof &amp; signal chips</span>
+  <div class="chips">
+    <span class="chip c-cyan"><span class="dot" style="background:var(--cyan)"></span>Published Research</span>
+    <span class="chip c-cyan">RANDAO</span>
+    <span class="chip c-cyan">Web3 Trust</span>
+  </div>
+  <div class="chips">
+    <span class="chip c-amber"><span class="dot" style="background:var(--amber)"></span>Founder</span>
+    <span class="chip c-plain">AI &amp; Blockchain</span>
+    <span class="chip c-plain">Spatial Computing</span>
+  </div>
+</body></html>

@@ -1,0 +1,15 @@
+/* Shared base for Design System preview cards */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: var(--bg-0); }
+body {
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  padding: 22px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+.row { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.swatch { border-radius: var(--r-sm); border: 1px solid var(--line); }
+.cap { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--fg-2); }
+.val { font-family: var(--font-mono); font-size: 11px; color: var(--fg-3); }
+.lbl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); }
