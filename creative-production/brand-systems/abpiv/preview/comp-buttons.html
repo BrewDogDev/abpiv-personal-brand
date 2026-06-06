@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Buttons" subtitle="Primary / ghost / amber / text + states" viewport="700x150" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  body{padding:24px 26px}
+  .grp{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .btn{font-family:var(--font-sans);font-weight:600;font-size:15px;border-radius:var(--r-sm);padding:11px 20px;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all var(--dur-fast) var(--ease-out)}
+  .btn .arr{transition:transform var(--dur-fast) var(--ease-out)}
+  .primary{background:var(--cyan);color:var(--cyan-ink)}
+  .primary:hover{background:var(--cyan-bright)}
+  .ghost{background:transparent;color:var(--fg-0);border-color:var(--line-strong)}
+  .ghost:hover{border-color:var(--cyan);color:var(--cyan-bright)}
+  .amber{background:transparent;color:var(--amber);border-color:var(--amber)}
+  .amber:hover{background:var(--amber);color:#241803}
+  .text{background:none;border:none;color:var(--cyan);font-family:var(--font-sans);font-weight:600;font-size:15px;cursor:pointer}
+  .lbl{margin-bottom:10px;display:block}
+</style></head>
+<body>
+  <span class="lbl">Buttons</span>
+  <div class="grp">
+    <button class="btn primary">Read insights <span class="arr">→</span></button>
+    <button class="btn ghost">Explore the work</button>
+    <button class="btn amber">Start here</button>
+    <button class="text">View all →</button>
+  </div>
+  <span class="cap">Hover: cyan brightens / border lights · Press: scale 0.98 · no color flash</span>
+</body></html>

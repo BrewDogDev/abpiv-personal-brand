@@ -1,0 +1,112 @@
+{
+  "title": "ABPIV style intake",
+  "summary": "Compact Creative Production style choices for Allan B. Pedin IV / ABPIV.",
+  "context": {
+    "business": "ABPIV - Allan B. Pedin IV personal brand",
+    "audience": "Investors, partners, media, collaborators, talent, and technical audiences",
+    "objective": "Premium founder-thesis creative that builds trust through clarity"
+  },
+  "defaultSelected": [
+    "capital-worthy-founder-thesis",
+    "technical-executive-interface",
+    "deep-navy-canvas",
+    "cyan-systems-accent",
+    "sparse-amber-agency",
+    "schibsted-grotesk",
+    "ibm-plex-mono-metadata",
+    "directional-route-motion",
+    "real-proof-only"
+  ],
+  "groups": [
+    {
+      "id": "taste",
+      "title": "Taste",
+      "options": [
+        {
+          "id": "capital-worthy-founder-thesis",
+          "label": "Capital-worthy founder thesis"
+        },
+        {
+          "id": "technical-executive-interface",
+          "label": "Technical executive interface"
+        },
+        {
+          "id": "quiet-premium",
+          "label": "Quiet premium"
+        }
+      ]
+    },
+    {
+      "id": "palette",
+      "title": "Palette",
+      "options": [
+        {
+          "id": "deep-navy-canvas",
+          "label": "Deep navy canvas"
+        },
+        {
+          "id": "cyan-systems-accent",
+          "label": "Cyan systems accent"
+        },
+        {
+          "id": "sparse-amber-agency",
+          "label": "Sparse amber agency"
+        }
+      ]
+    },
+    {
+      "id": "type",
+      "title": "Typography",
+      "options": [
+        {
+          "id": "schibsted-grotesk",
+          "label": "Schibsted Grotesk"
+        },
+        {
+          "id": "ibm-plex-mono-metadata",
+          "label": "IBM Plex Mono metadata"
+        },
+        {
+          "id": "strong-editorial-hierarchy",
+          "label": "Strong editorial hierarchy"
+        }
+      ]
+    },
+    {
+      "id": "motion",
+      "title": "Motion",
+      "options": [
+        {
+          "id": "directional-route-motion",
+          "label": "Directional route motion"
+        },
+        {
+          "id": "proof-chip-reveals",
+          "label": "Proof chip reveals"
+        },
+        {
+          "id": "single-amber-pulse",
+          "label": "Single amber pulse"
+        }
+      ]
+    },
+    {
+      "id": "guardrails",
+      "title": "Guardrails",
+      "options": [
+        {
+          "id": "real-proof-only",
+          "label": "Real proof only"
+        },
+        {
+          "id": "no-crypto-influencer-energy",
+          "label": "No crypto-influencer energy"
+        },
+        {
+          "id": "no-generic-ai-glow",
+          "label": "No generic AI glow"
+        }
+      ]
+    }
+  ]
+}

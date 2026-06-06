@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "kind": "creative-production-brand-system",
+  "id": "abpiv",
+  "slug": "abpiv",
+  "name": "ABPIV",
+  "fullName": "Allan B. Pedin IV",
+  "repositoryPath": "creative-production/brand-systems/abpiv",
+  "source": {
+    "bundle": "ABPIV Design System-handoff.zip",
+    "generatedAt": "2026-06-06",
+    "sourceOfTruth": [
+      "README.md",
+      "colors_and_type.css",
+      "_ds_manifest.json"
+    ]
+  },
+  "positioning": {
+    "archetype": "Visionary Operator CEO",
+    "coreLine": "Expanding individual agency through emerging technologies that help people and systems coordinate.",
+    "thesis": "Build, explain, earn trust.",
+    "pillars": [
+      {
+        "name": "Insight",
+        "copy": "AI, blockchain, and spatial computing are changing how we interact with the world around us."
+      },
+      {
+        "name": "Vision",
+        "copy": "A new age of technology should expand human capability and make systems easier to navigate."
+      },
+      {
+        "name": "Execution",
+        "copy": "Bringing that future closer through systems people can use, trust, and build on."
+      }
+    ],
+    "audiences": [
+      "Investors",
+      "Partners",
+      "Media",
+      "Collaborators",
+      "Talent",
+      "Technical audiences"
+    ],
+    "verifiedProofSignals": [
+      "Published AI & Blockchain Researcher",
+      "CipherPlay / RANDAO founder",
+      "Web3 Thought Leader"
+    ]
+  },
+  "visualSystem": {
+    "summary": "Capital-worthy founder thesis rendered as a quiet technical executive interface.",
+    "paletteRatio": {
+      "navyAndLightText": "90%",
+      "cyan": "8%",
+      "amber": "2% or less"
+    },
+    "colors": {
+      "bgVoid": "#04070D",
+      "bg0": "#070B14",
+      "bg1": "#0B1220",
+      "bg2": "#101A2C",
+      "bg3": "#16243A",
+      "fg0": "#F3F7FC",
+      "fg1": "#C6D2E2",
+      "fg2": "#8593A8",
+      "cyanBright": "#5FE6F4",
+      "cyan": "#2CC8DC",
+      "cyanDeep": "#1A8C9C",
+      "amberBright": "#FFC062",
+      "amber": "#F4A63C",
+      "amberDeep": "#C57E1E"
+    },
+    "typography": {
+      "sans": "Schibsted Grotesk",
+      "mono": "IBM Plex Mono",
+      "rules": [
+        "Use Schibsted Grotesk for display and body.",
+        "Use IBM Plex Mono only for proof chips, section indices, protocol details, and metadata.",
+        "Use sentence case for headlines and body."
+      ]
+    },
+    "motion": [
+      "Routes draw in.",
+      "Proof chips fade and rise.",
+      "Parts align or resolve.",
+      "One amber emphasis or pulse per frame."
+    ],
+    "avoid": [
+      "Invented traction or metrics",
+      "Crypto-influencer energy",
+      "Generic AI glow",
+      "Particle fields",
+      "Purple gradients",
+      "Emoji",
+      "Exclamation marks"
+    ]
+  },
+  "assets": {
+    "headshot": "assets/headshot.png",
+    "favicon": "assets/favicon.svg",
+    "fonts": [
+      "fonts/schibsted-grotesk-400.woff2",
+      "fonts/schibsted-grotesk-500.woff2",
+      "fonts/schibsted-grotesk-600.woff2",
+      "fonts/schibsted-grotesk-700.woff2",
+      "fonts/schibsted-grotesk-800.woff2",
+      "fonts/ibm-plex-mono-400.woff2",
+      "fonts/ibm-plex-mono-500.woff2",
+      "fonts/ibm-plex-mono-600.woff2"
+    ]
+  },
+  "files": {
+    "skill": "SKILL.md",
+    "promptContract": "prompt-contract.md",
+    "styleIntake": "style-intake.json",
+    "tokensCss": "colors_and_type.css",
+    "designManifest": "_ds_manifest.json",
+    "designBundle": "_ds_bundle.js",
+    "adherenceLint": "_adherence.oxlintrc.json"
+  },
+  "previewCards": [
+    "preview/brand-headshot.html",
+    "preview/brand-mark.html",
+    "preview/brand-systemmap.html",
+    "preview/brand-wordmark.html",
+    "preview/colors-canvas.html",
+    "preview/colors-cyan.html",
+    "preview/colors-amber.html",
+    "preview/colors-text.html",
+    "preview/type-display.html",
+    "preview/type-body.html",
+    "preview/type-mono.html",
+    "preview/comp-buttons.html",
+    "preview/comp-card.html",
+    "preview/comp-chips.html",
+    "preview/comp-nav.html"
+  ],
+  "uiKits": {
+    "site": {
+      "path": "ui_kits/site",
+      "entry": "ui_kits/site/index.html",
+      "description": "Premium personal-site kit with nav, hero, thesis, work rails, subscribe band, and footer."
+    },
+    "social": {
+      "path": "ui_kits/social",
+      "entry": "ui_kits/social/index.html",
+      "description": "4:5 founder-thesis social animation: hook, proof, thesis, wordmark."
+    }
+  },
+  "creativeProduction": {
+    "defaultOutputRoot": "outputs/creative-production/abpiv",
+    "paths": {
+      "explore": {
+        "prompt": "$explore Explore creative paths for the ABPIV personal-brand brief using the ABPIV brand system at creative-production/brand-systems/abpiv."
+      },
+      "moodBoards": {
+        "prompt": "$moodboard-explorer Build image-first ABPIV mood-board territories for a capital-worthy founder thesis."
+      },
+      "scenes": {
+        "prompt": "$scene-explorer Explore realistic ABPIV scenes around founder thesis, research credibility, investor trust, technical coordination, and public thought leadership."
+      },
+      "offers": {
+        "prompt": "$offer-explorer Test ABPIV offer/message directions across personal site, founder thesis deck, social animation, and proof-led content."
+      },
+      "ads": {
+        "prompt": "$ads-explorer Explore ABPIV social and paid-ad directions for investors, partners, media, collaborators, talent, and technical audiences."
+      },
+      "shots": {
+        "prompt": "$shot-explorer Explore camera shots, crops, headshot treatments, wordmark lockups, and system-map details for the ABPIV brand."
+      },
+      "logos": {
+        "prompt": "$logo-explorer Explore typographic ABPIV wordmark and Allan B. Pedin IV lockup variations only."
+      },
+      "assets": {
+        "prompt": "$generative-polish Polish the selected ABPIV asset into a publish-safe output."
+      }
+    }
+  }
+}

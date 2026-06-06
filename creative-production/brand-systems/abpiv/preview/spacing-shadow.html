@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- @dsCard group="Spacing" name="Elevation & Shadow" subtitle="Restrained cool shadows + accent glows" viewport="700x170" --><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="card.css">
+<style>
+  body{background:var(--bg-1)}
+  .row{display:flex;gap:22px;flex-wrap:wrap}
+  .item{display:flex;flex-direction:column;gap:10px;align-items:center}
+  .box{width:120px;height:74px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center}
+  .dot{width:10px;height:10px;border-radius:50%}
+</style></head>
+<body>
+  <div class="row">
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-sm)"></div><span class="cap">shadow-sm</span></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-md)"></div><span class="cap">shadow-md</span></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-lg)"></div><span class="cap">shadow-lg</span></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-cyan);border-color:var(--cyan-glow)"><span class="dot" style="background:var(--cyan)"></span></div><span class="cap">shadow-cyan</span></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-amber);border-color:var(--amber-glow)"><span class="dot" style="background:var(--amber)"></span></div><span class="cap">shadow-amber</span></div>
+  </div>
+</body></html>

@@ -1,0 +1,6 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ABPIV">
+  <rect width="64" height="64" rx="14" fill="#0B1220"></rect>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#1f3350" stroke-width="1.5"></rect>
+  <text x="32" y="33" text-anchor="middle" dominant-baseline="central" font-family="&#39;Schibsted Grotesk&#39;, &#39;Helvetica Neue&#39;, Arial, sans-serif" font-weight="800" font-size="30" letter-spacing="-1.2" fill="#F3F7FC">AP</text>
+  <rect x="22" y="46" width="20" height="3" rx="1.5" fill="#2CC8DC"></rect>
+</svg>
