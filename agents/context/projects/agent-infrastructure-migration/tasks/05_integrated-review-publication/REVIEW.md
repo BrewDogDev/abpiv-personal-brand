@@ -59,3 +59,42 @@ The Project is not ready for closure, archival, push, or pull-request publicatio
 ## Re-Review
 
 Required. Review the amended exact base-to-head range after the Task 04 owner restores the credential-free recovery metadata. Confirm the delta is confined to Task 04-owned canonical documentation and Task/Project evidence, rerun active local-link, JSON, secret/machine-path, whitespace, Project, Workflow, scope, prohibited-domain, and remote-ancestry checks, and append the new evidence and verdict here. Preserve the original finding and verdict.
+
+### 2026-07-24 Amended-Head Re-Review
+
+- Original reviewed implementation head: `d7fe3bd1cf268a3e4f3d0beb2b5178990895254d`
+- Original verdict: `NEEDS_FIXES`
+- Task 04 fix commit: `10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+- Amended whole-Project evidence head: `0c3b598c94a450de9b73380805d5aa4580c834b4`
+- Amended range inspected: `0b669d0482db62878faf15aadead227672615d48..0c3b598c94a450de9b73380805d5aa4580c834b4`, including Task 04 Report/Review Revision 01 and Task 05 Report Revision 01
+
+The Important n8n binding-recovery finding is resolved.
+
+- The supported repo-root binding path is explicit at `agents/access/references/local-bindings.md:8-11` and `agents/mcp-servers/n8n-instance/MCP.md:63-64`.
+- POSIX directory mode `0700`, file mode `0600`, and an equivalent least-privilege ACL for other filesystems are explicit at `agents/access/references/local-bindings.md:13-20` and `agents/mcp-servers/n8n-instance/MCP.md:64-67`.
+- The non-secret Secret Manager handle, Google Cloud project, and owning workflow are recorded at `agents/access/references/local-bindings.md:64-68`; these agree with `.github/workflows/n8n-apply.yml:130-157`.
+- The managed payload is limited to `CF-Access-Client-Id`, `CF-Access-Client-Secret`, and the non-secret `User-Agent` label at `agents/access/references/local-bindings.md:70-79`. Both canonical contracts explicitly keep the n8n bearer token under the separate `N8N_LOBST3RS_MCP_TOKEN` owner and prohibit deriving it from the Cloudflare Access payload.
+- Secret Manager reads, bearer-token retrieval, and local binding creation/replacement are separately approval-gated at `agents/access/references/local-bindings.md:81-105` and `agents/mcp-servers/n8n-instance/MCP.md:69-73`. Repository-edit, read-only-cloud, and already-configured-client authority are explicitly insufficient.
+
+Fresh amended-head evidence:
+
+- An independent 21-assertion recovery matrix passed 21/21 across the two canonical documents and owning workflow, including exact path, POSIX modes, equivalent ACL, secret handle, project, workflow ownership, payload fields, absent `Authorization`, separate bearer provenance, and secret-read/local-write gates.
+- The implementation revision `c4627099aebc535925d57bdd8df3ca3bc4ef7194..10f455dfb65ac94f1a2da156b4e9712242bee1b8` changes exactly the two Task 04-owned canonical documents. The following checkpoint changes only seven Task/Project control or evidence records. Both ancestry checks pass.
+- The two revised files contain five local links and all five resolve. A broader current-tree check covered 95 active tracked Markdown files and resolved 220/220 local links.
+- Both credential-free JSON examples parse through `ConvertFrom-Json`; two blocks, zero errors.
+- Targeted scans of the revised files found zero private-key blocks, GitHub/AWS/Google token shapes, JWT shapes, non-placeholder bearer or Cloudflare Access values, absolute user paths, installed-cache paths, or secret JSON values. A full active-range credential-shape scan covered 83 files with zero matches.
+- `git check-ignore -v --no-index .codex-local/n8n-mcp.json` still resolves to `.gitignore:6`; the ignored file was not read.
+- Project validator tests pass 22/22. Live Project validation passes with one active Project, five Task directories, and zero warnings. Workflow validation passes with zero routes, Workflows, stages, or warnings.
+- `git diff --check` passes for both the two-file implementation revision and the full amended range.
+- The amended range contains 19 commits and 95 paths: 81 additions, two modifications, and 12 `R100` moves. No path falls outside the authorized root, agent-infrastructure, legacy-history, or Project-evidence surfaces.
+- Skills, legacy blobs, root entrypoints, service profiles, adapters, and other neighboring implementation surfaces are unchanged from the previously reviewed head. `content-site/`, `infra/`, `creative-production/`, and `.github/` remain unchanged from the Project base.
+- Existing `origin/preview` still resolves to `0b669d0482db62878faf15aadead227672615d48` and is an ancestor of the amended head. A fresh fetch remains required immediately before publication.
+- The inherited Task 03 report-heading Minor and deterministic-only harness-selection limitation remain non-blocking and are correctly carried in Project evidence. No new Critical, Important, or Minor finding was introduced.
+
+Amended specification compliance: compliant. The missing useful recovery guidance is now migrated into its canonical Access and MCP owners without exposing a secret, reading local configuration, changing runtime state, or broadening authority.
+
+Amended task quality: approved. The fix is narrow, portable across POSIX and ACL-based filesystems, separates the two credential sources, and preserves least-privilege approval semantics.
+
+Amended verdict: **READY**
+
+The amended Project is ready for coordinator-controlled handoff, closure, archival, final verification, non-force publication to `preview`, and creation of the authorized non-draft `preview`-to-`main` pull request. This verdict does not authorize merge, production deployment, credential access, or any external runtime mutation.

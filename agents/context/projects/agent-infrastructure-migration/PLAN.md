@@ -27,7 +27,7 @@
 | 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | complete | legacy-implementer | READY |
 | 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | complete | skills-implementer | READY |
 | 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | complete | access-implementer | READY amended head |
-| 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | review | final-integrator | project-reviewer re-review |
+| 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | complete | final-integrator | READY amended head |
 
 ## Task Outcomes And Interfaces
 
@@ -86,6 +86,8 @@
 - Required capabilities: `agent-organization`, `agent-project-organization`, `verification-before-completion`, `handoff`, `github:yeet`
 - Acceptance: no blocking review findings; all Task records complete; Project validator and specialist checks pass from repository paths; Git diff contains only intended files; PR is non-draft, targets `main`, and uses `preview` as head
 - Approval or stop gate: do not merge, deploy production, force push, or publish if `origin/preview` has diverged
+- Completion evidence: the original whole-Project review found one Important preservation gap in Task 04; fix commit `10f455dfb65ac94f1a2da156b4e9712242bee1b8` and evidence head `0c3b598` restored and independently re-reviewed it; amended whole-Project verdict `READY` confirms 21/21 recovery assertions, 220/220 active links, 2/2 JSON examples, 22 validator tests, live Project/Workflow validation with zero warnings, zero safety findings, exact authorized 19-commit/95-path scope, unchanged prohibited runtime domains, and ancestral `origin/preview`
+- Deviations and residual findings: Task 03 retains one non-blocking report-heading Minor and a disclosed deterministic-only harness-selection limitation; live credentials and external runtimes were intentionally not probed; no blocking finding remains
 
 ## Integration And Reuse Obligations
 
