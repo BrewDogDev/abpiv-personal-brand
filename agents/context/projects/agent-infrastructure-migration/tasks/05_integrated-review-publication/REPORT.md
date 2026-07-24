@@ -80,3 +80,13 @@ Runtime builds and infrastructure tests are not required because the intended ra
 - Promoted and validated: canonical context/routing/glossary, Git policy, Project/Task governance, organization skill family, Project and Workflow validators, access profiles, n8n MCP contract, Codex/Kilo adapters, and exact legacy-history index.
 - Deferred candidates: a repository tool for legacy-migration verification; a route/profile/link/example/secret checker; and learning guidance for absolute patch targets in isolated worktrees. These remain candidates because creating them would expand the approved migration.
 - Final continuity owner: the dated Project handoff and immutable archived Project after independent review.
+
+## Revision 01: Restore The n8n MCP Recovery Contract
+
+- Whole-Project review finding: the first review at committed head `d7fe3bd1cf268a3e4f3d0beb2b5178990895254d` returned `NEEDS_FIXES` because the canonical Task 04 docs did not retain the supported ignored client-config path, restrictive local permission rule, or current Cloudflare Access header recovery handle.
+- Resolution: Task 04 commit `10f455dfb65ac94f1a2da156b4e9712242bee1b8` changes exactly `agents/access/references/local-bindings.md` and `agents/mcp-servers/n8n-instance/MCP.md`.
+- Restored contract: repo-root `.codex-local/n8n-mcp.json`; `.codex-local` mode `0700` and config mode `0600` where POSIX modes apply, with equivalent least-privilege ACLs elsewhere; Secret Manager handle `abpiv-n8n-mcp-cloudflare-access`; owning `.github/workflows/n8n-apply.yml`; separate n8n bearer-token provenance; and explicit approval gates for secret read and local credential-file write.
+- Safety boundary: the fix contains handles, header names, and placeholders only. No ignored file, secret payload, local credential, or external system was read or changed.
+- Implementer checks: 16/16 recovery/workflow assertions, 5/5 local links, 2/2 JSON examples, ignore-without-read, zero safety findings, 22 Project-validator tests, live Project/Workflow validators with zero warnings, exact two-file scope, and clean whitespace.
+- Independent amended-head review: Task 04's original reviewer reproduced 20/20 recovery assertions, exact two-file scope, 189/189 active links, 2/2 JSON examples, ignore-without-read, zero safety findings, all validators, and returned `READY`.
+- Remaining gate: the original whole-Project reviewer must inspect the amended head and append a new Task 05 verdict before closure or publication.

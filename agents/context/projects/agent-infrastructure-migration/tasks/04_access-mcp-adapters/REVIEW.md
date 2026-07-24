@@ -144,3 +144,84 @@ skill-discovery checks so the one declared parallel adapter target resolves.
 Not required for head `cbdb47ff741a619e9c7188c4beadea153119de63`.
 If Task 04 implementation changes, review the amended exact range and append
 fresh evidence and a new verdict here.
+
+### Revision 01: n8n MCP Recovery Contract
+
+- Revision base: `c4627099aebc535925d57bdd8df3ca3bc4ef7194`
+- Amended head: `10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+- Revision range:
+  `c4627099aebc535925d57bdd8df3ca3bc4ef7194..10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+- Artifacts inspected: the exact two-file revision diff, the Task 04 report
+  Revision 01 append, the Task 05 Important finding, the superseded root
+  recovery contract, and the tracked owner at
+  `.github/workflows/n8n-apply.yml:126-157`
+- Authority: read-only except this review append; `.codex-local/`, Secret
+  Manager, the n8n bearer-token source, MCP, cloud accounts, and external state
+  were not read or changed
+
+The Task 05 Important finding is resolved.
+
+- The supported ignored repo-root client path is now explicit at
+  `agents/access/references/local-bindings.md:9` and
+  `agents/mcp-servers/n8n-instance/MCP.md:64`.
+- POSIX directory mode `0700`, file mode `0600`, and the equivalent
+  least-privilege ACL rule are explicit at
+  `agents/access/references/local-bindings.md:15-20` and
+  `agents/mcp-servers/n8n-instance/MCP.md:64-67`.
+- The non-secret Secret Manager handle, Google Cloud project, and owning
+  workflow are recorded at
+  `agents/access/references/local-bindings.md:64-68`. They agree with the
+  tracked workflow's secret handle and payload construction at
+  `.github/workflows/n8n-apply.yml:130-157`.
+- The workflow-managed payload is correctly limited to
+  `CF-Access-Client-Id`, `CF-Access-Client-Secret`, and the non-secret
+  `User-Agent` label at
+  `agents/access/references/local-bindings.md:70-74`. The tracked workflow
+  contains those three fields and no `Authorization` field.
+- The separate n8n bearer-token provenance is explicit at
+  `agents/access/references/local-bindings.md:76-79` and
+  `agents/mcp-servers/n8n-instance/MCP.md:45-56`; neither contract implies that
+  the Cloudflare Access payload can supply or repair the bearer.
+- Secret Manager reads, bearer retrieval, and local binding creation or
+  replacement are separately approval-gated at
+  `agents/access/references/local-bindings.md:81-105` and
+  `agents/mcp-servers/n8n-instance/MCP.md:69-73`. Repository-edit,
+  read-only-cloud, and already-configured-client authority are explicitly
+  insufficient.
+
+Fresh verification:
+
+- An independent recovery matrix passed 20/20 assertions covering both
+  canonical documents and the tracked owning workflow: path, POSIX modes,
+  equivalent ACL, secret handle, project, workflow owner, exact managed payload,
+  absent `Authorization`, separate bearer provenance, and distinct secret-read
+  and local-write gates.
+- The exact revision range changes only
+  `agents/access/references/local-bindings.md` and
+  `agents/mcp-servers/n8n-instance/MCP.md`; 2 expected paths, 0 scope errors.
+  The base is an ancestor of the amended head.
+- `git diff --check
+  c4627099aebc535925d57bdd8df3ca3bc4ef7194..10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+  exited `0`.
+- The two revised files contain 5 local links; 5 resolve. A broader check over
+  94 active tracked Markdown files inspected 189 local links; 189 resolve.
+- Both fenced JSON examples parsed through `ConvertFrom-Json`; 2 blocks,
+  0 failures.
+- `git check-ignore -v --no-index .codex-local/n8n-mcp.json` again resolved to
+  `.gitignore:6:.codex-local/` without reading the ignored file.
+- Targeted scans of the two revised files found 0 private-key blocks,
+  machine-user or installed-cache paths, GitHub/AWS/Google token shapes,
+  Google-key JSON fields, JWT shapes, non-placeholder bearer values,
+  non-placeholder Cloudflare Access header values, or secret JSON values.
+- Project validator tests passed 22/22. Live Project validation passed with
+  1 active Project, 0 archived Projects, 5 Task directories, and 0 warnings.
+  Workflow validation passed with 0 routes, Workflows, stages, or warnings.
+- The revision changes no `content-site/`, `infra/`, `creative-production/`, or
+  `.github/` path. No runtime, credential, permission, deployment, or external
+  access check was needed or authorized.
+
+Amended verdict: **READY**
+
+Task 04 is ready at `10f455dfb65ac94f1a2da156b4e9712242bee1b8`.
+The original Task 05 recovery-metadata blocker no longer applies to this Task
+head.

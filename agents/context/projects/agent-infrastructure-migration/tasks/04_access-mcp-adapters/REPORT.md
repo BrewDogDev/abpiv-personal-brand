@@ -167,3 +167,82 @@ There are no other known concerns or missing inputs.
 This Task-local report is the implementer return contract. No separate Project
 handoff or Project routing update was made because the coordinator owns Project
 continuity and control-state transitions.
+
+## Revision 01: Restore n8n MCP Recovery Metadata
+
+### Status
+
+DONE
+
+### Review Finding Addressed
+
+Task 05 integrated review found that the migrated canonical access/MCP contracts
+did not preserve enough credential-free metadata for a future authorized
+operator to reconstruct the existing n8n MCP client binding. The revision
+restores that narrow contract without reading `.codex-local/`, retrieving a
+secret, probing an external service, or changing runtime state.
+
+### Amended Change
+
+- Revision base:
+  `c4627099aebc535925d57bdd8df3ca3bc4ef7194`
+- Amended Task head:
+  `10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+- Revision commit:
+  `10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+  (`Restore n8n MCP recovery contract`)
+- Revision range:
+  `c4627099aebc535925d57bdd8df3ca3bc4ef7194..10f455dfb65ac94f1a2da156b4e9712242bee1b8`
+- Exact committed paths:
+  - `agents/access/references/local-bindings.md`
+  - `agents/mcp-servers/n8n-instance/MCP.md`
+
+The access contract now identifies `.codex-local/n8n-mcp.json` as the supported
+ignored repo-root Codex binding, requires `0700` directory and `0600` config
+permissions where POSIX modes apply, and requires an equivalent least-privilege
+ACL elsewhere. It names non-secret Secret Manager handle
+`abpiv-n8n-mcp-cloudflare-access`, Google Cloud project
+`abpiv-personal-brand`, and owning
+`.github/workflows/n8n-apply.yml`.
+
+The access and MCP contracts explicitly state that the workflow-managed payload
+contains only `CF-Access-Client-Id`, `CF-Access-Client-Secret`, and the non-secret
+`User-Agent` label. It does not contain `Authorization` or the separate n8n MCP
+bearer token. The bearer remains governed by the separately authorized
+`N8N_LOBST3RS_MCP_TOKEN` owner or binding.
+
+The recovery procedure now gates Secret Manager reads, bearer-token retrieval,
+and creation/replacement of the local binding as distinct secret-bearing actions.
+Repository-edit authority, read-only cloud authority, or permission to use an
+already configured client does not grant those actions.
+
+### Revision Verification
+
+| Command or observation | Result | Evidence |
+| --- | --- | --- |
+| PowerShell recovery-contract matrix against the two canonical docs and `.github/workflows/n8n-apply.yml` | pass | 16/16 assertions passed for the supported path, POSIX modes, equivalent ACL, secret handle, workflow ownership, payload fields, separate bearer source, and authority gates. The workflow contains both Cloudflare Access header fields and `User-Agent`, and contains no `Authorization` field. |
+| PowerShell local-link verifier over the two revised Markdown files | pass | Five local links inspected; five resolved; zero missing. |
+| PowerShell fenced-JSON extraction with `ConvertFrom-Json` | pass | Two credential-free JSON examples parsed; zero failures. |
+| `git check-ignore -v --no-index .codex-local/n8n-mcp.json` | pass | `.gitignore:6:.codex-local/` owns the ignore result; the ignored file was not read. |
+| Targeted safety scan over the two revised files | pass | Zero absolute current-user or installed-cache paths, private-key blocks, token-shaped values, non-placeholder private-header values, or secret JSON values. |
+| `python -B agents/skills/agent-organization/agent-project-organization/scripts/test_validate_projects.py` | pass | 22 tests passed. |
+| `python -B agents/skills/agent-organization/agent-project-organization/scripts/validate_projects.py .` | pass | One active Project, zero archived Projects, five Task directories, zero warnings. |
+| `python -B agents/skills/agent-organization/agent-workflow-organization/scripts/validate_workflows.py .` | pass | Zero routes, Workflows, stages, or warnings. |
+| `git diff --check c4627099aebc535925d57bdd8df3ca3bc4ef7194..10f455dfb65ac94f1a2da156b4e9712242bee1b8` | pass | Exit 0; no whitespace errors. |
+| Exact committed-scope comparison | pass | Two expected implementation paths, two changed paths, scope delta zero. |
+
+### Re-Review Package
+
+- Review the original Task 04 evidence and `READY` verdict together with revision
+  range
+  `c4627099aebc535925d57bdd8df3ca3bc4ef7194..10f455dfb65ac94f1a2da156b4e9712242bee1b8`.
+- Confirm the restored recovery metadata agrees with
+  `.github/workflows/n8n-apply.yml` and that no secret value or local config was
+  added.
+- Append re-review evidence and a fresh verdict to the existing Task 04 and/or
+  Task 05 review record as the coordinator directs.
+
+### Remaining Concerns
+
+None known. This report append is intentionally uncommitted for independent
+re-review; Project control state remains coordinator-owned.
