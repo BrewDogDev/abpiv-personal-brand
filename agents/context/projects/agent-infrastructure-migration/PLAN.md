@@ -26,8 +26,8 @@
 | 01 | Canonical context, root entrypoint, repository map, Git policy, learning surfaces, and scaffold registries are complete. | None | complete | context-implementer | READY |
 | 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | complete | legacy-implementer | READY |
 | 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | complete | skills-implementer | READY |
-| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | complete | access-implementer | READY |
-| 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | executing | final-integrator | pending |
+| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | revisions | access-implementer | Task 05 Important |
+| 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | revisions | final-integrator | NEEDS_FIXES |
 
 ## Task Outcomes And Interfaces
 
@@ -75,6 +75,7 @@
 - Approval or stop gate: no credential reads, permission expansion, remote MCP mutation, or workflow deployment is authorized
 - Completion evidence: isolated implementation commit `cbdb47ff741a619e9c7188c4beadea153119de63`, integrated as `4d5d6a2`; independent review `READY` with no findings; exact 21-file scope, 3/3 profile contracts, 13/13 MCP sections, 2/2 adapters, 2/2 JSON examples, ignored-local verification without reading, and zero safety matches
 - Deviations and residual findings: the isolated review deferred one declared Codex-adapter link to Task 03; combined integration now supplies `agents/skills/agent-organization/`; live credentials, MCP runtime, and external accounts were intentionally not probed
+- Whole-Project review amendment: Task 05 found that the active canonical docs omitted the supported ignored n8n client-config path, restrictive local permissions, and the Secret Manager/workflow recovery handle preserved in the prior root contract; route this credential-free metadata back through Task 04 and require amended-head review
 
 ### Task 05: Integrated Review, Closure, And Publication
 
