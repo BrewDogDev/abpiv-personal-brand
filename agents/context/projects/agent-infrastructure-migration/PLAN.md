@@ -24,9 +24,9 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Canonical context, root entrypoint, repository map, Git policy, learning surfaces, and scaffold registries are complete. | None | complete | context-implementer | READY |
-| 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | planned | unassigned | pending |
-| 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | planned | unassigned | pending |
-| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | planned | unassigned | pending |
+| 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | review | legacy-implementer | legacy-reviewer |
+| 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | ready | unassigned | pending |
+| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | ready | unassigned | pending |
 | 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | planned | unassigned | pending |
 
 ## Task Outcomes And Interfaces
@@ -90,6 +90,7 @@
 - Record completed Task commit ranges, review verdicts, deviations, and unresolved Minor findings in the ledger or corresponding Task section.
 - Add dated amendments to `PROJECT.md` and revise this graph before dispatch when live evidence changes scope, architecture, domain boundaries, acceptance, or dependencies.
 - Tasks 02, 03, and 04 may run in parallel only after Task 01 is complete because they own disjoint files and create no external side effects.
+- Parallel execution decision: at the user's request, Tasks 03 and 04 use separate sibling Git worktrees and branches from one coordinator checkpoint; Task 03 owns only `agents/skills/`, Task 04 owns access/MCP/adapters plus two routing files, and Task 02 review writes only its `REVIEW.md`.
 - Task 01 review amendment: the implementation commit's five Project routing/archive links require the coordinator-owned Project scaffold to be checkpointed in the amended review head; the same reviewer must verify links against that commit tree before completion.
 
 ## Project Closure
