@@ -47,8 +47,20 @@ Validated as a candidate, not yet as a promoted tool. A repository-owned validat
 
 ## Verdict
 
-NEEDS_FIXES
+READY
 
 ## Re-Review
 
-Not performed. No amended head containing a reproducible fix and fresh commit-tree link evidence has been supplied.
+### 2026-07-24 Amended-Head Review
+
+- Amended head: `58fe84465477d65dc165ec67e94c6baba458ed55`
+- Original implementation head: `00b3ad439f21da0b1805059f6a4d89d58e797b7f`
+- Initial verdict: `NEEDS_FIXES`
+- Finding disposition: Resolved. The coordinator checkpoint adds `agents/context/projects/ROUTING.md` and `agents/context/projects/archive/README.md` as committed blobs, so all five targets named in the Important finding now exist at the amended head. The original finding and initial compliance and quality decisions above remain the record of the first review.
+- Scope distinction: `git merge-base 00b3ad439f21da0b1805059f6a4d89d58e797b7f 58fe84465477d65dc165ec67e94c6baba458ed55` returns the original implementation head. `git diff --quiet 00b3ad439f21da0b1805059f6a4d89d58e797b7f..58fe84465477d65dc165ec67e94c6baba458ed55 -- <18 Task-owned Markdown paths>` passes, proving those implementation files are unchanged. The coordinator commit adds nine records, all under `agents/context/projects/`; it does not alter an implementation, root, canonical-context, reference, registry, legacy, or external-system path.
+- Fresh link evidence: An independent Git-object verifier read the same 18 Task-owned Markdown files from `58fe84465477d65dc165ec67e94c6baba458ed55`, checked every local target with `git cat-file -e`, and found 103 links with 0 failures. Extending the same check to all 27 Markdown files changed from the Task base through the amended head found 104 links with 0 failures.
+- Fresh broader evidence: `git diff --check 0b669d0482db62878faf15aadead227672615d48..58fe84465477d65dc165ec67e94c6baba458ed55` passes. A committed-text scan over all 27 amended-head files found 0 credential-shaped, private-key, bearer-token-value, Windows-user-path, or `.codex` plugin-cache matches.
+- Project-state evidence: The bundled `validate_projects.py .` check passes against the live coordinator control state with 1 active Project, 0 archived Projects, 1 Task directory, and 0 warnings. The pre-existing coordinator edits that moved Task 01 from `revisions` to `review` and updated active routing were inspected and left untouched.
+- Specification compliance: Compliant at the amended head. The sole blocking acceptance failure from the initial review is resolved without changing the Task implementation.
+- Task quality: Approved at the amended head. The fix preserves ownership boundaries and makes the acceptance evidence reproducible from named commits.
+- Re-review verdict: `READY`
