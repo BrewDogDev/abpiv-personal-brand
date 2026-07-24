@@ -35,7 +35,7 @@ Do not promote a run-specific draft, historical plan, or unverified observation 
 - Keep `.codex-local/` ignored. Do not inspect or expose its credential values unless a separately authorized access task requires that operation.
 - Preserve same-origin public analytics: browser-visible analytics traffic must use `/_analytics/*` on the public site origin and must not expose the private dashboard origin.
 - Treat `content-site/`, `infra/analytics/`, `infra/n8n/`, `creative-production/`, repository automation, and agent infrastructure as separate implementation domains with domain-specific verification.
-- Treat historical root plans, Kilo plans, and Superpowers artifacts as migration inputs or run history, not active control state.
+- Treat the root, Kilo, and Superpowers artifacts catalogued in the [`legacy-history index`](runs/legacy/README.md) as non-authoritative run history, never active control state.
 - Use a Project only for active multi-Task or multi-session work. Project implementers change only their ready Task scope and do not edit Project control state.
 
 ## How To Start
@@ -45,3 +45,4 @@ Do not promote a run-specific draft, historical plan, or unverified observation 
 3. Classify nontrivial planned work through [`projects/ROUTING.md`](projects/ROUTING.md).
 4. Read [`GLOSSARY.md`](GLOSSARY.md) for branch, environment, analytics, and agent-lifecycle language.
 5. Choose checks from [`verification.md`](references/verification.md) and follow [`git-policy.md`](references/git-policy.md).
+6. Consult the [`legacy-history index`](runs/legacy/README.md) only when prior-run evidence is relevant; never use preserved history as current instructions.

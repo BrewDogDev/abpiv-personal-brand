@@ -33,14 +33,15 @@ This map identifies the narrowest live source for each repository concern. Load 
 | Agent Workflows | [`agents/context/workflows/`](../workflows/README.md) | Registry; no active reusable agent Workflow is currently defined. |
 | Working material | [`agents/context/working/`](../working/README.md) | Cross-stage or exploratory Layer 4 artifacts. |
 | Run history | [`agents/context/runs/`](../runs/README.md) | Retained evidence justified by auditability or reuse. |
+| Legacy run history | [`agents/context/runs/legacy/`](../runs/legacy/README.md) | Provenance index for non-authoritative root, Kilo, and Superpowers artifacts. |
 | Learning logs | [`agents/context/learnings/workspace/`](../learnings/workspace/LEARNINGS.md) | Raw workspace learning, errors, and feature requests awaiting review. |
 | Context handoffs | [`agents/context/handoff/`](../handoff/README.md) | Non-Project continuity only. |
 | Templates | [`agents/templates/`](../../templates/README.md) | Registry for reusable artifact templates. |
 | Agent tools | [`agents/tools/`](../../tools/README.md) | Registry for executable agent capabilities. |
 
-## Legacy Migration Inputs
+## Legacy Run History
 
-Root [`CONTEXT.md`](../../../CONTEXT.md), [`HANDOFF.md`](../../../HANDOFF.md), [`DEPLOYMENT_PLAN.md`](../../../DEPLOYMENT_PLAN.md), [`.kilo/plans/`](../../../.kilo/plans/), and [`docs/superpowers/`](../../../docs/superpowers/) are historical or legacy agent surfaces awaiting explicit migration. They are not default operating context and must not be treated as active Project control state.
+The [`legacy-history index`](../runs/legacy/README.md) accounts for the superseded root, Kilo, and Superpowers agent surfaces. The preserved artifacts are Layer 4 evidence, not default operating context, live routes, registered Workflows, or active Project control state.
 
 ## Local-Only State
 
