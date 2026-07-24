@@ -25,9 +25,9 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | Canonical context, root entrypoint, repository map, Git policy, learning surfaces, and scaffold registries are complete. | None | complete | context-implementer | READY |
 | 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | complete | legacy-implementer | READY |
-| 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | review | skills-implementer | skills-reviewer |
-| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | review | access-implementer | access-reviewer |
-| 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | planned | unassigned | pending |
+| 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | complete | skills-implementer | READY |
+| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | complete | access-implementer | READY |
+| 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | executing | final-integrator | pending |
 
 ## Task Outcomes And Interfaces
 
@@ -62,6 +62,8 @@
 - Required capabilities: `agent-skill-organization`, `testing-agent-skills`
 - Acceptance: every `SKILL.md` is recursively discoverable; relative links resolve or external dependencies are explicit; validator unit tests and live workspace validation pass
 - Approval or stop gate: stop rather than persist machine-specific cache paths or silently alter procedural semantics
+- Completion evidence: isolated implementation commit `556a1181eebe10479a5eb124961fde647f03ff30`, integrated as `a2960a0`; independent review `READY`; 23/23 source inventory, 22 exact normalized files plus one documented license-link portability correction, 14 unique recursively discovered skills, 9/9 local links, 22 validator tests, live Project and empty-Workflow validation with zero warnings, and clean scope/safety checks
+- Deviations and residual findings: one non-blocking Minor records nonstandard report section headings despite complete evidence; deterministic scenarios verify rule presence and routing behavior but do not sample selection reliability across every harness
 
 ### Task 04: Split Access, MCP, And Adapter Contracts
 
@@ -71,6 +73,8 @@
 - Required capabilities: `agent-access-organization`, `agent-mcp-organization`, `agent-adapter-organization`
 - Acceptance: access selection, server runtime, harness mapping, and secret boundaries are unambiguous; no secret values or private config content enter tracked files; routing links resolve
 - Approval or stop gate: no credential reads, permission expansion, remote MCP mutation, or workflow deployment is authorized
+- Completion evidence: isolated implementation commit `cbdb47ff741a619e9c7188c4beadea153119de63`, integrated as `4d5d6a2`; independent review `READY` with no findings; exact 21-file scope, 3/3 profile contracts, 13/13 MCP sections, 2/2 adapters, 2/2 JSON examples, ignored-local verification without reading, and zero safety matches
+- Deviations and residual findings: the isolated review deferred one declared Codex-adapter link to Task 03; combined integration now supplies `agents/skills/agent-organization/`; live credentials, MCP runtime, and external accounts were intentionally not probed
 
 ### Task 05: Integrated Review, Closure, And Publication
 
