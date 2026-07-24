@@ -42,25 +42,42 @@ No MCP server is installed or launched locally by this repository.
 
 The selected profile names all bindings. A compatible client sends:
 
-- `Authorization: Bearer <bound value>` from `N8N_LOBST3RS_MCP_TOKEN`;
-- `CF-Access-Client-Id: <bound value>` from `CF_ACCESS_CLIENT_ID`;
-- `CF-Access-Client-Secret: <bound value>` from
-  `CF_ACCESS_CLIENT_SECRET`; and
-- `User-Agent: Codex-n8n-MCP/1.0`.
+- `Authorization: Bearer <bound value>` from the separately managed n8n binding
+  `N8N_LOBST3RS_MCP_TOKEN`;
+- `CF-Access-Client-Id: <bound value>` and
+  `CF-Access-Client-Secret: <bound value>` from Google Cloud Secret Manager
+  handle `abpiv-n8n-mcp-cloudflare-access`; and
+- `User-Agent: Codex-n8n-MCP/1.0`, also recorded in that managed payload as a
+  non-secret client label.
 
 Header names and the user-agent label are non-secret. Bearer and Cloudflare
 Access header values are secret and remain in ignored local config or a
-platform-native secret store. Never log complete request headers.
+platform-native secret store. The
+[`local-binding recovery contract`](../../access/references/local-bindings.md)
+identifies the owning workflow and required authority. The workflow-owned secret
+does not contain the n8n bearer token. Never log complete request headers or
+substitute one credential source for the other.
 
 ## Install And Run
 
-There is no local install. Configure a compatible client with the remote endpoint
-and runtime bindings, initialize MCP, then request `tools/list`.
+There is no local server install. The supported repo-root Codex client binding is
+`.codex-local/n8n-mcp.json`. Protect `.codex-local/` with mode `0700` and the
+config with mode `0600` on POSIX-compatible filesystems; elsewhere, use an
+equivalent least-privilege ACL restricted to the approved client account and
+required trusted system principals.
+
+Creating or replacing that binding, reading the Secret Manager payload, or
+obtaining the n8n bearer token requires explicit authority for the exact
+secret-bearing action. Repository work and read-only external inspection do not
+grant that authority. Once an authorized binding exists, initialize MCP and
+request `tools/list`.
 
 ## Client Configuration
 
-This credential-free example shows the required shape. Replace placeholders only
-inside ignored local or platform-managed configuration:
+This credential-free example shows the required shape for
+`.codex-local/n8n-mcp.json`. Replace placeholders only inside ignored local or
+platform-managed configuration and only through the
+[`recovery contract`](../../access/references/local-bindings.md):
 
 ```json
 {
@@ -135,6 +152,9 @@ are denied.
   response unexpectedly contains secret material.
 - Keep the public forms hostname separate from the Access-protected editor and
   MCP host.
+- Keep the workflow-managed Cloudflare Access headers separate from the n8n
+  bearer token. Retrieval or local binding repair is a secret-bearing operation,
+  not a routine connectivity check.
 
 ## Verification And Troubleshooting
 
@@ -150,9 +170,12 @@ Before work, report:
 Troubleshooting:
 
 - Cloudflare login HTML instead of MCP: gateway service-token bindings are absent
-  or rejected. Stop; do not substitute an interactive email challenge.
+  or rejected. Under separately approved recovery authority, use Secret Manager
+  handle `abpiv-n8n-mcp-cloudflare-access` as described by the local-binding
+  contract; otherwise stop. Do not substitute an interactive email challenge.
 - HTTP 401: verify the bearer binding name and current n8n MCP access without
-  printing the token.
+  printing the token. The Cloudflare Access Secret Manager payload cannot repair
+  a missing n8n bearer token.
 - HTTP 403: verify the Cloudflare Access binding and policy through an approved
   read-only path.
 - Unexpected content type or timeout: inspect negotiated transport, bounded
