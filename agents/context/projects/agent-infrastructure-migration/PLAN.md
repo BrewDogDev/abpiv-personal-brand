@@ -24,7 +24,7 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Canonical context, root entrypoint, repository map, Git policy, learning surfaces, and scaffold registries are complete. | None | complete | context-implementer | READY |
-| 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | review | legacy-implementer | legacy-reviewer |
+| 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | complete | legacy-implementer | READY |
 | 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | executing | skills-implementer | pending |
 | 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | executing | access-implementer | pending |
 | 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | planned | unassigned | pending |
@@ -51,6 +51,8 @@
 - Required capabilities: `agent-context-organization`, `agent-adapter-organization`
 - Acceptance: all tracked legacy source content is accounted for by exact moves or documented continued ownership; searches find no live routing to removed paths; historical artifacts are clearly non-authoritative
 - Approval or stop gate: the original migration request authorizes moves and removal of superseded paths; stop if an artifact is still active
+- Completion evidence: implementation commit `6439d1e7a138022d1a8b7712f52588b5b04097d3`; independent review `READY` with no findings; 12/12 exact blob and SHA-256 moves, 12/12 provenance records, exact 29-path implementation scope, 7/7 glossary blocks, 100/100 committed links, zero stale active routes or safety matches, and unchanged excluded implementation/adapter domains
+- Deviations and residual findings: the implementation preserved one source blob without a final newline through a documented one-file Git index method after `apply_patch` could not retain the exact bytes; independent review reproduced the committed and worktree blob equality; no review findings remain
 
 ### Task 03: Vendor And Validate Agent-Organization Skills
 
