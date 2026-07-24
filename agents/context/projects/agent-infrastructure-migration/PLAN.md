@@ -25,8 +25,8 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | Canonical context, root entrypoint, repository map, Git policy, learning surfaces, and scaffold registries are complete. | None | complete | context-implementer | READY |
 | 02 | Legacy root, Kilo, and Superpowers agent artifacts are preserved in the correct Layer 3 or Layer 4 locations with all references reconciled. | 01 | complete | legacy-implementer | READY |
-| 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | executing | skills-implementer | pending |
-| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | executing | access-implementer | pending |
+| 03 | The repository-owned `agent-organization` skill family and Project validator are recursively discoverable, documented, and tested. | 01 | review | skills-implementer | skills-reviewer |
+| 04 | n8n MCP/access guidance and harness adapter contracts are split into their canonical owners without exposing local secrets. | 01 | review | access-implementer | access-reviewer |
 | 05 | The integrated migration passes whole-Project review, validation, handoff, archival, exact staging, and GitHub publication as a ready PR to `main`. | 02, 03, 04 | planned | unassigned | pending |
 
 ## Task Outcomes And Interfaces
