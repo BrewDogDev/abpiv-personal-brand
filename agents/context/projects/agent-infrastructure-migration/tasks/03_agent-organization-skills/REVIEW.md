@@ -55,3 +55,13 @@ READY. There are no Critical or Important findings. The implementation satisfies
 ## Re-Review
 
 Not required for head `556a1181eebe10479a5eb124961fde647f03ff30`. Append amended head, resolved findings, fresh evidence, and a new verdict here if implementation or evidence changes.
+
+### 2026-07-24 Evidence-Portability Re-Review
+
+- Amended evidence head: `cc4798a3c2b8482b52a9feb690a061b43751d424`.
+- Reviewed implementation range: unchanged at `8af90094ac6a42ae244cd4c1a79f1cd0df771166..556a1181eebe10479a5eb124961fde647f03ff30`.
+- Evidence-only delta: `cc4798a^..cc4798a` changes only `REPORT.md:12`, replacing the absolute temporary worktree path with the portable phrase `in a coordinator-provided isolated worktree`.
+- Resolved portability issue: the updated report contains no absolute Windows user path, Unix home path, `.codex/plugins/cache` path, or `.codex/worktrees` path.
+- Fresh evidence: `git diff --name-only cc4798a^ cc4798a` returned one path; `git diff --exit-code 556a1181eebe10479a5eb124961fde647f03ff30 cc4798a -- agents/skills` returned no implementation difference; `git diff --check cc4798a^ cc4798a` passed; semantic inspection found all seven required report categories still present; machine/cache-path and credential-shape scans returned zero matches.
+- Existing finding disposition: the original report-heading observation remains a non-blocking Minor because equivalent complete evidence is still present; the amendment neither worsens nor depends on that artifact-shape issue.
+- Verdict: **READY**. The evidence-portability issue is resolved, the implementation verdict is unchanged, and no new Critical or Important finding was introduced.
