@@ -38,6 +38,9 @@ This map identifies the narrowest live source for each repository concern. Load 
 | Context handoffs | [`agents/context/handoff/`](../handoff/README.md) | Non-Project continuity only. |
 | Templates | [`agents/templates/`](../../templates/README.md) | Registry for reusable artifact templates. |
 | Agent tools | [`agents/tools/`](../../tools/README.md) | Registry for executable agent capabilities. |
+| External service access | [`agents/access/`](../../access/README.md) | Credential-free profiles for Google Cloud, Cloudflare, and n8n target selection, verification, and action gates. |
+| MCP servers | [`agents/mcp-servers/`](../../mcp-servers/README.md) | Harness-agnostic server transport, dynamic-tool, credential-name, and safety contracts. |
+| Harness adapters | [`agents/adapters/`](../../adapters/README.md) | Thin active Codex and historical Kilo mappings to canonical owners. |
 
 ## Legacy Run History
 
