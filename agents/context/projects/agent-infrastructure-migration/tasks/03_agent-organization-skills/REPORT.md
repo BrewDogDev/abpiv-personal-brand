@@ -9,7 +9,7 @@ DONE
 - Dispatch base: `8af90094ac6a42ae244cd4c1a79f1cd0df771166`
 - Implementation commit: `556a1181eebe10479a5eb124961fde647f03ff30`
 - Reviewed range: `8af90094ac6a42ae244cd4c1a79f1cd0df771166..556a1181eebe10479a5eb124961fde647f03ff30`
-- Branch and isolated worktree: `codex/agent-infra-skills` at `C:\Users\allan\.codex\worktrees\0b92\abpiv-personal-brand-skills`
+- Branch and work state: `codex/agent-infra-skills` in a coordinator-provided isolated worktree
 
 ## Mode, Ownership, And Skills
 
