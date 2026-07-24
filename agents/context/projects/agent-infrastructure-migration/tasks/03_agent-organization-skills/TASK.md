@@ -2,14 +2,14 @@
 
 ## Status
 
-Ready
+Executing
 
 ## Parent Project And Live Basis
 
 - Project: `agents/context/projects/agent-infrastructure-migration/PROJECT.md`
 - Plan row: Task 03
-- Planned from: `codex/migrate-agent-infrastructure` at `6439d1e7a138022d1a8b7712f52588b5b04097d3`, with coordinator Task records pending
-- Refreshed at: 2026-07-24 and the same implementation head
+- Planned from: `codex/migrate-agent-infrastructure` at coordinator checkpoint `44f2beb2aff94cfe0d3765e833f68dbf4121d6b9`
+- Refreshed at: 2026-07-24 for isolated parallel dispatch
 - Dependencies verified: Task 01 is `complete`; canonical context, skill registry location, Git policy, Project records, and required validation commands exist; installed source is `abpiv-agents@0.1.30`
 
 ## Outcome And Acceptance
