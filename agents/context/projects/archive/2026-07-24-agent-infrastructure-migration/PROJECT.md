@@ -2,7 +2,7 @@
 
 ## Status
 
-- Status: closing
+- Status: archived-complete
 - Owning context: `agents/context/`
 - Branch or working state: `codex/migrate-agent-infrastructure`
 - Base: `origin/preview` at `0b669d0482db62878faf15aadead227672615d48`
@@ -96,3 +96,4 @@ Define which agent artifacts are current sources of truth, which are historical 
 | 2026-07-24 | The complete five-Task graph was traced to every requested outcome, self-reviewed, and validated with no unresolved material decision. | Approve the Project for coordinated execution; Tasks 02-04 become parallel-eligible only after Task 01 passes independent review. | Move Project and active route to `ready`. | Original request plus planning validation. |
 | 2026-07-24 | Task 01 passed independent amended-head review, and the user explicitly requested parallel agent execution. | Dispatch Tasks 03 and 04 concurrently from one coordinator checkpoint in isolated sibling worktrees while Task 02 remains under independent review. | Assign the two disjoint implementation tracks and move them to `executing`; preserve Task 02's review gate before integration. | Project plan plus explicit user direction. |
 | 2026-07-24 | The first whole-Project review found one Important n8n recovery-contract preservation gap; Task 04 restored it in two canonical docs and both Task 04 and whole-Project amended-head reviews returned `READY`. | Accept the reviewed integrated migration and enter closing for publication, handoff, and archival. | All Tasks are complete; publish only through `preview`, then record the actual ready PR and archive intact. | Independent amended-head reviews plus original publication authorization. |
+| 2026-07-24 | Remote `preview` remained ancestral and unchanged; reviewed closing head `baf0237` pushed without force and GitHub created open non-draft PR #17 from `preview` to `main`. | Complete the Project with a dated handoff and immutable archive; leave merge and production deployment to the repository owner. | Remove the active route and archive intact at `projects/archive/2026-07-24-agent-infrastructure-migration/`. | Verified publication result and original user request. |

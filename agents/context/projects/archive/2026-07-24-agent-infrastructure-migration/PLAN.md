@@ -88,6 +88,7 @@
 - Approval or stop gate: do not merge, deploy production, force push, or publish if `origin/preview` has diverged
 - Completion evidence: the original whole-Project review found one Important preservation gap in Task 04; fix commit `10f455dfb65ac94f1a2da156b4e9712242bee1b8` and evidence head `0c3b598` restored and independently re-reviewed it; amended whole-Project verdict `READY` confirms 21/21 recovery assertions, 220/220 active links, 2/2 JSON examples, 22 validator tests, live Project/Workflow validation with zero warnings, zero safety findings, exact authorized 19-commit/95-path scope, unchanged prohibited runtime domains, and ancestral `origin/preview`
 - Deviations and residual findings: Task 03 retains one non-blocking report-heading Minor and a disclosed deterministic-only harness-selection limitation; live credentials and external runtimes were intentionally not probed; no blocking finding remains
+- Publication evidence: reviewed closing head `baf0237ef121ac8b3f770939b2070ba2f9376a42` pushed to `preview` without force; [PR #17](https://github.com/BrewDogDev/abpiv-personal-brand/pull/17) is open, non-draft, head `preview`, base `main`; merge and production deployment were not performed
 
 ## Integration And Reuse Obligations
 
@@ -108,5 +109,6 @@
 - All ledger Tasks are `complete`.
 - All independent reviews and blocking fixes pass.
 - Integrated verification proves the Project completion criteria.
-- Project-local handoff and routing reflect final state.
-- The coordinator removes the active route and moves the intact Project to `archive/<closure-date>-<project-slug>/`.
+- The ready PR is published from `preview` to `main` without merge or production deployment.
+- The dated Project-local handoff records final state and the exact fresh-session continuation prompt.
+- The active route is removed and the intact Project is archived at `archive/2026-07-24-agent-infrastructure-migration/`.
