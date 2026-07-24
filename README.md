@@ -1,32 +1,16 @@
 # abpiv-personal-brand
 
-Docusaurus content site deployed to Cloudflare Pages at `https://allanbpediniv.com/info/`.
+Public Docusaurus site and supporting infrastructure for [allanbpediniv.com/info/](https://allanbpediniv.com/info/).
 
-For future coding agents, start with [`AGENTS.md`](AGENTS.md). It captures the current production state, analytics deployment map, workflow approval flow, and verification commands.
+## Agent And Maintainer Start
 
-The site lives in `content-site/`. GitHub Actions builds, typechecks, auto-deploys preview, and manually deploys production through the `Content Site` workflow.
+Future agents start with [`AGENTS.md`](AGENTS.md), then route through the canonical [`agents/context/`](agents/context/CONTEXT.md) source of truth. The [repository map](agents/context/references/repository-map.md) identifies the live implementation and operator documentation for each domain.
 
-Shared Plausible Analytics infrastructure lives in [`infra/analytics/`](infra/analytics/). It is repo-level infrastructure, not content-site-specific, so future sites should reuse the same OpenTofu, Ansible, and Worker patterns.
+## Repository Areas
 
-The `Content Site` workflow in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs content-site CI, deploys `preview`, and supports manual production dispatch from `main`. Manual analytics infrastructure workflows live in [`.github/workflows/analytics-apply.yml`](.github/workflows/analytics-apply.yml) and [`.github/workflows/analytics-provision.yml`](.github/workflows/analytics-provision.yml).
+- [`content-site/`](content-site/README.md): Docusaurus content and application code deployed through Cloudflare Pages.
+- [`infra/analytics/`](infra/analytics/README.md): shared Plausible Community Edition analytics infrastructure and same-origin collection proxy.
+- [`infra/n8n/`](infra/n8n/README.md): self-hosted n8n forms and editor infrastructure.
+- [`creative-production/brand-systems/abpiv/`](creative-production/brand-systems/abpiv/README.md): ABPIV brand-system source package.
 
-## Deployment and Forms Infrastructure
-
-The content site uses the preview/main branch model:
-
-- `preview` auto-deploys to `https://content-site.lobst3rs.com/info/`.
-- `main` runs CI.
-- Production deploys from `main` only by manual `Content Site` workflow dispatch with `target=production`.
-- Pull requests into `main` must come from `preview`.
-
-Self-hosted n8n forms infrastructure lives in `infra/n8n/`.
-
-- Public forms hostname: `forms.allanbpediniv.com`
-- Private editor hostname: `workflows.lobst3rs.com`
-- Editor access: Cloudflare Access for `allanblankpedin@gmail.com`
-- GCP project: `abpiv-personal-brand`
-- GCP region: `us-east1`
-
-The existing Plausible analytics stack remains in `infra/analytics/`.
-
-For the next AI or maintainer, start with the content-site handoff: [`content-site/AI_HANDOFF.md`](content-site/AI_HANDOFF.md).
+For content-site deployment details and base-path gotchas, retain the operator entrypoint at [`content-site/AI_HANDOFF.md`](content-site/AI_HANDOFF.md).
