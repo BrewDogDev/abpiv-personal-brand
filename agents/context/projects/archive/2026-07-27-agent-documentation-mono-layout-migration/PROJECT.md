@@ -2,7 +2,7 @@
 
 ## Status
 
-- Status: closing
+- Status: archived-complete
 - Owning context: `agents/context/`
 - Branch or working state: `codex/migrate-agent-docs-mono-layout`
 - Base: `origin/preview` at `c58a221201057c3fb67ec31db198575fb0ff9970`
@@ -95,3 +95,4 @@ Decide how the repository should migrate canonical agent owners from the former 
 | 2026-07-27 | The complete three-Task graph traces every requested outcome and non-goal, resolves cross-domain ownership, preserves immutable history, records the merge authority, and passes Project validation with zero warnings. | Approve the Project for coordinated execution; Tasks 01 and 02 may be briefed and dispatched from the same checkpoint in isolated worktrees. | Move the Project and active route to `ready`. | Original request plus successful planning self-review and validator evidence. |
 | 2026-07-27 | The user reported possible updates to `main`; a fresh fetch and the separate local `main` worktree both showed `origin/main` and local `main` still at `7b6267d`, while `origin/preview` remained `c58a221`. | Treat remote reconciliation as a mandatory publication gate: fetch again, compare commits and paths since the Project base, and integrate any non-overlapping change before updating `preview` or opening the merge PR. | Add fresh remote and local-main reconciliation to Task 03 evidence; stop and replan if new agent-documentation changes overlap. | User's explicit follow-up plus current read-only Git evidence. |
 | 2026-07-27 | All three Tasks are complete; Task 03's second amended-head independent review returned `READY` after its exact checker passed from a later coordinator checkpoint. | Move the Project to `closing` while it remains active and writable through the first observed `preview` to `main` migration merge. Archive only after final handoff records the observed merge evidence. | Publish the reviewed migration first, then complete immutable archival through a second closure pull request. | Original merge authorization, completed Task ledger, and final independent review. |
+| 2026-07-27 | PR #18 passed `Main Source Guard` and merged the reviewed migration to `main` as `a58a366c9c7927368204b2e4a9f183f0fb07b3b4`; a fresh fetch and the Project-local handoff record the observed merge and identical `main`/`preview` tree. | Mark the Project `archived-complete`, remove its active route, move it intact to the dated archive, and publish that closure through a second `preview` to `main` pull request without modifying the archive afterward. | Complete immutable archival and final post-merge verification; do not deploy production. | Original merge authorization plus observed PR, check, ref, tree, and handoff evidence. |
