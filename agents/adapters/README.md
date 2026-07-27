@@ -1,6 +1,6 @@
 # Harness Adapter Registry
 
-Adapters map harness behavior to canonical repository assets without duplicating
+Adapters map harness behavior to canonical repository owners without duplicating
 their instruction bodies or storing local configuration.
 
 ## Registered Adapters

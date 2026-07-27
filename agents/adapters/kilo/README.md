@@ -5,7 +5,7 @@
 - Harness: Kilo
 - Maintenance status: historical
 - Canonical evidence: the
-  [`legacy run-history index`](../../agents/context/runs/legacy/README.md)
+  [`legacy run-history index`](../../context/runs/legacy/README.md)
 
 Kilo is not an active repository harness. Its prior plan files are preserved as
 non-authoritative Layer 4 evidence and do not control current work.
@@ -15,10 +15,10 @@ non-authoritative Layer 4 evidence and do not control current work.
 | Historical surface | Current owner |
 | --- | --- |
 | `.kilo/plans/*` plan artifacts | Preserved under the legacy run-history index |
-| Repository instructions and semantics | Root [`AGENTS.md`](../../AGENTS.md) and canonical [`agents/context/`](../../agents/context/CONTEXT.md) |
-| Planned multi-session work | [`agents/context/projects/`](../../agents/context/projects/ROUTING.md) |
-| External service targets | [`access/ROUTING.md`](../../access/ROUTING.md) |
-| MCP server behavior | [`mcp-servers/`](../../mcp-servers/README.md) |
+| Repository instructions and semantics | Root [`AGENTS.md`](../../../AGENTS.md) and canonical [`agents/context/`](../../context/CONTEXT.md) |
+| Planned multi-session work | [`agents/context/projects/`](../../context/projects/ROUTING.md) |
+| External service targets | [`agents/access/ROUTING.md`](../../access/ROUTING.md) |
+| MCP server behavior | [`agents/mcp-servers/`](../../mcp-servers/README.md) |
 
 ## Discovery And Entrypoints
 
