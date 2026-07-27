@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Tool Organization"
+  short_description: "Organize executable tool contracts and safety."
+  default_prompt: "Use $agent-tool-organization to document or audit this executable agent tool."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Adapter Organization"
+  short_description: "Organize harness mappings without duplicating canon."
+  default_prompt: "Use $agent-adapter-organization to create or audit this harness adapter mapping."

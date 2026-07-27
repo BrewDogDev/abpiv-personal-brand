@@ -1,0 +1,4 @@
+interface:
+  display_name: "Planning Tasks"
+  short_description: "Create a just-in-time Project Task brief."
+  default_prompt: "Use $planning-tasks to make the next Project Task execution-ready from live state."

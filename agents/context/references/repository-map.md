@@ -36,11 +36,12 @@ This map identifies the narrowest live source for each repository concern. Load 
 | Legacy run history | [`agents/context/runs/legacy/`](../runs/legacy/README.md) | Provenance index for non-authoritative root, Kilo, and Superpowers artifacts. |
 | Learning logs | [`agents/context/learnings/workspace/`](../learnings/workspace/LEARNINGS.md) | Raw workspace learning, errors, and feature requests awaiting review. |
 | Context handoffs | [`agents/context/handoff/`](../handoff/README.md) | Non-Project continuity only. |
-| Templates | [`agents/templates/`](../../templates/README.md) | Registry for reusable artifact templates. |
-| Agent tools | [`agents/tools/`](../../tools/README.md) | Registry for executable agent capabilities. |
-| External service access | [`agents/access/`](../../access/README.md) | Credential-free profiles for Google Cloud, Cloudflare, and n8n target selection, verification, and action gates. |
-| MCP servers | [`agents/mcp-servers/`](../../mcp-servers/README.md) | Harness-agnostic server transport, dynamic-tool, credential-name, and safety contracts. |
-| Harness adapters | [`agents/adapters/`](../../adapters/README.md) | Thin active Codex and historical Kilo mappings to canonical owners. |
+| Agent skill family | [`skills/agent-organization/`](../../../skills/agent-organization/SKILL.md) | Canonical router and recursively discoverable specialist family; inventory, provenance, and update policy live in [`skills/README.md`](../../../skills/README.md). |
+| Templates | [`templates/`](../../../templates/README.md) | Registry for reusable artifact templates. |
+| Agent tools | [`tools/`](../../../tools/README.md) | Registry for executable agent capabilities. |
+| External service access | [`access/`](../../../access/README.md) | Credential-free profiles for Google Cloud, Cloudflare, and n8n target selection, verification, and action gates. |
+| MCP servers | [`mcp-servers/`](../../../mcp-servers/README.md) | Harness-agnostic server transport, dynamic-tool, credential-name, and safety contracts. |
+| Harness adapters | [`adapters/`](../../../adapters/README.md) | Thin active Codex and historical Kilo mappings to canonical owners. |
 
 ## Legacy Run History
 

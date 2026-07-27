@@ -1,0 +1,4 @@
+interface:
+  display_name: "Executing Tasks"
+  short_description: "Run one implementer and independent reviewer."
+  default_prompt: "Use $executing-tasks to dispatch and verify one bounded Project Task."

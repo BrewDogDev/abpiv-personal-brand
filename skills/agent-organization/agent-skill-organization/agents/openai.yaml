@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Skill Organization"
+  short_description: "Organize skills, families, metadata, and discovery."
+  default_prompt: "Use $agent-skill-organization to create or audit this nested skill family."

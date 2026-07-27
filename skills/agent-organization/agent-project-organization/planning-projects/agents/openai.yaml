@@ -1,0 +1,4 @@
+interface:
+  display_name: "Planning Projects"
+  short_description: "Plan a governed multi-task monorepo Project."
+  default_prompt: "Use $planning-projects to scaffold and plan this multi-task monorepo Project."

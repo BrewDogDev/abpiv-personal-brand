@@ -4,3 +4,8 @@ node_modules/
 .terraform/
 .superpowers/
 .codex-local/
+
+# Python-generated cache
+__pycache__/
+*.pyc
+*.pyo
