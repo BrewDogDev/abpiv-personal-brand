@@ -34,7 +34,7 @@
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | complete | task05-templates-impl | READY |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | complete | task06-adapters-impl | READY |
 | 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | complete | task07-context-impl | READY |
-| 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | planned | unassigned | pending |
+| 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | ready | unassigned | pending |
 
 ## Task Outcomes And Interfaces
 
