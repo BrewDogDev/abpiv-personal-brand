@@ -6,7 +6,7 @@ Use the remote instance MCP server for authenticated n8n discovery and
 task-authorized workflow operations.
 
 Canonical server contract:
-[`agents/mcp-servers/n8n-instance/MCP.md`](../../../../mcp-servers/n8n-instance/MCP.md).
+[`mcp-servers/n8n-instance/MCP.md`](../../../../mcp-servers/n8n-instance/MCP.md).
 
 ## Inputs
 

@@ -65,7 +65,7 @@ The non-secret Google Cloud Secret Manager handle
 `abpiv-n8n-mcp-cloudflare-access` is the supported recovery source for the
 Cloudflare Access client headers used by the local n8n MCP client. It belongs to
 Google Cloud project `abpiv-personal-brand` and is written by
-[`.github/workflows/n8n-apply.yml`](../../../.github/workflows/n8n-apply.yml).
+[`.github/workflows/n8n-apply.yml`](../../.github/workflows/n8n-apply.yml).
 
 That managed secret contains only:
 
@@ -93,7 +93,7 @@ each secret-bearing action:
    process. If that source is unavailable or ambiguous, stop; the workflow-owned
    Secret Manager payload is not a fallback.
 5. Assemble the redacted client shape documented in
-   [`agents/mcp-servers/n8n-instance/MCP.md`](../../mcp-servers/n8n-instance/MCP.md)
+   [`mcp-servers/n8n-instance/MCP.md`](../../mcp-servers/n8n-instance/MCP.md)
    only at `.codex-local/n8n-mcp.json`, then apply the restrictive file
    permission or ACL before client use.
 6. Validate JSON and effective permissions locally without printing the config,

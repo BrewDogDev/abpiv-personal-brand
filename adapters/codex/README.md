@@ -4,8 +4,8 @@
 
 - Harness: Codex
 - Maintenance status: active
-- Canonical source of truth: repository-owned assets under `agents/` and the root
-  [`AGENTS.md`](../../../AGENTS.md)
+- Canonical source of truth: `agents/context/`, top-level owner surfaces, and
+  root [`AGENTS.md`](../../AGENTS.md)
 
 This adapter maps Codex entrypoints and discovery expectations. It does not copy
 canonical instruction bodies or define machine-local MCP credentials.
@@ -14,15 +14,12 @@ canonical instruction bodies or define machine-local MCP credentials.
 
 | Canonical asset | Codex usage |
 | --- | --- |
-| Root [`AGENTS.md`](../../../AGENTS.md) | Persistent repository entrypoint that routes into canonical context |
-| [`agents/context/CONTEXT.md`](../../context/CONTEXT.md), [`GLOSSARY.md`](../../context/GLOSSARY.md), and [`ROUTING.md`](../../context/ROUTING.md) | Semantic meaning, canonical terms, and intent routing |
-| [`agents/context/projects/`](../../context/projects/ROUTING.md) | Active multi-Task or multi-session Project discovery and Project-local continuity |
-| [`agents/access/ROUTING.md`](../../access/ROUTING.md) | External target, verification, action gates, and secret boundary |
-| [`agents/mcp-servers/n8n-instance/MCP.md`](../../mcp-servers/n8n-instance/MCP.md) | Remote n8n MCP transport, dynamic-tool, and safety contract |
-| [`agents/skills/agent-organization/`](../../skills/agent-organization/) | Canonical agent-infrastructure router and recursively nested specialist family |
-
-The final mapping row is supplied in parallel by Project Task 03. This adapter is
-not complete for integrated use until that canonical target resolves.
+| Root [`AGENTS.md`](../../AGENTS.md) | Persistent repository entrypoint that routes into canonical context |
+| [`agents/context/CONTEXT.md`](../../agents/context/CONTEXT.md), [`GLOSSARY.md`](../../agents/context/GLOSSARY.md), and [`ROUTING.md`](../../agents/context/ROUTING.md) | Semantic meaning, canonical terms, and intent routing |
+| [`agents/context/projects/`](../../agents/context/projects/ROUTING.md) | Active multi-session Project discovery and Project-local continuity |
+| [`access/ROUTING.md`](../../access/ROUTING.md) | External target, verification, action gates, and secret boundary |
+| [`mcp-servers/n8n-instance/MCP.md`](../../mcp-servers/n8n-instance/MCP.md) | Remote n8n MCP transport, dynamic-tool, and safety contract |
+| Canonical `skills/agent-organization/` owner | Agent-infrastructure router and recursively nested specialist family |
 
 ## Discovery And Entrypoints
 
@@ -57,8 +54,8 @@ consumer to the canonical repository copy without writing cache paths into Git.
 
 - Resolve the root entrypoint, context, Project, access, MCP, and skill-family
   targets.
-- Verify recursive skill discovery and unique frontmatter names after Task 03 is
-  integrated.
+- Verify recursive skill discovery and unique frontmatter names from the
+  canonical top-level `skills/` owner.
 - Reload or start a fresh Codex task after runtime installation or mapping
   changes; a current task may retain previously loaded instructions.
 

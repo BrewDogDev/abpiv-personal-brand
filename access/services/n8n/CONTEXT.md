@@ -7,8 +7,8 @@ workflows on the repository's n8n instance.
 
 This context owns instance selection, access verification, credential references,
 and action gates. The canonical remote server contract is
-[`n8n-instance/MCP.md`](../../../mcp-servers/n8n-instance/MCP.md). Infrastructure
-operation remains owned by [`infra/n8n/`](../../../../infra/n8n/README.md).
+[`mcp-servers/n8n-instance/MCP.md`](../../../mcp-servers/n8n-instance/MCP.md). Infrastructure
+operation remains owned by [`infra/n8n/`](../../../infra/n8n/README.md).
 
 ## Profile
 

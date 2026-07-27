@@ -13,7 +13,8 @@ This context covers:
 - n8n forms infrastructure under `infra/n8n/`;
 - the ABPIV creative-production brand system under `creative-production/`;
 - repository automation under `.github/workflows/`; and
-- the agent infrastructure under `agents/`.
+- canonical context under `agents/context/` and the top-level agent owner
+  surfaces.
 
 Implementation and operator documentation beside each system remains authoritative for that system. This context explains repository-wide meaning and routes agents to those narrower sources instead of copying their contracts.
 

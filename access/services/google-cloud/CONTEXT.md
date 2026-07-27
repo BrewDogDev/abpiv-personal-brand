@@ -7,8 +7,8 @@ owned by this repository.
 
 This context owns target-project selection, approved interfaces, verification,
 credential references, and action gates. Infrastructure procedures remain in
-[`infra/analytics/`](../../../../infra/analytics/README.md) and
-[`infra/n8n/`](../../../../infra/n8n/README.md).
+[`infra/analytics/`](../../../infra/analytics/README.md) and
+[`infra/n8n/`](../../../infra/n8n/README.md).
 
 ## Profile
 

@@ -37,9 +37,9 @@ Access context answers:
   verification commands belong here.
 - Runtime procedures belong with their implementation or reusable skill.
 - MCP transport and exposed-tool behavior belongs under
-  [`agents/mcp-servers/`](../mcp-servers/README.md).
+  [`mcp-servers/`](../mcp-servers/README.md).
 - Harness-specific mapping belongs under
-  [`agents/adapters/`](../adapters/README.md).
+  [`adapters/`](../adapters/README.md).
 - Tokens, passwords, private header values, key material, raw local config, and
   decrypted credentials never belong in tracked files. See the
   [`secret boundary`](references/secret-boundary.md).
