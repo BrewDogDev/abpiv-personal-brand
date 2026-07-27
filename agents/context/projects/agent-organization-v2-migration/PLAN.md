@@ -28,7 +28,7 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Move the complete vendored skill family to `agents/skills/` and migrate its supplied bodies and scripts to 0.1.36 while retaining repository metadata. | None | complete | task01-skill-impl | READY; Minor record typo corrected |
-| 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | planned | unassigned | pending |
+| 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | ready | unassigned | pending |
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | planned | unassigned | pending |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | planned | unassigned | pending |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | planned | unassigned | pending |
@@ -62,7 +62,7 @@
 - Implementer selection: `balanced` capability and `medium` reasoning because the move is bounded but crosses profiles, interfaces, relative links, and safety text
 - Reviewer selection: `balanced` capability and `medium` reasoning with `quick` depth because direct inventory, link, and secret-boundary checks strongly verify a documentation-only move
 - Isolation: owns only the access surface and its Task return artifact
-- Acceptance: all 14 files are preserved under the target path; access-owned links resolve; stable handles, gates, and secret language are unchanged; no credential value or cache path appears
+- Acceptance: all 14 files are preserved under the target path; access-internal and repository implementation links resolve; exactly five planned sibling-owner links point to the Task 03 and Task 06 target paths; stable handles, gates, and secret language are unchanged; no credential value or cache path appears
 - Approval or stop gate: stop if a move would lose history, expose a secret, or require changing an external target or permission
 
 ### Task 03: Relocate MCP server contracts
