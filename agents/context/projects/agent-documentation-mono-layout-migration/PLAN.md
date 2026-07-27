@@ -25,7 +25,7 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Live non-skill agent owners and context routes use the top-level Mono layout with history and safety contracts preserved. | None | complete | task01-implementer | READY amended head |
-| 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | executing | task02-implementer | pending |
+| 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | review | task02-implementer | task02-reviewer |
 | 03 | The integrated migration passes whole-Project review, is archived with handoff evidence, and is promoted and merged through `preview` to `main`. | 01, 02 | planned | unassigned | pending |
 
 ## Task Outcomes And Interfaces
@@ -71,6 +71,7 @@
 - Add dated amendments to `PROJECT.md` and revise this graph before dispatch when live evidence changes scope, architecture, domain boundaries, acceptance, or dependencies.
 - Tasks 01 and 02 may execute in parallel only from the same coordinator checkpoint in isolated worktrees because their owned paths and mutable state do not overlap.
 - Task 03 begins only after both implementation ranges pass fresh independent review and are integrated into the coordinator branch.
+- Immediately before Task 03 publication, fetch remote refs and inspect the separate local `main` worktree; reconcile all commits and touched paths since the Project base, and return through controlled replanning if an update overlaps migrated agent documentation.
 
 ## Project Closure
 
