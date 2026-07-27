@@ -393,6 +393,21 @@ def git(*arguments, check=True):
         text=True,
     )
 
+report_relative = (
+    "agents/context/projects/agent-documentation-mono-layout-migration/"
+    "tasks/03_integrated-review-publication/REPORT.md"
+)
+report_head_rows = git(
+    "log",
+    "-1",
+    "--format=%H",
+    "--",
+    report_relative,
+).stdout.splitlines()
+assert len(report_head_rows) == 1, report_head_rows
+report_head = report_head_rows[0]
+assert re.fullmatch(r"[0-9a-f]{40}", report_head), report_head
+
 old_path = git(
     "grep",
     "-n",
@@ -462,7 +477,7 @@ assert len(skill_status) == 39
 whole_project = git(
     "diff",
     "--name-only",
-    "c58a221201057c3fb67ec31db198575fb0ff9970..HEAD",
+    f"c58a221201057c3fb67ec31db198575fb0ff9970..{report_head}",
 ).stdout.splitlines()
 allowed_roots = (
     ".gitignore",
@@ -491,7 +506,7 @@ assert not any(path.startswith(prohibited) for path in whole_project)
 assert git(
     "diff",
     "--quiet",
-    "c58a221201057c3fb67ec31db198575fb0ff9970",
+    f"c58a221201057c3fb67ec31db198575fb0ff9970..{report_head}",
     "--",
     "content-site",
     "infra",
@@ -516,20 +531,19 @@ expected_task_03 = {
     "adapters/codex/README.md",
     "agents/context/references/repository-map.md",
     "agents/context/references/verification.md",
-    "agents/context/projects/agent-documentation-mono-layout-migration/"
-    "tasks/03_integrated-review-publication/REPORT.md",
+    report_relative,
 }
 assert task_03_original == expected_task_03
-revision_base = "0bd3c8736cb32f48d30980f9a5d5fbb72a27b2a2"
 revision_paths = set(
-    git("diff", "--name-only", f"{revision_base}..HEAD").stdout.splitlines()
+    git(
+        "diff",
+        "--name-only",
+        f"{report_head}^..{report_head}",
+    ).stdout.splitlines()
 )
 revision_paths.update(git("diff", "--name-only").stdout.splitlines())
 revision_paths.update(git("diff", "--cached", "--name-only").stdout.splitlines())
-assert revision_paths == {
-    "agents/context/projects/agent-documentation-mono-layout-migration/"
-    "tasks/03_integrated-review-publication/REPORT.md"
-}
+assert revision_paths == {report_relative}
 
 tracked = git("ls-files").stdout.splitlines()
 tracked_generated = [
@@ -654,6 +668,14 @@ These focused ignore and Git artifact commands terminate independently:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
+$reportPath = 'agents/context/projects/agent-documentation-mono-layout-migration/tasks/03_integrated-review-publication/REPORT.md'
+$reportHead = @(git log -1 --format=%H -- $reportPath)
+if (
+  $reportHead.Count -ne 1 -or
+  $reportHead[0] -notmatch '^[0-9a-f]{40}$'
+) {
+  throw 'Expected exactly one full report-head hash.'
+}
 $probes = @(
   'cache-probe/__pycache__/module.cpython-313.pyc',
   'cache-probe/module.pyc',
@@ -665,13 +687,13 @@ foreach ($probe in $probes) {
     throw "Ignore probe failed: $probe"
   }
 }
-git diff --check c58a221201057c3fb67ec31db198575fb0ff9970..HEAD
+git diff --check "c58a221201057c3fb67ec31db198575fb0ff9970..$($reportHead[0])"
 if ($LASTEXITCODE -ne 0) {
   throw 'Whole-Project whitespace check failed.'
 }
-git diff --check 0bd3c8736cb32f48d30980f9a5d5fbb72a27b2a2..HEAD
+git diff --check "$($reportHead[0])^..$($reportHead[0])"
 if ($LASTEXITCODE -ne 0) {
-  throw 'Task 03 revision whitespace check failed.'
+  throw 'Latest report revision whitespace check failed.'
 }
 ```
 
@@ -756,7 +778,9 @@ closure and publication through `preview` to `main`.
 
 ### Change Range
 
-- Whole Project: `c58a221201057c3fb67ec31db198575fb0ff9970..HEAD`.
+- Whole Project:
+  `c58a221201057c3fb67ec31db198575fb0ff9970..<report-head>`, where
+  `<report-head>` is the one full hash derived by the exact command above.
 - Task 03 base: `c7acaba73f58c94fcb4e0b1c47ac38b731d27a55`.
 - Task 03 head: the implementation commit containing this report; use the
   exact identity returned by the implementer, not `HEAD~1`.
@@ -850,13 +874,20 @@ has not yet been observed.
 | Review item | Severity | Verification and disposition | Status |
 | --- | --- | --- | --- |
 | The original sequence archived before the migration PR and observed merge. | Important | Valid. The sequence above keeps the Project active and `closing` through the first observed merge, records exact external evidence in the final Project-local handoff, then archives and publishes closure through a second PR. | Implemented; pending fresh re-review. |
-| Whole-Project custom checks lacked exact terminating reproduction commands. | Important | Valid. The self-contained standard-library assertion command, remote/local-main command, ignore probes, validator commands, and pinned Git ranges above cover the required source, metadata, links, JSON, scenarios, moves, old paths, safety, generated output, scope, immutable/prohibited paths, refs, and diff checks. | Implemented; pending fresh re-review. |
+| Whole-Project custom checks lacked exact terminating reproduction commands. | Important | Valid. The first report revision added the self-contained standard-library assertion command, remote/local-main command, ignore probes, validator commands, and pinned Git bases covering the required source, metadata, links, JSON, scenarios, moves, old paths, safety, generated output, scope, immutable/prohibited paths, refs, and diff checks. | Implemented in first revision; superseded only where its range endpoint moved with `HEAD`. |
+| The published whole-Project, report-revision, and diff-check ranges used moving `HEAD` and failed after the coordinator's required review-transition commit. | Important | Valid. Every review-sensitive range now ends at one validated full hash derived by `git log -1 --format=%H -- <Task 03 REPORT path>`. Unstaged and cached report paths are still unioned during pre-commit verification; later coordinator-only commits cannot change the committed report head. | Implemented in second revision; pending fresh re-review. |
 | `skills/README.md` omits `-B` from its neighboring validator examples. | Minor | Valid and nonblocking because `.gitignore` prevents generated bytecode from entering the tracked result, but explicitly outside this report-only revision scope. No edit was made; the coordinator retains the consistency concern. | Acknowledged; open nonblocking coordinator concern. |
 
 Revision basis and preservation:
 
 - Coordinator revision base:
   `0bd3c8736cb32f48d30980f9a5d5fbb72a27b2a2`.
+- First report-only revision:
+  `0bd3c8736cb32f48d30980f9a5d5fbb72a27b2a2..25be935b50151c6cda9d3d872864dc39e063a2a0`.
+- First re-review checkpoint:
+  `ab81e0e751f8845e820c9c0f49d1678a687be8d9`.
+- Second report-only revision base:
+  `f03f47c5c6bfc2f7e117d4691527cfaed2f7db9f`.
 - Original Task 03 implementation:
   `c7acaba73f58c94fcb4e0b1c47ac38b731d27a55..d6b5dbe17b1d439bbd1903fb0c20e7e77ca6a743`.
 - Revision scope: only this `REPORT.md`; `.gitignore`,
