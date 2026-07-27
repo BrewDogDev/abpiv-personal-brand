@@ -30,7 +30,7 @@
 | 01 | Move the complete vendored skill family to `agents/skills/` and migrate its supplied bodies and scripts to 0.1.36 while retaining repository metadata. | None | complete | task01-skill-impl | READY; Minor record typo corrected |
 | 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | complete | task02-access-impl | READY |
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | complete | task03-mcp-impl | READY |
-| 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | review | task04-tools-impl | task04-tools-review |
+| 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | complete | task04-tools-impl | READY |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | planned | unassigned | pending |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | planned | unassigned | pending |
 | 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | planned | unassigned | pending |
@@ -94,6 +94,9 @@
 - Isolation: owns only the tool registry and its Task return artifact
 - Acceptance: the registry content is preserved, the old path is absent, the new path exists, and no tool contract is invented
 - Approval or stop gate: stop if any live executable tool appears during execution or another change overlaps the registry
+- Completion evidence: implementation range `234028133a24b3c12475c2a0f85b974bd2a69a97..d2bc1e45ecf85376468d04f8c3f5b04af9c51ea6`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; one `R100` move with blob `69108c5a29d92b105e9d4db505aa48e648ec371f`; one target file, no old root, no `TOOL.md`, and clean validators, scope, and safety checks
+- Review disposition: Critical, Important, and Minor findings `None`
+- Reuse assessment: retain the exact-blob registry-migration checker with no-invention assertions for Project-wide promotion assessment in Task 08; do not expand this completed Task
 
 ### Task 05: Relocate the reusable-template registry
 
