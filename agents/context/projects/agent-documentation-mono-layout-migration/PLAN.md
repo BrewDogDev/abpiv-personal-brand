@@ -24,7 +24,7 @@
 
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
-| 01 | Live non-skill agent owners and context routes use the top-level Mono layout with history and safety contracts preserved. | None | review | task01-implementer | task01-reviewer: amended re-review |
+| 01 | Live non-skill agent owners and context routes use the top-level Mono layout with history and safety contracts preserved. | None | complete | task01-implementer | READY amended head |
 | 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | planned | unassigned | pending |
 | 03 | The integrated migration passes whole-Project review, is archived with handoff evidence, and is promoted and merged through `preview` to `main`. | 01, 02 | planned | unassigned | pending |
 
@@ -38,6 +38,8 @@
 - Required capabilities: `agent-context-organization`, `agent-access-organization`, `agent-mcp-organization`, `agent-adapter-organization`, `agent-tool-organization`
 - Acceptance: exact old-to-new blob accounting; no active reference to former canonical paths outside immutable history; every changed and neighboring Markdown link resolves; profile, MCP, adapter, secret, and promotion semantics remain equivalent; prohibited domains and history are unchanged
 - Approval or stop gate: the original request authorizes the moves; stop if a path is still consumed as a live interface or a safety contract would be weakened
+- Completion evidence: implementation commit `92fdb1afa28614a48f4e2c4aeca5524dd7404c0b`, revision commit `bff58ef041b525d58f57f08a65a9ddcf296e58c3`, and amended independent verdict `READY`; 21/21 history-detected moves, 14 byte-identical and seven path-edited blobs, exact 24-entry implementation scope, 156/156 local links, 27/27 contract assertions, zero active former-owner or stale Task-language matches, zero prohibited-path or safety findings, and Project validation with zero warnings
+- Deviations and residual findings: one non-blocking Minor notes that the report's revision-scope example uses moving `HEAD`; reruns must use the explicit amended head `bff58ef041b525d58f57f08a65a9ddcf296e58c3`. The one-use migration-verifier candidate was not promoted because recurring demand is unproven.
 
 ### Task 02: Migrate And Refresh The Agent-Organization Skill Family
 

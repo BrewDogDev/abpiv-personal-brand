@@ -113,6 +113,106 @@ NEEDS_FIXES
 
 ## Re-Review
 
-Pending. Re-review the amended exact base-to-head range after the Important
-finding is removed, the report is appended, and the focused task-language,
-link, scope, safety, validator, and whitespace checks are rerun.
+### Revision 01
+
+- Original Task base: `56e47bd0ef98447de33cce1eb4be95994df594f0`
+- Original implementation head:
+  `92fdb1afa28614a48f4e2c4aeca5524dd7404c0b`
+- Revision base: `49afee970c9cd3ce36e66e96848e5c9fbf8a8fc9`
+- Amended Task head: `bff58ef041b525d58f57f08a65a9ddcf296e58c3`
+- Coordinator re-review dispatch:
+  `178c5636ee30d045ed3038d7ec8cdb46a38b4dcb`
+- Amended diff inspected:
+  `git diff --patience 49afee970c9cd3ce36e66e96848e5c9fbf8a8fc9 bff58ef041b525d58f57f08a65a9ddcf296e58c3`
+
+### Finding Dispositions
+
+- Important — resolved. `adapters/codex/README.md:36` now states the durable
+  adapter fact, "This adapter does not maintain a Codex manifest or generated
+  interface metadata." The acceptance-specific run-scoped language scan exits
+  1 with zero matches, while the two valid operational references to a Codex
+  runtime task remain unchanged.
+- Minor — substantially resolved, with one residual Minor carried to the
+  coordinator. `REPORT.md:140-463` now supplies the inventory, link,
+  27-assertion contract matrix, exclusion-aware old-path and task-language,
+  scope, and safety commands requested by the original review. However,
+  `REPORT.md:131-133` and `REPORT.md:394` resolve the revision head with
+  `git rev-parse HEAD`. At dispatch head `178c5636ee30d045ed3038d7ec8cdb46a38b4dcb`,
+  that published scope command sees four paths, including the coordinator-owned
+  `PLAN.md` and Project route, rather than the two revision paths. Replacing
+  the moving value with the explicit amended head
+  `bff58ef041b525d58f57f08a65a9ddcf296e58c3` produces exactly the adapter and
+  report paths. This is an evidence-reproducibility limitation, not an
+  implementation, scope, or safety defect.
+
+### Amended Findings
+
+#### Critical
+
+- None.
+
+#### Important
+
+- None.
+
+#### Minor
+
+- The amended report's revision-scope example is `HEAD`-relative rather than
+  pinned to the amended Task head (`REPORT.md:131-133`, `REPORT.md:394`).
+  Preserve the explicit head recorded above when rerunning or integrating this
+  Task.
+
+### Fresh Verification
+
+- Explicit revision scope passed: the
+  `49afee970c9cd3ce36e66e96848e5c9fbf8a8fc9..bff58ef041b525d58f57f08a65a9ddcf296e58c3`
+  diff contains only `adapters/codex/README.md` and this Task's `REPORT.md`.
+  The later dispatch commit changes only Project `PLAN.md` and routing control
+  state.
+- Original implementation scope remains exact: 24 entries, comprising 21
+  detected renames and three context modifications, with zero prohibited-path
+  changes.
+- Old-to-new accounting passed: 21 source files, 21 destinations, 14
+  byte-identical blobs, seven intentionally edited blobs, zero old files
+  remaining, and zero unexpected destinations.
+- The amended 27-file local-link run passed 156 links with zero failures.
+- The contract matrix passed all 27 assertions with zero missing terms.
+- The exclusion-aware old-owner scan and run-scoped Codex adapter language scan
+  both returned `rg` exit 1 with zero matches.
+- The robust 25-file safety scan found zero private-key blocks,
+  credential-shaped values, machine-local cache paths, or worktree paths.
+- Both credential-free fenced JSON examples parsed with zero failures.
+- Project validation passed with one active Project, one archived Project, one
+  Task directory, and zero warnings.
+- `git diff --check` passed for the original implementation range, the revision
+  range, and the original-base-to-amended-head range.
+- The `.codex-local/n8n-mcp.json` ignore check still resolves to the repository
+  ignore rule without reading the file.
+- The branch and index were clean at coordinator dispatch before this review
+  record was amended. Runtime, external, publication, and deployment checks
+  remain correctly out of scope.
+
+### Specification Compliance
+
+Compliant. The amended implementation satisfies every Task 01 acceptance
+criterion. The stable adapter no longer contains run-scoped Project-task
+language, and the full owner migration, routing, links, safety contracts,
+history preservation, and prohibited-path boundaries remain verified. Task
+02 still owns creation and recursive-discovery validation of the canonical
+top-level skill family.
+
+### Task Quality
+
+Approved with the residual Minor evidence limitation above. No Critical or
+Important finding remains, the revision is the smallest in-scope correction,
+and fresh checks directly prove the amended result.
+
+### Reuse Assessment
+
+Unchanged: reject promotion for now. Retain the one-use migration-verifier
+evidence in this Project and reconsider a canonical `tools/` implementation
+only after recurring demand is demonstrated.
+
+### Verdict
+
+READY
