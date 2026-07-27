@@ -65,7 +65,7 @@ The non-secret Google Cloud Secret Manager handle
 `abpiv-n8n-mcp-cloudflare-access` is the supported recovery source for the
 Cloudflare Access client headers used by the local n8n MCP client. It belongs to
 Google Cloud project `abpiv-personal-brand` and is written by
-[`.github/workflows/n8n-apply.yml`](../../.github/workflows/n8n-apply.yml).
+[`.github/workflows/n8n-apply.yml`](../../../.github/workflows/n8n-apply.yml).
 
 That managed secret contains only:
 
