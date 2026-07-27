@@ -2,7 +2,7 @@
 
 ## Status
 
-- Status: ready
+- Status: executing
 - Owning context: `agents/context/`
 - Branch or working state: `codex/migrate-agent-organization-v2`
 - Base: `origin/preview` at `088ac31aeea018131a7bf4d11fff8943266cfba1`
