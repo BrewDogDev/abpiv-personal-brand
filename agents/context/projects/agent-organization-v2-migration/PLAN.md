@@ -32,7 +32,7 @@
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | complete | task03-mcp-impl | READY |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | complete | task04-tools-impl | READY |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | complete | task05-templates-impl | READY |
-| 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | executing | task06-adapters-impl | rigorous review dispatched |
+| 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | complete | task06-adapters-impl | READY |
 | 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | planned | unassigned | pending |
 | 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | planned | unassigned | pending |
 
@@ -124,6 +124,9 @@
 - Isolation: owns only the adapter surface and its Task return artifact after canonical owner moves complete
 - Acceptance: all three adapter files are preserved at the target path; active Codex paths resolve; Kilo remains historical; adapters stay mapping-only; no machine-local configuration is introduced
 - Approval or stop gate: stop if recursive discovery cannot be demonstrated or a harness mapping would require duplicate canonical instructions
+- Completion evidence: implementation range `8d2adcc3187000f558a02b916fe4dd10843c7b10..04546ae9663a794f7a7762f7bac4869fbd1abb5c`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; three history-visible moves; all 19 local links resolved; Codex remains active and Kilo historical; 14 unique folder-matched skills and 14 matching metadata prompts; exact normalized delta, validators, scope, and safety scans clean
+- Review disposition: Critical, Important, and Minor findings `None`; the reviewer observed a coordinator-only invalid `reviewing` status after the implementation head, and coordinator commit `055e9fbfad86ebb28b16dd373fae7732ae9fe4c6` restored the validator-supported `executing` status before Task completion
+- Reuse assessment: retain the deterministic adapter-relocation checker candidate for Project-wide promotion assessment in Task 08; do not expand this completed Task
 
 ### Task 07: Integrate canonical context and repository governance
 
