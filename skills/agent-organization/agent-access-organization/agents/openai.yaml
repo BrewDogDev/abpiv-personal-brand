@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Access Organization"
+  short_description: "Organize access profiles, scopes, and secret gates."
+  default_prompt: "Use $agent-access-organization to create or audit this external-service access profile."

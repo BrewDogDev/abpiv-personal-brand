@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Organization"
+  short_description: "Organize complete agent infrastructure workspaces."
+  default_prompt: "Use $agent-organization to bootstrap or audit this agent infrastructure workspace."
