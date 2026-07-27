@@ -78,6 +78,7 @@ Ready
 - One implementer session; do not delegate or subdivide.
 - The brief contains sufficient Task-local context; do not depend on the full coordinator conversation.
 - Ask before guessing at a material ambiguity.
+- Use test-driven development or the repository's equivalent evidence cycle when behavior changes.
 - Record the preflight former-owner routes and validator commands, then prove the target routes and commands after the bounded edits.
 - Implement only this Task, run focused and required checks, inspect scope, and commit exact owned files when Git policy requires it.
 - Write `REPORT.md`; do not update Project control state.
