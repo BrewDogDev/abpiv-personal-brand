@@ -25,6 +25,20 @@ For Markdown changes, programmatically extract local inline links, strip anchors
 - Compare branch and deployment claims to [`.github/workflows/`](../../../.github/workflows/) and the current Git graph.
 - Scan tracked changes for credential values and machine-local plugin cache paths.
 
+Run the canonical agent validators from the repository root with Python bytecode
+generation disabled:
+
+```powershell
+python -B skills/agent-organization/agent-project-organization/scripts/test_validate_projects.py
+python -B skills/agent-organization/agent-project-organization/scripts/validate_projects.py .
+python -B skills/agent-organization/agent-workflow-organization/scripts/validate_workflows.py .
+```
+
+The Project-validator test suite currently contains 31 tests and must finish
+with `OK`. The live Project and Workflow validators must finish without errors
+or warnings. Keep `-B` on these commands so verification does not create
+`__pycache__`, `.pyc`, or `.pyo` output in the canonical skill family.
+
 ## Content Site
 
 The [`Content Site`](../../../.github/workflows/deploy.yml) workflow installs dependencies, typechecks, builds, and checks homepage Insights alignment. For content-site changes:

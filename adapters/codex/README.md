@@ -19,7 +19,7 @@ canonical instruction bodies or define machine-local MCP credentials.
 | [`agents/context/projects/`](../../agents/context/projects/ROUTING.md) | Active multi-session Project discovery and Project-local continuity |
 | [`access/ROUTING.md`](../../access/ROUTING.md) | External target, verification, action gates, and secret boundary |
 | [`mcp-servers/n8n-instance/MCP.md`](../../mcp-servers/n8n-instance/MCP.md) | Remote n8n MCP transport, dynamic-tool, and safety contract |
-| Canonical `skills/agent-organization/` owner | Agent-infrastructure router and recursively nested specialist family |
+| [`skills/agent-organization/`](../../skills/agent-organization/SKILL.md) | Agent-infrastructure router and recursively nested specialist family |
 
 ## Discovery And Entrypoints
 
@@ -33,9 +33,15 @@ canonical instruction bodies or define machine-local MCP credentials.
 
 ## Interface Metadata And Manifests
 
-This adapter does not maintain a Codex manifest or generated interface metadata.
-The repository paths above are canonical; installed plugin caches and
-machine-local configuration are consumers, never sources of truth.
+The canonical family retains 14 source `agents/openai.yaml` interface metadata
+records, one beside each recursively discovered `SKILL.md`. Each record declares
+`display_name`, `short_description`, and a `default_prompt` that invokes the
+matching skill name. These source records do not duplicate skill bodies.
+
+This adapter does not maintain a Codex manifest, generate those metadata
+records, or claim a generated manifest for the family. The repository paths
+above are canonical; installed plugin caches and machine-local configuration
+are consumers, never sources of truth.
 
 ## Unsupported Features
 

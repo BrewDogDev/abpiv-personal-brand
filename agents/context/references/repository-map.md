@@ -36,6 +36,7 @@ This map identifies the narrowest live source for each repository concern. Load 
 | Legacy run history | [`agents/context/runs/legacy/`](../runs/legacy/README.md) | Provenance index for non-authoritative root, Kilo, and Superpowers artifacts. |
 | Learning logs | [`agents/context/learnings/workspace/`](../learnings/workspace/LEARNINGS.md) | Raw workspace learning, errors, and feature requests awaiting review. |
 | Context handoffs | [`agents/context/handoff/`](../handoff/README.md) | Non-Project continuity only. |
+| Agent skill family | [`skills/agent-organization/`](../../../skills/agent-organization/SKILL.md) | Canonical router and recursively discoverable specialist family; inventory, provenance, and update policy live in [`skills/README.md`](../../../skills/README.md). |
 | Templates | [`templates/`](../../../templates/README.md) | Registry for reusable artifact templates. |
 | Agent tools | [`tools/`](../../../tools/README.md) | Registry for executable agent capabilities. |
 | External service access | [`access/`](../../../access/README.md) | Credential-free profiles for Google Cloud, Cloudflare, and n8n target selection, verification, and action gates. |
