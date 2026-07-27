@@ -29,12 +29,12 @@ Run the canonical agent validators from the repository root with Python bytecode
 generation disabled:
 
 ```powershell
-python -B skills/agent-organization/agent-project-organization/scripts/test_validate_projects.py
-python -B skills/agent-organization/agent-project-organization/scripts/validate_projects.py .
-python -B skills/agent-organization/agent-workflow-organization/scripts/validate_workflows.py .
+python -B agents/skills/agent-organization/agent-project-organization/scripts/test_validate_projects.py
+python -B agents/skills/agent-organization/agent-project-organization/scripts/validate_projects.py .
+python -B agents/skills/agent-organization/agent-workflow-organization/scripts/validate_workflows.py .
 ```
 
-The Project-validator test suite currently contains 31 tests and must finish
+The Project-validator test suite currently contains 32 tests and must finish
 with `OK`. The live Project and Workflow validators must finish without errors
 or warnings. Keep `-B` on these commands so verification does not create
 `__pycache__`, `.pyc`, or `.pyo` output in the canonical skill family.
