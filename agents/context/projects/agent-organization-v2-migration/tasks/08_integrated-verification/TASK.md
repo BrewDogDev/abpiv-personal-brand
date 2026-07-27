@@ -64,7 +64,7 @@ Ready
 ## Skills, Tools, Authority, And Selection
 
 - Required implementation skills: `agent-organization`, `testing-agent-skills`, and `verification-before-completion`
-- Required review skills: `requesting-code-review` and `receiving-code-review`
+- Required review and verification skills: `requesting-code-review`, `receiving-code-review`, and `verification-before-completion`
 - Allowed tools and actions: read tracked repository and local Git state; run deterministic validators, inventory, link, content, history, scope, and safety checks; create, stage, and commit only `REPORT.md`
 - Approval-gated actions: any fix, new reusable artifact, source-version change, history rewrite, publication, external check requiring authentication, or runtime action
 - Prohibited actions: delegation; editing an existing file; installed-cache or ignored-state inspection; secret access; external/runtime mutation; fetch, push, PR, merge, deploy, publish, permission change, force push, destructive reset, or cleanup of unrelated state
@@ -82,19 +82,19 @@ Ready
 - Ask before guessing at a material ambiguity.
 - Use test-driven development or the repository's equivalent evidence cycle when behavior changes. This Task is verification-only, so record the Project-base negative condition or invariant and the current passing observation for each migration class.
 - Make no fix. Any failed acceptance criterion or blocking finding returns `DONE_WITH_CONCERNS` or `BLOCKED` to the coordinator for replanning.
-- Run fresh focused and broader checks, inspect exact scope and Git state, write `REPORT.md`, and commit only that report when all required checks pass.
+- Implement only this Task, run focused and required checks, inspect exact scope and Git state, write `REPORT.md`, and commit only that report when all required checks pass.
 - Do not update Project control state.
 - If the Task cannot fit this contract, return `BLOCKED: OVERSIZED`.
 
 ## Verification And Evidence
 
-- Owner-layout check: six former roots absent; target counts are 39/14/2/1/1/3; target anchor files and all cross-owner mappings resolve
+- Focused check: six former roots absent; target counts are 39/14/2/1/1/3; target anchor files and all cross-owner mappings resolve
 - Skills check: family inventory 38; supplied/retained split 24/14; 14 unique folder-matched skills; 14 paired metadata prompts; two documented portability corrections; 15 local family links; no `__pycache__`, `.pyc`, or `.pyo`
 - Active-links check: resolve local inline Markdown links across live agent infrastructure, with explicit exclusions and totals recorded; verify root/context/adapter/access/MCP mappings and no former-root live route
 - Preservation check: compare Project-base blobs and diffs for root `AGENTS.md`, root `README.md`, `agents/context/projects/archive/`, and `agents/context/runs/legacy/`
 - Project-evidence check: Tasks 01 through 07 each have a brief, `DONE` report, clean review verdicts, and exact implementation ranges; Task 08's brief exists and its report is the only permitted new write
-- Validator check: 32 tests `OK`; live Project and Workflow validators zero warnings; `-B` produces no bytecode
-- Whole-diff check: classify every `088ac31aeea018131a7bf4d11fff8943266cfba1..HEAD` changed path; require only former owners, target `agents/*` infrastructure, and this Project's control/evidence; require `git diff --check`
+- Broader check: run the 32-test Project-validator suite and live Project and Workflow validators with `-B`; require `OK`, zero errors or warnings, and no bytecode
+- Diff or artifact review: classify every `088ac31aeea018131a7bf4d11fff8943266cfba1..HEAD` changed path; require only former owners, target `agents/*` infrastructure, and this Project's control/evidence; require `git diff --check`
 - Safety check: no generated artifacts, private-key blocks, credential-shaped values, user-specific absolute paths, or concrete installed-cache paths in the migration diff
 - Git check: exact branch/base/head, status, upstream comparison, commits ahead, and confirmation that no push or publication occurred
 - Required evidence: exact Task base/head and commit, command or checker methods, counts and exclusions, failures or limitations, reuse disposition, residual risk, and rigorous review package
@@ -106,7 +106,7 @@ Ready
 
 ## Reuse Assessment
 
-Compare the normalization-aware source overlay, owner migration, exact-blob registry, adapter relocation, and resolution-aware context check candidates recorded in Tasks 01 through 07. State whether each reflects recurring repository work or one-time migration evidence; identify the durable integration already present; require separate reviewed planning before creating any new reusable artifact.
+Compare the normalization-aware source overlay, owner migration, exact-blob registry, adapter relocation, and resolution-aware context check candidates recorded in Tasks 01 through 07. State in `REPORT.md` whether each reflects recurring repository work or one-time migration evidence; identify the durable integration already present; require separate reviewed planning before creating any new reusable artifact.
 
 ## Return And Review
 
