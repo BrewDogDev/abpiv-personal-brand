@@ -2,7 +2,7 @@
 
 ## Status
 
-- Status: ready
+- Status: executing
 - Owning context: `agents/context/`
 - Branch or working state: `codex/migrate-agent-docs-mono-layout`
 - Base: `origin/preview` at `c58a221201057c3fb67ec31db198575fb0ff9970`
