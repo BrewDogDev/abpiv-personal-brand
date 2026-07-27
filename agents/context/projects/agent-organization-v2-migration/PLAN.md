@@ -28,7 +28,7 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Move the complete vendored skill family to `agents/skills/` and migrate its supplied bodies and scripts to 0.1.36 while retaining repository metadata. | None | complete | task01-skill-impl | READY; Minor record typo corrected |
-| 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | review | task02-access-impl | task02-access-review |
+| 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | complete | task02-access-impl | READY |
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | planned | unassigned | pending |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | planned | unassigned | pending |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | planned | unassigned | pending |
@@ -64,6 +64,9 @@
 - Isolation: owns only the access surface and its Task return artifact
 - Acceptance: all 14 files are preserved under the target path; access-internal and repository implementation links resolve; exactly five planned sibling-owner links point to the Task 03 and Task 06 target paths; stable handles, gates, and secret language are unchanged; no credential value or cache path appears
 - Approval or stop gate: stop if a move would lose history, expose a secret, or require changing an external target or permission
+- Completion evidence: implementation range `f71d639f5cd94b75a7db08b4e1e93d710dba72a9..8e3f374e54285932fe1f2c7940122eca059cc2ae`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; 14 history-visible moves; four authorized link corrections in three files; 42 current links resolved; exactly five planned sibling links; validators, scope, and safety scans clean
+- Review disposition: Critical, Important, and Minor findings `None`
+- Reuse assessment: retain the normalization-aware owner-migration checker candidate for Project-wide promotion assessment in Task 08; do not expand this completed Task
 
 ### Task 03: Relocate MCP server contracts
 
