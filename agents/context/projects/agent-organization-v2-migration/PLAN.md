@@ -29,7 +29,7 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | Move the complete vendored skill family to `agents/skills/` and migrate its supplied bodies and scripts to 0.1.36 while retaining repository metadata. | None | complete | task01-skill-impl | READY; Minor record typo corrected |
 | 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | complete | task02-access-impl | READY |
-| 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | review | task03-mcp-impl | task03-mcp-review |
+| 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | complete | task03-mcp-impl | READY |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | planned | unassigned | pending |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | planned | unassigned | pending |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | planned | unassigned | pending |
@@ -79,6 +79,9 @@
 - Isolation: owns only the MCP surface and its Task return artifact after Task 02 completes
 - Acceptance: both files are preserved at the target path; all MCP-owned links resolve; no server executable, runtime mutation, credential value, or tool-inventory invention is introduced
 - Approval or stop gate: stop if the target access profile does not resolve or runtime or secret scope would change
+- Completion evidence: implementation range `d40769528a0779ffc5915ba7c35fab2905f55adc..07f6179e9b14a19c9a34863910401a7097e52c94`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; two `R100` moves with byte-identical blobs; five link occurrences across four hrefs resolved; MCP interface and safety markers, validators, scope, and safety scans clean
+- Review disposition: Critical, Important, and Minor findings `None`
+- Reuse assessment: retain the normalized-blob owner-migration checker with MCP link and safety assertions for Project-wide promotion assessment in Task 08; do not expand this completed Task
 
 ### Task 04: Relocate the executable-tool registry
 
