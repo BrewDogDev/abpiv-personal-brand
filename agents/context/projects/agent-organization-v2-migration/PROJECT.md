@@ -2,7 +2,7 @@
 
 ## Status
 
-- Status: executing
+- Status: closing
 - Owning context: `agents/context/`
 - Branch or working state: `codex/migrate-agent-organization-v2`
 - Base: `origin/preview` at `088ac31aeea018131a7bf4d11fff8943266cfba1`
@@ -101,3 +101,4 @@ Decide how to migrate the repository from top-level canonical agent-owner surfac
 | 2026-07-27 | The eight-Task graph traces the requested layout, source migration, preserved metadata and history, canonical-owner integrations, and whole-Project verification; Project validation passed with zero warnings. | Approve the Project for coordinated local execution in dependency order. | Move the Project and active route to `ready`; brief Task 01 just in time. | Original request plus planning self-review and validator evidence. |
 | 2026-07-27 | The legacy repository validator rejected `ready` with all Tasks still `planned`, while the requested 0.1.36 validator passed the same Project with zero warnings and intentionally removes premature current-Task routing. | Treat the legacy failure as target-contract drift, retain the 0.1.36-ready control state, and make validator migration the first execution Task. | Task 01 is the mandatory first dispatch; later Project checks use the migrated repository validator. | Original request for the 0.1.36 organization contract plus direct validator evidence. |
 | 2026-07-27 | Task 01 preflight enumerated 24 non-generated source files, not 23; the additional `capability-and-reasoning-classes.md` is directly linked by the supplied Project skill and is absent from the current 37-file family. | Correct the stale count, include the required reference, and expect 38 target family files: 24 supplied files plus 14 retained metadata files. | Refresh Task 01 counts and acceptance without changing its source, ownership, authority, or selection. | Live source inventory and the original 0.1.36 migration authorization. |
+| 2026-07-27 | All eight Tasks returned `DONE`; every independent review returned `COMPLIANT`, `APPROVED`, and `READY`; integrated verification reproduced the complete owner, discovery, metadata, route, preservation, safety, reuse, and Git evidence with no finding. | Accept the local migration as complete and enter coordinator-controlled closure without publication. | Mark every Task complete, write the Project-local handoff, remove the active route, and archive the intact Project. | Original migration request plus the Task 08 rigorous review. |

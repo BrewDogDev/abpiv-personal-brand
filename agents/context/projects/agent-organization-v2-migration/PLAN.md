@@ -34,7 +34,7 @@
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | complete | task05-templates-impl | READY |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | complete | task06-adapters-impl | READY |
 | 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | complete | task07-context-impl | READY |
-| 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | executing | task08-integrated-impl | rigorous review dispatched |
+| 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | complete | task08-integrated-impl | READY |
 
 ## Task Outcomes And Interfaces
 
@@ -154,6 +154,9 @@
 - Isolation: read-only outside its own Task return artifact; findings return to the coordinator for replanning or a bounded fix Task
 - Acceptance: every Project completion criterion has direct fresh evidence; all validators and deterministic scenarios pass; retained metadata and recursive discovery pass; active stale-path scans are clean; archives and legacy runs match baseline; the diff contains only authorized agent-infrastructure changes
 - Approval or stop gate: any blocking finding, failed required check, changed immutable history, secret-shaped value, machine-local cache path, or unrelated diff returns the Project to planning
+- Completion evidence: implementation range `4ba11ae6573736eedff3edf1551bdd635d73a860..e593fc9626362fa5e2f30d150c42257749d841fb`; Project review range `088ac31aeea018131a7bf4d11fff8943266cfba1..e593fc9626362fa5e2f30d150c42257749d841fb`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; target owners `39/14/2/1/1/3`; 38-file family split 24 supplied and 14 retained; 14 skills and 14 metadata prompts; 198 active links resolved; immutable root, archive, and legacy objects preserved; 32 tests and both live validators passed; 93 final diff records and 149 endpoints classified with zero protected paths or safety findings
+- Review disposition: Critical, Important, and Minor findings `None`; stated residual risks are limited to intentionally uninspected runtime, installed, ignored, credential, external, and refreshed-remote state
+- Reuse assessment: retain the reviewed Skills update policy and canonical verification procedure as the durable integrations; keep the remaining migration checkers as one-time Project evidence unless later recurrence justifies a separately planned artifact
 
 ## Integration And Reuse Obligations
 
