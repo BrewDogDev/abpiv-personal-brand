@@ -60,7 +60,7 @@ Decide how to migrate the repository from top-level canonical agent-owner surfac
 - A fresh agent reads root `AGENTS.md`, loads `agents/context/`, and follows live routes to sibling owners under `agents/`.
 - A tracked move preserves useful content and history while live Markdown routes, commands, and relative links update atomically.
 - Archived Projects and legacy runs remain immutable evidence even when they contain former live paths.
-- The repository-owned skill family receives the 0.1.36 non-generated skill subset while retaining repository-required Codex metadata.
+- The repository-owned skill family receives all 24 non-generated files in the 0.1.36 skill subset while retaining repository-required Codex metadata.
 - The skill family and live Project state satisfy the updated validator and bounded Task-contract behavior.
 - Local implementation authority does not imply publication, deployment, access, permission, or secret authority.
 
@@ -84,7 +84,7 @@ Decide how to migrate the repository from top-level canonical agent-owner surfac
 
 - Live canonical owner surfaces are under `agents/`, with `agents/context/` retaining its Layer 1, Layer 3, and Layer 4 contracts.
 - Every active path, route, adapter mapping, command, and changed Markdown link resolves after the moves.
-- The repository-owned `agent-organization` family reflects the non-generated `abpiv-agents` 0.1.36 subset plus documented retained metadata and passes its bundled tests.
+- The repository-owned `agent-organization` family contains all 24 non-generated files in the `abpiv-agents` 0.1.36 subset plus 14 documented retained metadata files and passes its bundled tests.
 - Recursive discovery finds the expected globally unique skills and matching retained metadata under `agents/skills/`.
 - Archived Projects and legacy run history remain unchanged.
 - All Tasks and independent reviews pass.
@@ -97,6 +97,7 @@ Decide how to migrate the repository from top-level canonical agent-owner surfac
 | Date | Evidence or trigger | Decision | Plan impact | Approval basis |
 | --- | --- | --- | --- | --- |
 | 2026-07-27 | The 0.1.36 skill contract, current repository layout, prior completed migration, plugin metadata, current Git graph, and the user's request were inspected. | Use Migrate mode; move the six top-level owner surfaces beneath `agents/`, preserve immutable history and retained metadata, and keep all work local. | Scaffold a new Project and inventory specialist-owned Tasks. | Original user request and `agent-organization` classification. |
-| 2026-07-27 | The ownership inventory found 59 files across six live top-level owner surfaces, active path references in canonical context and owner documentation, a complete 37-file vendored family, a 23-file non-generated 0.1.36 source subset, and 14 repository-required metadata files absent from that subset. | Move to planning and decompose the migration by canonical specialist owner, keeping cross-domain integration and whole-Project verification explicit. | Write the complete Task graph and validate it before execution. | Original request plus inspected repository and package evidence. |
+| 2026-07-27 | The ownership inventory found 59 files across six live top-level owner surfaces, active path references in canonical context and owner documentation, a complete 37-file vendored family, an initially counted 0.1.36 source subset, and 14 repository-required metadata files absent from that subset. | Move to planning and decompose the migration by canonical specialist owner, keeping cross-domain integration and whole-Project verification explicit. | Write the complete Task graph and validate it before execution. | Original request plus inspected repository and package evidence. |
 | 2026-07-27 | The eight-Task graph traces the requested layout, source migration, preserved metadata and history, canonical-owner integrations, and whole-Project verification; Project validation passed with zero warnings. | Approve the Project for coordinated local execution in dependency order. | Move the Project and active route to `ready`; brief Task 01 just in time. | Original request plus planning self-review and validator evidence. |
 | 2026-07-27 | The legacy repository validator rejected `ready` with all Tasks still `planned`, while the requested 0.1.36 validator passed the same Project with zero warnings and intentionally removes premature current-Task routing. | Treat the legacy failure as target-contract drift, retain the 0.1.36-ready control state, and make validator migration the first execution Task. | Task 01 is the mandatory first dispatch; later Project checks use the migrated repository validator. | Original request for the 0.1.36 organization contract plus direct validator evidence. |
+| 2026-07-27 | Task 01 preflight enumerated 24 non-generated source files, not 23; the additional `capability-and-reasoning-classes.md` is directly linked by the supplied Project skill and is absent from the current 37-file family. | Correct the stale count, include the required reference, and expect 38 target family files: 24 supplied files plus 14 retained metadata files. | Refresh Task 01 counts and acceptance without changing its source, ownership, authority, or selection. | Live source inventory and the original 0.1.36 migration authorization. |
