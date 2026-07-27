@@ -33,7 +33,7 @@
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | complete | task04-tools-impl | READY |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | complete | task05-templates-impl | READY |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | complete | task06-adapters-impl | READY |
-| 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | executing | task07-context-impl | rigorous review dispatched |
+| 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | complete | task07-context-impl | READY |
 | 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | planned | unassigned | pending |
 
 ## Task Outcomes And Interfaces
@@ -139,6 +139,9 @@
 - Isolation: owns context and entrypoint integration only; it does not rewrite owner bodies, immutable archives, legacy history, implementation code, or Project coordinator control state
 - Acceptance: every active agent-owner path and changed local Markdown link resolves; verification commands use target paths; no absent Workflow, tool, access profile, MCP server, adapter, or template is invented; archives and legacy history remain byte-for-byte unchanged
 - Approval or stop gate: stop if live and historical references cannot be distinguished or a repository workflow contradicts current governance
+- Completion evidence: implementation range `e09d493995a5151566c60eedbdf0bbe35d4a9cd5..d82fd272ec361e5addd76436c50a4c4f8a5ceb90`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; four bounded context corrections plus report; 20 Markdown artifacts and 144 local links resolved; 17 live route documents contained zero former-root routes under explicit exclusions; all six owner inventories present and former roots absent; canonical 32-test commands, validators, preservation, scope, and safety checks clean
+- Review disposition: Critical, Important, and Minor findings `None`; residual risk is limited to untracked external consumers outside Task authority
+- Reuse assessment: retain the resolution-aware live-context migration checker candidate for Project-wide assessment in Task 08; Task 07 created no new script, Workflow, Tool, Template, or stable reference
 
 ### Task 08: Integrated review and verification
 
