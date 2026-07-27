@@ -4,9 +4,9 @@
 
 - Date: 2026-07-27
 - Goal: migrate live agent infrastructure to the reviewed 0.1.36 `agents/*` owner layout while preserving discovery, metadata, safety boundaries, and immutable history
-- Status: ready-for-review
+- Status: complete
 - Workspace: `C:\Users\allan\.codex\worktrees\1411\abpiv-personal-brand`
-- Source of truth: `agents/context/projects/agent-organization-v2-migration/`
+- Source of truth: `agents/context/projects/archive/2026-07-27-agent-organization-v2-migration/`
 
 ## Goal
 
@@ -21,12 +21,14 @@ Project without pushing, publishing, deploying, or mutating external state.
 - Project base and local upstream snapshot: `origin/preview` at
   `088ac31aeea018131a7bf4d11fff8943266cfba1`.
 - Verified closing head:
-  `66ddeadd14b0fdaa707401331dfe1f0005706e10`.
+  `66ddeadd14b0fdaa707401331dfe1f0005706e10`; handoff-pointer head:
+  `8daa41a6617e5068d573e9d23eefb8e244a1e1d4`.
 - All eight Tasks are complete. Every independent review is `COMPLIANT`,
   `APPROVED`, and `READY`, with no Critical, Important, or unresolved Minor
   finding.
-- The active Project status is `closing`; its only remaining action is intact
-  archival and active-route removal.
+- The Project is `archived-complete` at
+  `agents/context/projects/archive/2026-07-27-agent-organization-v2-migration/`;
+  it is absent from active Project routing.
 - No fetch, push, pull request, merge, publication, deployment, permission
   change, credential access, runtime action, or external mutation occurred.
 
@@ -75,9 +77,9 @@ Project without pushing, publishing, deploying, or mutating external state.
 - Live Project and Workflow validators: zero warnings.
 - Whole-Project review: 93 records and 149 path endpoints classified, with zero
   protected-domain path, safety, or mode finding.
-- Git: clean at closing head; local comparison was 0 behind and 45 ahead of the
-  available `origin/preview` snapshot after the closing commit. Remote state was
-  not refreshed.
+- Git: clean at the closing and handoff commits. The final archive commit is the
+  commit containing this completed record; the branch is 0 behind and 47 ahead
+  of the available `origin/preview` snapshot. Remote state was not refreshed.
 
 ## What Worked
 
@@ -104,22 +106,16 @@ Project without pushing, publishing, deploying, or mutating external state.
 
 ## Remaining Work
 
-1. Verify the approved archive target
-   `agents/context/projects/archive/2026-07-27-agent-organization-v2-migration/`
-   does not exist and the active Project source resolves inside
-   `agents/context/projects/`.
-2. Change the Project status to `archived-complete`, update this handoff and
-   `latest.md` to `complete`, remove the active routing row, and move the intact
-   Project to the approved dated archive path.
-3. Run the 32-test suite, live Project and Workflow validators, local-link
-   resolution, archive/legacy preservation, exact closure diff, safety scan,
-   and clean-worktree check.
-4. Commit the exact archival closure paths locally and report the final commit.
+None is required to satisfy the user-requested migration. The local topic
+branch may be integrated or published only after explicit new authorization.
+If that is later requested, first confirm the exact requested action, refresh
+the relevant remote refs, reconcile any new `origin/preview` commits without
+rewriting unrelated work, and rerun the canonical checks before publication.
 
 ## Open Decisions Or Blockers
 
-None. The remaining archival action is explicitly planned, local, reversible
-through Git, and within the original migration authority.
+None. Publication is intentionally unperformed and is not an implicit
+continuation requirement.
 
 ## Do Not Assume
 
@@ -135,9 +131,9 @@ through Git, and within the original migration authority.
 ## Fresh-Session Continuation Prompt
 
 ```text
-Continue the goal "archive the completed agent organization v2 migration" in C:\Users\allan\.codex\worktrees\1411\abpiv-personal-brand.
+Continue the goal "integrate or publish the completed agent organization v2 migration only if explicitly authorized" in C:\Users\allan\.codex\worktrees\1411\abpiv-personal-brand.
 
-First, read agents/context/projects/agent-organization-v2-migration/handoff/2026-07-27-migrate-agent-organization-v2-handoff.md completely. Then load root AGENTS.md, agents/context/projects/agent-organization-v2-migration/PROJECT.md, PLAN.md, and the closure rules they reference. Treat the handoff as working context, not unquestionable truth: verify the current files, Git state, checks, approvals, and external state before acting.
+First, read agents/context/projects/archive/2026-07-27-agent-organization-v2-migration/handoff/2026-07-27-migrate-agent-organization-v2-handoff.md completely. Then load root AGENTS.md, the archived Project instructions referenced by the handoff, and the current Git policy. Treat the handoff as working context, not unquestionable truth: verify the current files, Git state, checks, approvals, and external state before acting.
 
-Resume from the ordered Remaining Work section, beginning with verifying that agents/context/projects/archive/2026-07-27-agent-organization-v2-migration/ does not exist and that the active Project source is the intended in-repository directory. Preserve unrelated user changes and stay within every scope, safety, review, and stop boundary recorded in the handoff. Do not redo completed work unless live evidence contradicts it. If state has changed, reconcile it, document the difference, and continue toward the goal.
+Resume from the ordered Remaining Work section, beginning with confirming that the user has explicitly authorized the exact integration or publication action; if no such authorization exists, make no external change. Preserve unrelated user changes and stay within every scope, safety, review, and stop boundary recorded in the handoff. Do not redo completed work unless live evidence contradicts it. If state has changed, reconcile it, document the difference, and continue toward the goal.
 ```
