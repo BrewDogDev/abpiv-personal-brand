@@ -31,7 +31,7 @@
 | 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | complete | task02-access-impl | READY |
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | complete | task03-mcp-impl | READY |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | complete | task04-tools-impl | READY |
-| 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | review | task05-templates-impl | task05-templates-review |
+| 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | complete | task05-templates-impl | READY |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | planned | unassigned | pending |
 | 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | planned | unassigned | pending |
 | 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | planned | unassigned | pending |
@@ -109,6 +109,9 @@
 - Isolation: owns only the template registry and its Task return artifact
 - Acceptance: the registry content is preserved, the old path is absent, the new path exists, and no template is invented
 - Approval or stop gate: stop if a reusable template appears during execution or another change overlaps the registry
+- Completion evidence: implementation range `2d8737fddad61078e1a401a7e7ed908c9dfabac4..cc9737942e635d97c80d7d6920664ca9e6f39270`; `REPORT.md` status `DONE`; `REVIEW.md` verdicts `COMPLIANT`, `APPROVED`, and `READY`; one `R100` move with blob `bbafd539e37034b5c359770ef46272abe26d1b07`; one target file, no old root, no extra template, and clean validators, scope, and safety checks
+- Review disposition: Critical, Important, and Minor findings `None`
+- Reuse assessment: retain the exact-blob registry-migration checker with lazy-creation and no-invention assertions for Project-wide promotion assessment in Task 08; do not expand this completed Task
 
 ### Task 06: Relocate and remap harness adapters
 
