@@ -52,7 +52,7 @@ Ready
 
 ## Interfaces
 
-- Consumes: the current complete 37-file repository family; the requested 0.1.36 non-generated 23-file subset; package ID, repository URL, version, and license; the current active Project records
+- Consumes: the current complete 37-file repository family; the requested 0.1.36 non-generated 24-file subset; package ID, repository URL, version, and license; the current active Project records
 - Produces: a complete 38-file target family under `agents/skills/`, updated portable provenance, passing target-path validators, recursive-discovery evidence, and `REPORT.md`
 
 ## Skills, Tools, Authority, And Selection
