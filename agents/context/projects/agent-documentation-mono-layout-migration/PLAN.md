@@ -25,8 +25,8 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Live non-skill agent owners and context routes use the top-level Mono layout with history and safety contracts preserved. | None | complete | task01-implementer | READY amended head |
-| 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | review | task02-implementer | task02-reviewer: amended re-review |
-| 03 | The integrated migration passes whole-Project review, is archived with handoff evidence, and is promoted and merged through `preview` to `main`. | 01, 02 | planned | unassigned | pending |
+| 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | complete | task02-implementer | READY amended head |
+| 03 | The integrated migration passes whole-Project review and supplies verified evidence for coordinator archival, promotion, and merge through `preview` to `main`. | 01, 02 | ready | task03-implementer | pending |
 
 ## Task Outcomes And Interfaces
 
@@ -49,14 +49,16 @@
 - Required capabilities: `agent-skill-organization`, `testing-agent-skills`
 - Acceptance: inventory and content comparison against Mono 1.1.0 excluding generated cache files; canonical names and folders agree; frontmatter names are globally unique; recursive `SKILL.md` discovery works; bundled validator tests, live Project validation, empty Workflow validation, local links, safety scan, and deterministic scenario coverage pass
 - Approval or stop gate: the original request authorizes the move and scoped contract refresh; stop if the source package cannot be made portable without an undocumented semantic fork or if a supported harness cannot discover the family
+- Completion evidence: implementation commit `ccb422569e4f17c6eb05e037f0d217d1110b01ff`, provenance revision `8db18c153b99a027a598e59a692d6f1ee11336b3`, and amended independent verdict `READY`; exact 37-file family, 35 normalized exact matches plus three allowed corrections in two files, 14/14 skills, 14/14 metadata mappings, 90/90 relevant rendered links, 31 validator tests, live Project and Workflow validation with zero warnings, 8/8 deterministic scenarios, and zero scope or safety findings
+- Deviations and residual findings: fresh-context agent samples were unavailable under the non-delegating Task contract and are not claimed; generated cache was removed and will be prevented through Task 03 integration; the vendored-family comparison candidate remains unpromoted because recurring demand is unproven.
 
-### Task 03: Integrate, Close, Publish, And Merge
+### Task 03: Integrate, Verify, And Prepare Coordinator Publication
 
-- Owns: cross-domain findings routed to Tasks 01 or 02; integrated verification evidence; Project Task return records; Project-local handoff; coordinator control-state closure and archival; exact Git commits; topic-to-`preview` integration; the `preview` to `main` pull request and authorized merge
+- Owns: cross-domain discovery, verification, adapter, and cache-hygiene findings; whole-Project verification evidence; final Task return records; a stable package consumed by coordinator handoff, archival, exact Git publication, pull request, and authorized merge
 - Consumes: reviewed Task 01 and 02 commit ranges; live Git graph and workflows; repository verification and Git policy
-- Produces: a clean integrated tree; zero blocking findings; immutable archived Project; removed active route; pushed `preview`; merged `preview` pull request in `main`; post-merge ref and tree verification
+- Produces: a clean integrated tree and zero-blocking whole-Project review; the coordinator then produces the immutable archive, removed active route, pushed `preview`, merged `preview` pull request in `main`, and post-merge ref/tree evidence
 - Required capabilities: `agent-organization`, `agent-project-organization`, `verification-before-completion`, `handoff`, GitHub publication capability
-- Acceptance: Project and Workflow validators pass from canonical paths; active Markdown links resolve; legacy history and prohibited implementation domains match the base; no credential or machine-local path enters tracked changes; staged and committed scope is exact; GitHub checks permit merge; `origin/main` contains the archived migration and canonical layout
+- Acceptance: Project and Workflow validators pass from canonical paths; active Markdown links resolve; legacy history and prohibited implementation domains match the base; no credential, generated cache, or machine-local path enters tracked changes; staged and committed scope is exact; fresh remote/local-main reconciliation is recorded; the independent verdict is `READY`; coordinator closure then requires GitHub checks and `origin/main` to contain the migrated layout and archived Project
 - Approval or stop gate: merge is authorized by the original request; do not force push, bypass `preview`, deploy production, merge with blocking review or CI findings, or overwrite unrelated remote work
 
 ## Integration And Reuse Obligations
