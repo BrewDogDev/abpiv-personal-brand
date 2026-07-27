@@ -6,7 +6,7 @@ This directory is the repository-owned source for harness-agnostic agent skills.
 
 ### `agent-organization`
 
-- Source: [`BrewDogDev/mono`](https://github.com/BrewDogDev/mono)
+- Source: [`CipherPlayLabs/mono`](https://github.com/CipherPlayLabs/mono)
 - Source package version: `1.1.0`
 - Copied scope: the complete 37-file non-generated `agent-organization` family: 14 `SKILL.md` files, 14 colocated `agents/openai.yaml` interface metadata files, three Python validator or test scripts, and six Markdown references or templates
 - Exclusions: generated `__pycache__`, `.pyc`, and `.pyo` files only

@@ -244,3 +244,25 @@ Final staged evidence:
 - Staged safety scan: PASS across 39 UTF-8 text files; zero generated paths, user-specific or installed-cache paths, private-key blocks, credential-shaped values, or active-skill `agents/skills/` references.
 - Remaining dirty state: the coordinator-owned `agents/context/projects/ROUTING.md` normalization is unstaged.
 - Exact result commit identity and post-commit dirty state are returned to the coordinator because a commit cannot contain its own object identity.
+
+## Review Feedback Ledger
+
+| Review item | Severity | Requirement or risk | Verification and disposition | Status |
+| --- | --- | --- | --- | --- |
+| `skills/README.md` attributed Mono 1.1.0 to `BrewDogDev/mono`; replace the label and URL with `CipherPlayLabs/mono`. | Important | Correct source provenance is required for safe future updates. | Valid. The selected Mono 1.1.0 package manifest at `.codex-plugin/plugin.json` declares `name: mono`, `version: 1.1.0`, author `CipherPlay Labs`, and both `homepage` and `repository` as `https://github.com/CipherPlayLabs/mono`. The README source label and URL now match that manifest exactly. | Implemented; pending fresh re-review. |
+| Review worktree contained generated Project-validator bytecode. | Minor | The Task requires a generated-cache-free integration state. | Superseded by coordinator cleanup before revision dispatch. Fresh recursive checks find zero `__pycache__`, `.pyc`, or `.pyo` paths. No `.gitignore` or other-owner change was made. | Cleared; no implementer edit. |
+
+## Revision Evidence
+
+- Revision dispatch basis: coordinator head `bd7da7c23adcf47fea5d48f68cf90608d19cbcb4`.
+- Amended implementation scope: `skills/README.md` for the one-line provenance correction and this `REPORT.md` for the feedback ledger and reproducible evidence. `REVIEW.md`, Project control state, ignore policy, and all other owners remain unchanged.
+- Revision scope check: PASS. `git diff --name-only` reports exactly `skills/README.md` and this `REPORT.md`.
+- Provenance resolution: PASS. The selected manifest identity above parsed successfully, the README contains `CipherPlayLabs/mono` with `https://github.com/CipherPlayLabs/mono`, and no `BrewDogDev/mono` reference remains in the README.
+- Normalized source comparison: PASS. Source and repository inventories remain 37 paths each, with 35 exact files, two allowed-deviation files, exactly three one-occurrence corrections, and zero unexpected difference.
+- Discovery and interface metadata: PASS. Fourteen recursive skills have globally unique folder-matched names; all 14 metadata files parse with the required fields and matching `$skill-name` prompts.
+- Rendered local links: PASS. All 90 links resolve after fenced examples, remote URLs, and anchors are excluded.
+- Bundled tests: PASS. `python -B skills/agent-organization/agent-project-organization/scripts/test_validate_projects.py` ran 31 tests and returned `OK`.
+- Live validators: PASS. Project validation reports 1 active Project, 1 archived Project, 2 Task directories, and 0 warnings; Workflow validation reports 0 routes, 0 Workflows, 0 stages, and 0 warnings.
+- Deterministic behavioral matrix: PASS, 8/8 direct-trigger, paraphrased-trigger, near-neighbor, non-trigger, missing-information, approval-boundary, stop-rule, and cross-skill-route checks. The previously documented fresh-agent limitation is unchanged.
+- Safety and generated state: PASS. No machine-local installed path, private-key block, credential-shaped value, active-skill old path, generated cache, or bytecode was found.
+- Worktree whitespace: `git diff --check` PASS.
