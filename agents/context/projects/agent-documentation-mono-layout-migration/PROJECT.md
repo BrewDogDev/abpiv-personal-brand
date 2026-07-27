@@ -2,7 +2,7 @@
 
 ## Status
 
-- Status: executing
+- Status: closing
 - Owning context: `agents/context/`
 - Branch or working state: `codex/migrate-agent-docs-mono-layout`
 - Base: `origin/preview` at `c58a221201057c3fb67ec31db198575fb0ff9970`
@@ -94,3 +94,4 @@ Decide how the repository should migrate canonical agent owners from the former 
 | 2026-07-27 | The affected owners, active references, vendored-family delta, promotion workflow, and preservation boundaries were inventoried with no material unresolved decision. | Move to planning and define three bounded Tasks with independent reviews; Tasks 01 and 02 are parallel-eligible only in isolated worktrees because their owned files do not overlap. | Write the complete Task graph and validate it before execution. | Original user request plus the inspected Mono and repository contracts. |
 | 2026-07-27 | The complete three-Task graph traces every requested outcome and non-goal, resolves cross-domain ownership, preserves immutable history, records the merge authority, and passes Project validation with zero warnings. | Approve the Project for coordinated execution; Tasks 01 and 02 may be briefed and dispatched from the same checkpoint in isolated worktrees. | Move the Project and active route to `ready`. | Original request plus successful planning self-review and validator evidence. |
 | 2026-07-27 | The user reported possible updates to `main`; a fresh fetch and the separate local `main` worktree both showed `origin/main` and local `main` still at `7b6267d`, while `origin/preview` remained `c58a221`. | Treat remote reconciliation as a mandatory publication gate: fetch again, compare commits and paths since the Project base, and integrate any non-overlapping change before updating `preview` or opening the merge PR. | Add fresh remote and local-main reconciliation to Task 03 evidence; stop and replan if new agent-documentation changes overlap. | User's explicit follow-up plus current read-only Git evidence. |
+| 2026-07-27 | All three Tasks are complete; Task 03's second amended-head independent review returned `READY` after its exact checker passed from a later coordinator checkpoint. | Move the Project to `closing` while it remains active and writable through the first observed `preview` to `main` migration merge. Archive only after final handoff records the observed merge evidence. | Publish the reviewed migration first, then complete immutable archival through a second closure pull request. | Original merge authorization, completed Task ledger, and final independent review. |

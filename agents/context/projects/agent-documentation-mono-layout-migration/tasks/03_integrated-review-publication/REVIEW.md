@@ -270,3 +270,118 @@ one-use verifier candidate warrants promotion.
 #### Re-Review Verdict
 
 NEEDS_FIXES
+
+### 2026-07-27 Second Amended Head Re-Review
+
+#### Boundary
+
+- Original Task 03 implementation head:
+  `d6b5dbe17b1d439bbd1903fb0c20e7e77ca6a743`
+- Second report-only revision base:
+  `f03f47c5c6bfc2f7e117d4691527cfaed2f7db9f`
+- Second amended implementation head:
+  `f444b64b7f15aee786a1b063879137197e264b98`
+- Coordinator re-review checkpoint:
+  `e273c44d11e2962b389cd306d7ac2d73eda95ab2`
+- Exact revision scope: only
+  `agents/context/projects/agent-documentation-mono-layout-migration/tasks/03_integrated-review-publication/REPORT.md`
+- Preservation: `.gitignore`, `adapters/codex/README.md`,
+  `agents/context/references/repository-map.md`, and
+  `agents/context/references/verification.md` remain byte-identical to the
+  original Task 03 implementation head. The implementer did not change
+  `REVIEW.md`, Project control state, prior Tasks, stable owners, archives,
+  legacy runs, branches, remotes, or external systems.
+
+#### Finding Dispositions
+
+- Original Important closure-order finding: **resolved**. The ordered
+  lifecycle assertions again pass 8/8. The report keeps the Project active and
+  `closing` through the first observed migration merge, records final evidence
+  while the handoff is mutable, and only then archives and publishes closure
+  through the second PR.
+
+- Original Important missing-command finding: **resolved**. The report contains
+  complete terminating commands for the combined whole-Project assertions,
+  remote and local-`main` reconciliation, ignore probes, validators, and pinned
+  diff checks.
+
+- First re-review Important moving-head finding: **resolved**. At coordinator
+  checkpoint `e273c44d11e2962b389cd306d7ac2d73eda95ab2`, the published checker
+  derived exactly
+  `f444b64b7f15aee786a1b063879137197e264b98` from the last commit modifying
+  `REPORT.md`. The derived range excluded the later coordinator-owned
+  `PLAN.md` transition and prior review commits while retaining the expected
+  78-path whole-Project evidence. The checker ran verbatim and exited zero.
+
+- Minor cache-safe-command consistency finding: **carried, nonblocking**.
+  `skills/README.md:33-35` still omits `-B` while the canonical verification
+  reference uses it. The generated-cache ignore rule prevents that neighboring
+  inconsistency from entering the tracked migration result, and the file
+  remains outside the authorized report-only revision.
+
+#### Fresh Verification
+
+- Published whole-Project checker: PASS verbatim. It reported 37/37 source
+  inventory, 35 exact files, three corrections in two files, 14 skills, 14
+  metadata records, 72 active Markdown files, 190 local links, two JSON
+  blocks, 8/8 deterministic scenarios, 21 non-skill owner moves with 14
+  identical and seven edited blobs, 24 skill moves, 15 Task-02 additions, 78
+  whole-Project paths, and zero old-path, generated-output, safety, or
+  prohibited-scope findings.
+- Derived report head: PASS, exactly
+  `f444b64b7f15aee786a1b063879137197e264b98`.
+- Published remote/local-main command: PASS after a fresh fetch.
+  `origin/main` remains
+  `7b6267d23dc092dad007f04756325be0861002bc`,
+  `origin/preview` remains
+  `c58a221201057c3fb67ec31db198575fb0ff9970`, their trees remain identical,
+  and the separate local `main` remains clean and synchronized.
+- Published focused ignore and diff-check command: PASS.
+- Project-validator suite: PASS, 31 tests and `OK`.
+- Live Project validator: PASS, 1 active Project, 1 archived Project, 3 Task
+  directories, and 0 warnings.
+- Live Workflow validator: PASS, 0 routes, 0 Workflows, 0 stages, and 0
+  warnings.
+- Stable-file preservation: PASS. The four non-report Task 03 implementation
+  files are byte-identical between
+  `d6b5dbe17b1d439bbd1903fb0c20e7e77ca6a743` and
+  `f444b64b7f15aee786a1b063879137197e264b98`.
+- Generated state: PASS, zero `__pycache__`, `.pyc`, or `.pyo` files after all
+  fresh checks.
+
+#### Amended Findings
+
+##### Critical
+
+- None.
+
+##### Important
+
+- None.
+
+##### Minor
+
+- Carry `skills/README.md:33-35` omitting `-B` to the coordinator as a
+  nonblocking stable-document consistency concern.
+
+#### Specification Compliance
+
+Compliant. Both original Important findings and the moving-head re-review
+finding are fully resolved. The amended report is self-contained,
+reproducible from a later coordinator checkpoint, lifecycle-truthful, and
+limited to its authorized report-only scope.
+
+#### Task Quality
+
+Approved with the residual Minor above. No implementation, safety, discovery,
+source-parity, history-preservation, remote-reconciliation, or publication
+ordering blocker remains.
+
+#### Reuse Assessment
+
+Unchanged. The four intended stable promotions remain validated, and the two
+one-use verifier candidates remain correctly unpromoted.
+
+#### Re-Review Verdict
+
+READY
