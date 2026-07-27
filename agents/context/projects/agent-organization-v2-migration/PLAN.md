@@ -29,7 +29,7 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | Move the complete vendored skill family to `agents/skills/` and migrate its supplied bodies and scripts to 0.1.36 while retaining repository metadata. | None | complete | task01-skill-impl | READY; Minor record typo corrected |
 | 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | complete | task02-access-impl | READY |
-| 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | ready | unassigned | pending |
+| 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | executing | task03-mcp-impl | pending |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | planned | unassigned | pending |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | planned | unassigned | pending |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | planned | unassigned | pending |
