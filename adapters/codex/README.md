@@ -33,7 +33,7 @@ canonical instruction bodies or define machine-local MCP credentials.
 
 ## Interface Metadata And Manifests
 
-No Codex manifest or generated interface metadata is introduced by this Task.
+This adapter does not maintain a Codex manifest or generated interface metadata.
 The repository paths above are canonical; installed plugin caches and
 machine-local configuration are consumers, never sources of truth.
 

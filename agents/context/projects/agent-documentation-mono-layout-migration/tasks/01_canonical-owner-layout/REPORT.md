@@ -106,6 +106,371 @@ and infrastructure actions were out of scope and were not performed.
 - The Task brief's planning-basis line names an earlier coordinator checkpoint,
   while the explicit dispatch and actual clean branch established
   `56e47bd0ef98447de33cce1eb4be95994df594f0` as the Task base.
-- No independent feedback has been received yet. Review should use
-  `56e47bd0ef98447de33cce1eb4be95994df594f0..92fdb1afa28614a48f4e2c4aeca5524dd7404c0b`;
-  any finding must be verified against live artifacts before an in-scope fix.
+- Independent review at coordinator head
+  `49afee970c9cd3ce36e66e96848e5c9fbf8a8fc9` returned one Important
+  adapter-language finding and one Minor reproducibility finding. Both were
+  verified against live artifacts and addressed in Revision 01 below.
+
+## Revision 01: Durable Adapter Language And Reproducible Evidence
+
+### Status
+
+DONE
+
+### Feedback Ledger
+
+| Review item | Severity | Disposition | Evidence |
+| --- | --- | --- | --- |
+| `adapters/codex/README.md` described manifest state as introduced "by this Task." | Important | Valid; fixed with the smallest durable wording change. | The adapter now states that it does not maintain a Codex manifest or generated interface metadata. The focused task-language scan below returns no run-scoped Project-task language. |
+| Custom verification results lacked exact commands, exclusions, and matrix terms. | Minor | Valid; fixed in this report. | The six deterministic checks below include terminating assertions, exact path sets, every old-path exclusion, and all 27 contract-matrix terms. |
+
+### Revision Scope And Git
+
+- Revision base:
+  `49afee970c9cd3ce36e66e96848e5c9fbf8a8fc9`
+- Amended Task head: the single revision commit containing this report; resolve
+  it with `git rev-parse HEAD` and compare it to the revision base with the
+  exact scope command below.
+- Revision commit subject:
+  `Address canonical owner migration review`
+- Exact revised paths:
+  - `adapters/codex/README.md`
+  - `agents/context/projects/agent-documentation-mono-layout-migration/tasks/01_canonical-owner-layout/REPORT.md`
+
+### Deterministic Verification Commands
+
+Run every command from the repository root in PowerShell. Each command throws
+on a mismatch instead of relying on visual interpretation.
+
+#### Old-To-New Inventory And Blob Accounting
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$taskBase = '56e47bd0ef98447de33cce1eb4be95994df594f0'
+$oldRoots = @(
+  'agents/access',
+  'agents/adapters',
+  'agents/mcp-servers',
+  'agents/templates',
+  'agents/tools'
+)
+$oldLines = git ls-tree -r $taskBase -- $oldRoots
+$records = foreach ($line in $oldLines) {
+  if ($line -notmatch '^\d+ blob ([0-9a-f]+)\t(.+)$') {
+    throw "Unexpected ls-tree row: $line"
+  }
+  $oldBlob = $Matches[1]
+  $oldPath = $Matches[2]
+  $newPath = $oldPath -replace '^agents/', ''
+  if (-not (Test-Path -LiteralPath $newPath -PathType Leaf)) {
+    throw "Missing migrated file: $newPath"
+  }
+  $newBlob = (git hash-object -- $newPath).Trim()
+  [pscustomobject]@{
+    OldPath = $oldPath
+    NewPath = $newPath
+    SameBlob = ($oldBlob -eq $newBlob)
+  }
+}
+$expectedNew = @($records.NewPath | Sort-Object)
+$actualNew = @(
+  git ls-files -- access adapters mcp-servers templates tools |
+    Sort-Object
+)
+$oldRemaining = @(
+  git ls-files -- agents/access agents/adapters agents/mcp-servers `
+    agents/templates agents/tools
+)
+$unexpectedNew = @($actualNew | Where-Object { $_ -notin $expectedNew })
+if (
+  $records.Count -ne 21 -or
+  $actualNew.Count -ne 21 -or
+  @($records | Where-Object SameBlob).Count -ne 14 -or
+  @($records | Where-Object { -not $_.SameBlob }).Count -ne 7 -or
+  $oldRemaining.Count -ne 0 -or
+  $unexpectedNew.Count -ne 0
+) {
+  throw 'Owner inventory or blob accounting mismatch.'
+}
+```
+
+#### Local Inline Links
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$files = @(
+  Get-ChildItem -LiteralPath access,adapters,mcp-servers,templates,tools `
+    -Recurse -File -Filter *.md
+  Get-Item -LiteralPath `
+    'agents/context/CONTEXT.md', `
+    'agents/context/ROUTING.md', `
+    'agents/context/references/repository-map.md', `
+    'agents/context/references/verification.md', `
+    'AGENTS.md', `
+    'agents/context/projects/agent-documentation-mono-layout-migration/tasks/01_canonical-owner-layout/REPORT.md'
+) | Sort-Object FullName -Unique
+$pattern = '(?!!)\[[^\]]*\]\((?<target>[^)]+)\)'
+$linkCount = 0
+$failures = @()
+foreach ($file in $files) {
+  $text = [System.IO.File]::ReadAllText($file.FullName)
+  foreach ($match in [regex]::Matches($text, $pattern)) {
+    $target = $match.Groups['target'].Value.Trim()
+    if ($target.StartsWith('<') -and $target.EndsWith('>')) {
+      $target = $target.Substring(1, $target.Length - 2)
+    }
+    if ($target -match '^(?:[A-Za-z][A-Za-z0-9+.-]*:|#|//)') {
+      continue
+    }
+    $target = ($target -replace '[?#].*$', '')
+    if ([string]::IsNullOrWhiteSpace($target)) {
+      continue
+    }
+    $linkCount++
+    $decoded = [Uri]::UnescapeDataString($target)
+    $resolved = [System.IO.Path]::GetFullPath(
+      (Join-Path $file.DirectoryName $decoded)
+    )
+    if (-not (Test-Path -LiteralPath $resolved)) {
+      $failures += "$($file.FullName) -> $target"
+    }
+  }
+}
+if ($files.Count -ne 27 -or $linkCount -ne 156 -or $failures.Count -ne 0) {
+  $failures
+  throw 'Local-link verification mismatch.'
+}
+```
+
+#### Contract Matrix
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$required = @(
+  @{
+    File = 'access/references/local-bindings.md'
+    Terms = @(
+      '.codex-local/n8n-mcp.json',
+      '0700',
+      '0600',
+      'abpiv-n8n-mcp-cloudflare-access',
+      'N8N_LOBST3RS_MCP_TOKEN',
+      'CF-Access-Client-Id',
+      'CF-Access-Client-Secret',
+      'User-Agent'
+    )
+  },
+  @{
+    File = 'mcp-servers/n8n-instance/MCP.md'
+    Terms = @(
+      'Streamable HTTP',
+      'tools/list',
+      'N8N_LOBST3RS_MCP_TOKEN',
+      'abpiv-n8n-mcp-cloudflare-access',
+      'ambiguous',
+      'publication',
+      'production execution'
+    )
+  },
+  @{
+    File = 'access/references/secret-boundary.md'
+    Terms = @(
+      'Tracked Files Must Not Contain',
+      '.codex-local/',
+      'Never report its value'
+    )
+  },
+  @{
+    File = 'adapters/codex/README.md'
+    Terms = @(
+      'Maintenance status: active',
+      'agents/context/',
+      'access/ROUTING.md',
+      'mcp-servers/n8n-instance/MCP.md',
+      'skills/agent-organization/',
+      'recursively'
+    )
+  },
+  @{
+    File = 'adapters/kilo/README.md'
+    Terms = @(
+      'Maintenance status: historical',
+      'not an active repository harness',
+      'Historical files must not be loaded'
+    )
+  }
+)
+$missing = @()
+$assertionCount = 0
+foreach ($item in $required) {
+  $text = [System.IO.File]::ReadAllText((Resolve-Path $item.File))
+  foreach ($term in $item.Terms) {
+    $assertionCount++
+    if (-not $text.Contains($term)) {
+      $missing += "$($item.File) :: $term"
+    }
+  }
+}
+if ($assertionCount -ne 27 -or $missing.Count -ne 0) {
+  $missing
+  throw 'Contract-matrix verification mismatch.'
+}
+```
+
+#### Active Old Paths And Run-Scoped Adapter Language
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$oldPathMatches = @(
+  rg -n --hidden `
+    --glob '!.git/**' `
+    --glob '!agents/context/projects/archive/**' `
+    --glob '!agents/context/runs/legacy/**' `
+    --glob '!agents/skills/**' `
+    --glob '!agents/context/projects/agent-documentation-mono-layout-migration/**' `
+    'agents/(access|adapters|mcp-servers|templates|tools)/' .
+)
+$oldPathExit = $LASTEXITCODE
+if ($oldPathExit -ne 1 -or $oldPathMatches.Count -ne 0) {
+  $oldPathMatches
+  throw 'Unexpected active former-owner path.'
+}
+$taskLanguageMatches = @(
+  rg -n `
+    '(?i)(introduced|added|removed|changed|supplied|completed)\s+(?:in|by|for|during|after|before)\s+(?:this\s+)?(?:Project\s+)?Task|Task\s+\d+|parallel\s+Task' `
+    adapters/codex/README.md
+)
+$taskLanguageExit = $LASTEXITCODE
+if ($taskLanguageExit -ne 1 -or $taskLanguageMatches.Count -ne 0) {
+  $taskLanguageMatches
+  throw 'Run-scoped Project-task language remains in the Codex adapter.'
+}
+```
+
+The old-path exclusions are intentionally limited to Git internals, immutable
+Project archives, legacy run history, Task 02's still-owned skill tree, and this
+Project's coordinator-owned Task/control records.
+
+#### Original Implementation And Revision Scope
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$taskBase = '56e47bd0ef98447de33cce1eb4be95994df594f0'
+$implementationHead = '92fdb1afa28614a48f4e2c4aeca5524dd7404c0b'
+$implementationStatus = @(
+  git diff --name-status -M "$taskBase..$implementationHead"
+)
+$implementationPaths = @(
+  git diff --name-only "$taskBase..$implementationHead"
+)
+$expectedImplementationPaths = @(
+  git ls-tree -r --name-only $taskBase -- `
+    agents/access agents/adapters agents/mcp-servers agents/templates agents/tools |
+    ForEach-Object { $_ -replace '^agents/', '' }
+) + @(
+  'agents/context/CONTEXT.md',
+  'agents/context/ROUTING.md',
+  'agents/context/references/repository-map.md'
+)
+$missingImplementation = @(
+  $expectedImplementationPaths |
+    Where-Object { $_ -notin $implementationPaths }
+)
+$extraImplementation = @(
+  $implementationPaths |
+    Where-Object { $_ -notin $expectedImplementationPaths }
+)
+if (
+  $implementationPaths.Count -ne 24 -or
+  @($implementationStatus | Where-Object { $_ -match '^R' }).Count -ne 21 -or
+  @($implementationStatus | Where-Object { $_ -match '^M' }).Count -ne 3 -or
+  $missingImplementation.Count -ne 0 -or
+  $extraImplementation.Count -ne 0
+) {
+  throw 'Original implementation scope mismatch.'
+}
+
+$revisionBase = '49afee970c9cd3ce36e66e96848e5c9fbf8a8fc9'
+$revisionHead = (git rev-parse HEAD).Trim()
+$revisionPaths = @(git diff --name-only "$revisionBase..$revisionHead")
+$expectedRevisionPaths = @(
+  'adapters/codex/README.md',
+  'agents/context/projects/agent-documentation-mono-layout-migration/tasks/01_canonical-owner-layout/REPORT.md'
+)
+$missingRevision = @(
+  $expectedRevisionPaths | Where-Object { $_ -notin $revisionPaths }
+)
+$extraRevision = @(
+  $revisionPaths | Where-Object { $_ -notin $expectedRevisionPaths }
+)
+if (
+  $revisionPaths.Count -ne 2 -or
+  $missingRevision.Count -ne 0 -or
+  $extraRevision.Count -ne 0
+) {
+  throw 'Revision scope mismatch.'
+}
+```
+
+#### Secret And Machine-Local-Path Safety
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$taskBase = '56e47bd0ef98447de33cce1eb4be95994df594f0'
+$implementationHead = '92fdb1afa28614a48f4e2c4aeca5524dd7404c0b'
+$files = @(
+  git diff --name-only "$taskBase..$implementationHead"
+) + @(
+  'agents/context/projects/agent-documentation-mono-layout-migration/tasks/01_canonical-owner-layout/REPORT.md'
+) | Sort-Object -Unique
+$privateKey = @()
+$machinePath = @()
+$credential = @()
+foreach ($path in $files) {
+  $text = [System.IO.File]::ReadAllText((Resolve-Path $path))
+  $scanText = [regex]::Replace(
+    $text,
+    '(?ms)^```powershell\s.*?^```\s*$',
+    ''
+  )
+  if ($scanText -match '-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----') {
+    $privateKey += $path
+  }
+  if (
+    $scanText -match
+      '(?i)(?:[A-Z]:[\\/]Users[\\/]|/Users/[^/\s]+/|/home/[^/\s]+/|\.codex[\\/]plugins[\\/]cache|\.codex[\\/]worktrees)'
+  ) {
+    $machinePath += $path
+  }
+  if (
+    $scanText -match
+      '(?i)(?:\b(?:sk|ghp|gho|github_pat)-?[A-Za-z0-9_]{20,}\b|\bAIza[0-9A-Za-z_-]{30,}\b|\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b)'
+  ) {
+    $credential += $path
+  }
+}
+if (
+  $files.Count -ne 25 -or
+  $privateKey.Count -ne 0 -or
+  $machinePath.Count -ne 0 -or
+  $credential.Count -ne 0
+) {
+  $privateKey
+  $machinePath
+  $credential
+  throw 'Safety scan mismatch.'
+}
+```
+
+### Revision Verification
+
+The focused task-language, link, contract, old-path, scope, safety, Project
+validator, and whitespace checks must be rerun against the amended revision
+commit before re-review. Their fresh results and exact amended commit identity
+are returned to the coordinator with this report.
+
+### Re-Review
+
+Re-review the amended base-to-head Task evidence and this revision against the
+recorded Important and Minor findings. No finding was declined or broadened,
+and no Project control state or review record was modified.
