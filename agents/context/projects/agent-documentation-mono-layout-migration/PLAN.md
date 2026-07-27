@@ -26,7 +26,7 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | Live non-skill agent owners and context routes use the top-level Mono layout with history and safety contracts preserved. | None | complete | task01-implementer | READY amended head |
 | 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | complete | task02-implementer | READY amended head |
-| 03 | The integrated migration passes whole-Project review and supplies verified evidence for coordinator archival, promotion, and merge through `preview` to `main`. | 01, 02 | ready | task03-implementer | pending |
+| 03 | The integrated migration passes whole-Project review and supplies verified evidence for coordinator archival, promotion, and merge through `preview` to `main`. | 01, 02 | executing | task03-implementer | pending |
 
 ## Task Outcomes And Interfaces
 
