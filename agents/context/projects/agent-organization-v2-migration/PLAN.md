@@ -28,7 +28,7 @@
 | Task | Outcome | Dependencies | Status | Implementer | Review |
 | --- | --- | --- | --- | --- | --- |
 | 01 | Move the complete vendored skill family to `agents/skills/` and migrate its supplied bodies and scripts to 0.1.36 while retaining repository metadata. | None | complete | task01-skill-impl | READY; Minor record typo corrected |
-| 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | ready | unassigned | pending |
+| 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | executing | task02-access-impl | pending |
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | planned | unassigned | pending |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | planned | unassigned | pending |
 | 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | planned | unassigned | pending |
