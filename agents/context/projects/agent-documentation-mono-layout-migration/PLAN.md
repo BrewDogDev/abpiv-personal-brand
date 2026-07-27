@@ -26,7 +26,7 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | Live non-skill agent owners and context routes use the top-level Mono layout with history and safety contracts preserved. | None | complete | task01-implementer | READY amended head |
 | 02 | The repository-owned `agent-organization` family lives under `skills/`, reflects Mono 1.1.0 plus documented portability corrections, and passes skill validation. | None | complete | task02-implementer | READY amended head |
-| 03 | The integrated migration passes whole-Project review and supplies verified evidence for coordinator archival, promotion, and merge through `preview` to `main`. | 01, 02 | review | task03-implementer | NEEDS_FIXES; amended re-review pending |
+| 03 | The integrated migration passes whole-Project review and supplies verified evidence for coordinator archival, promotion, and merge through `preview` to `main`. | 01, 02 | revisions | task03-implementer | NEEDS_FIXES at first amended head |
 
 ## Task Outcomes And Interfaces
 
@@ -60,7 +60,7 @@
 - Required capabilities: `agent-organization`, `agent-project-organization`, `verification-before-completion`, `handoff`, GitHub publication capability
 - Acceptance: Project and Workflow validators pass from canonical paths; active Markdown links resolve; legacy history and prohibited implementation domains match the base; no credential, generated cache, or machine-local path enters tracked changes; staged and committed scope is exact; fresh remote/local-main reconciliation is recorded; the independent verdict is `READY`; coordinator closure then requires GitHub checks and `origin/main` to contain the migrated layout and archived Project
 - Approval or stop gate: merge is authorized by the original request; do not force push, bypass `preview`, deploy production, merge with blocking review or CI findings, or overwrite unrelated remote work
-- Revision evidence: the first independent review returned `NEEDS_FIXES` against implementation head `d6b5dbe17b1d439bbd1903fb0c20e7e77ca6a743`. The four stable implementation edits passed; `REPORT.md` must replace premature pre-merge archival with a truthful two-PR lifecycle and add exact reproducible whole-Project verification commands. A non-blocking Minor notes that neighboring `skills/README.md` validator examples omit `-B`; that file remains outside Task 03 revision scope.
+- Revision evidence: the first independent review returned `NEEDS_FIXES` against implementation head `d6b5dbe17b1d439bbd1903fb0c20e7e77ca6a743`. Report revision `25be935b50151c6cda9d3d872864dc39e063a2a0` resolved the premature-archive finding and added the complete checker, but amended re-review found its report-only range still used moving `HEAD` and failed after the required coordinator checkpoint. The next report-only revision must derive a stable report head for every review-sensitive range. The four stable implementation edits continue to pass. A non-blocking Minor notes that neighboring `skills/README.md` validator examples omit `-B`; that file remains outside Task 03 revision scope.
 
 ## Integration And Reuse Obligations
 
