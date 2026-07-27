@@ -19,7 +19,7 @@ Ready
 - Acceptance criteria:
   - Move both tracked files from `mcp-servers/` to equivalent relative paths under `agents/mcp-servers/` with Git-visible history; require the former top-level `mcp-servers/` root to be absent.
   - Preserve both files byte-for-byte or normalized-content exact; no link or contract edit is expected.
-  - Require all four local Markdown links to resolve after the move: one registry contract link and three references to the migrated Access owner.
+  - Require all five local Markdown link occurrences across four distinct hrefs to resolve after the move: one registry contract link and three relative href forms into the migrated Access owner, with the local-binding href used twice.
   - Preserve the remote Streamable HTTP transport, dynamic `tools/list` authority, credential and header names, action gates, ambiguity handling, safety notes, example boundaries, and statement that no local server executable or secret-bearing client configuration is tracked.
   - Require zero runtime access, MCP connection, authentication, credential reads, external mutation, generated files, secret values, machine-local installed-cache paths, or new tool claims.
 
@@ -78,7 +78,7 @@ Ready
 
 ## Verification And Evidence
 
-- Focused check: require two target files, no top-level `mcp-servers/`, normalized content equality for both files, four resolving local links, and unchanged runtime, tool-discovery, credential-name, gate, and secret-boundary markers
+- Focused check: require two target files, no top-level `mcp-servers/`, normalized content equality for both files, five resolving link occurrences across four distinct hrefs, and unchanged runtime, tool-discovery, credential-name, gate, and secret-boundary markers
 - Broader check: run the canonical Project and Workflow validators from `agents/skills/`; require zero errors or warnings and confirm no runtime or external state was touched
 - Diff or artifact review: inspect exact Task base-to-head diff for only old and target MCP paths plus `REPORT.md`; both source documents should be 100% renames
 - Required evidence: exact Task base/head and commit, inventory/content comparison, link results, safety-marker comparison, secret/cache-path scan, generated-file scan, validator output, `git diff --check`, and scope status
