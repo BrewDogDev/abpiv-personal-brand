@@ -31,7 +31,7 @@
 | 02 | Move the credential-free access registry to `agents/access/` with its internal contracts and live references intact. | None | complete | task02-access-impl | READY |
 | 03 | Move the MCP server registry to `agents/mcp-servers/` and preserve its access-profile and safety relationships. | 02 | complete | task03-mcp-impl | READY |
 | 04 | Move the empty executable-tool registry to `agents/tools/` without inventing a tool contract. | None | complete | task04-tools-impl | READY |
-| 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | executing | task05-templates-impl | pending |
+| 05 | Move the empty template registry to `agents/templates/` without inventing reusable templates. | None | review | task05-templates-impl | task05-templates-review |
 | 06 | Move the harness adapter registry to `agents/adapters/` and update its mappings to the migrated canonical owners. | 01, 02, 03, 04, 05 | planned | unassigned | pending |
 | 07 | Integrate the new owner layout into canonical context, routing, repository maps, verification, and repository entrypoints. | 01, 02, 03, 04, 05, 06 | planned | unassigned | pending |
 | 08 | Perform whole-Project review, integrated verification, preservation checks, and reusable-learning assessment. | 07 | planned | unassigned | pending |
