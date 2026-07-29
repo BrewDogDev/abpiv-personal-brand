@@ -1,4 +1,0 @@
-interface:
-  display_name: "Testing Agent Skills"
-  short_description: "Pressure-test reusable agent skills."
-  default_prompt: "Use $testing-agent-skills to forward-test this skill with realistic success and pressure scenarios."

@@ -25,19 +25,20 @@ For Markdown changes, programmatically extract local inline links, strip anchors
 - Compare branch and deployment claims to [`.github/workflows/`](../../../.github/workflows/) and the current Git graph.
 - Scan tracked changes for credential values and machine-local plugin cache paths.
 
-Run the canonical agent validators from the repository root with Python bytecode
-generation disabled:
+Agent procedures and validators are supplied externally by the
+`abpiv-agents` distribution through the active harness; this repository does
+not vendor their skill bodies or scripts. Resolve these bundled resources and
+run them against the repository root with Python bytecode generation disabled:
 
-```powershell
-python -B agents/skills/agent-organization/agent-project-organization/scripts/test_validate_projects.py
-python -B agents/skills/agent-organization/agent-project-organization/scripts/validate_projects.py .
-python -B agents/skills/agent-organization/agent-workflow-organization/scripts/validate_workflows.py .
-```
+- `agent-project-organization/scripts/test_validate_projects.py`
+- `agent-project-organization/scripts/validate_projects.py <repository-root>`
+- `agent-workflow-organization/scripts/validate_workflows.py <repository-root>`
 
-The Project-validator test suite currently contains 32 tests and must finish
-with `OK`. The live Project and Workflow validators must finish without errors
-or warnings. Keep `-B` on these commands so verification does not create
-`__pycache__`, `.pyc`, or `.pyo` output in the canonical skill family.
+The Project-validator test suite must finish with `OK`. The live Project and
+Workflow validators must finish without errors or warnings. If the external
+plugin or a required validator resource is unavailable, report agent validation
+as unavailable and do not claim that the affected artifact is compliant. Never
+persist an installed-cache path in tracked files.
 
 ## Content Site
 

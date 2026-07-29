@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agent MCP Organization"
-  short_description: "Organize MCP runtime, tools, config, and safety."
-  default_prompt: "Use $agent-mcp-organization to document or audit this MCP server integration."
