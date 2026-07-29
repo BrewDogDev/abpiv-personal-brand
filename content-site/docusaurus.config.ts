@@ -34,7 +34,7 @@ function parseFrontMatterValue(value: string): string {
 
 function parseMdxFrontMatter(filePath: string): Record<string, string> {
   const source = readFileSync(filePath, 'utf8');
-  const match = source.match(/^---\n([\s\S]*?)\n---/);
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
   if (!match) {
     return {};
@@ -42,7 +42,7 @@ function parseMdxFrontMatter(filePath: string): Record<string, string> {
 
   return Object.fromEntries(
     match[1]
-      .split('\n')
+      .split(/\r?\n/)
       .map((line) => {
         const separator = line.indexOf(':');
 
