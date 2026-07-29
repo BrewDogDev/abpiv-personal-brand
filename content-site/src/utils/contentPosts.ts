@@ -30,10 +30,10 @@ export const fallbackPosts: Record<string, BlogPost[]> = {
   research: [
     {
       metadata: {
-        permalink: '/research/randao-white-paper-v1',
-        title: 'Truly Random Number Generation',
-        description: 'Research on truly random number generation for decentralized applications.',
-        date: '2026-04-30',
+        permalink: '/research/addressing-onchain-randomness',
+        title: 'Truly Random Numbers for Blockchains',
+        description: 'How decentralized entropy providers can bring unpredictable, verifiable random numbers to blockchain applications.',
+        date: '2026-06-22',
         tags: [],
       },
     },

@@ -16,7 +16,6 @@ export const links = {
   strava: withUtm('https://www.strava.com/athletes/194701234'),
   tiktok: withUtm('https://www.tiktok.com/@allanbpediniv'),
   email: 'mailto:allan@abpiv.dev',
-  randaoWhitepaper: 'https://randao-whitepaper.ar.io/',
 } as const;
 
 export type LinkKey = keyof typeof links;
