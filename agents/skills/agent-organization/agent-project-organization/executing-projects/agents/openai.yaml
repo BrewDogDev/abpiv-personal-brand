@@ -1,4 +1,0 @@
-interface:
-  display_name: "Executing Projects"
-  short_description: "Coordinate reviewed Tasks through Project closure."
-  default_prompt: "Use $executing-projects to coordinate this approved Project through reviewed Tasks and closure."

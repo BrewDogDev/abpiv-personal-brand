@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agent Project Organization"
-  short_description: "Classify and coordinate monorepo Projects."
-  default_prompt: "Use $agent-project-organization to classify this planned work and route its Project lifecycle."

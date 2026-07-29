@@ -6,9 +6,12 @@
 - Maintenance status: active
 - Canonical source of truth: canonical owners under `agents/`, including
   `agents/context/`, and root [`AGENTS.md`](../../../AGENTS.md)
+- External procedure provider:
+  [`BrewDogDev/abpiv-agents`](https://github.com/BrewDogDev/abpiv-agents)
+  through the installed `abpiv-agents` Codex plugin
 
 This adapter maps Codex entrypoints and discovery expectations. It does not copy
-canonical instruction bodies or define machine-local MCP credentials.
+external skill bodies or define machine-local MCP credentials.
 
 ## Mapping
 
@@ -19,7 +22,7 @@ canonical instruction bodies or define machine-local MCP credentials.
 | [`agents/context/projects/`](../../context/projects/ROUTING.md) | Active multi-session Project discovery and Project-local continuity |
 | [`agents/access/ROUTING.md`](../../access/ROUTING.md) | External target, verification, action gates, and secret boundary |
 | [`agents/mcp-servers/n8n-instance/MCP.md`](../../mcp-servers/n8n-instance/MCP.md) | Remote n8n MCP transport, dynamic-tool, and safety contract |
-| [`agents/skills/agent-organization/`](../../skills/agent-organization/SKILL.md) | Agent-infrastructure router and recursively nested specialist family |
+| External `abpiv-agents` plugin | Reusable agent-organization procedures used to create, maintain, and validate repository-owned artifacts; no skill body is stored in this repository |
 | [`agents/tools/README.md`](../../tools/README.md) | Empty executable agent capability registry; no repository-owned tool is currently registered |
 | [`agents/templates/README.md`](../../templates/README.md) | Empty reusable agent artifact template registry; no template is currently registered |
 
@@ -28,44 +31,40 @@ canonical instruction bodies or define machine-local MCP credentials.
 1. Codex reads the closest `AGENTS.md`; the repository root file is the supported
    entrypoint for this workspace.
 2. Repository work starts from canonical context and routing, then loads only the
-   selected domain, Project, access profile, MCP contract, or skill.
-3. Skills must be discovered recursively so the `agent-organization` family
-   router and nested specialists remain independently addressable.
-4. Canonical skill frontmatter names must remain globally unique.
+   selected repository-owned domain, Project, access profile, or MCP contract.
+3. When reusable agent procedure is needed, Codex resolves the installed
+   `abpiv-agents` plugin and uses its independently discovered skills.
+4. If the required external skill is unavailable, stop before claiming that its
+   procedure or validation was applied.
 
 ## Interface Metadata And Manifests
 
-The canonical family retains 14 source `agents/openai.yaml` interface metadata
-records, one beside each recursively discovered `SKILL.md`. Each record declares
-`display_name`, `short_description`, and a `default_prompt` that invokes the
-matching skill name. These source records do not duplicate skill bodies.
-
-This adapter does not maintain a Codex manifest, generate those metadata
-records, or claim a generated manifest for the family. The repository paths
-above are canonical; installed plugin caches and machine-local configuration
-are consumers, never sources of truth.
+The external plugin owns its skill manifests, interface metadata, discovery,
+installation, and updates. This repository owns no plugin manifest or copied
+skill metadata. The adapter records only the mapping between external procedure
+and repository-owned artifacts.
 
 ## Unsupported Features
 
-- This adapter does not install repository skills into a Codex runtime.
+- This adapter does not install or update the external plugin.
 - It does not create an MCP client binding or make credentials available.
-- It does not promise that every Codex host supports identical recursive skill
-  discovery; runtime support must be verified after installation.
+- It does not make the repository self-contained when `abpiv-agents` is absent.
 
 ## Generation Or Synchronization
 
-The adapter is manually maintained as a thin mapping. Detect drift by resolving
-every link, enumerating the nested `SKILL.md` files, and comparing any installed
-consumer to the canonical repository copy without writing cache paths into Git.
+There is no skill synchronization surface in this repository. Keep reusable
+skill bodies in `BrewDogDev/abpiv-agents`; keep only the artifacts produced for
+this workspace here. Never copy an installed plugin cache into Git.
 
 ## Validation And Reload
 
-- Resolve the root entrypoint, context, Project, access, MCP, and skill-family
-  targets.
-- Verify recursive skill discovery and unique frontmatter names from the
-  canonical `agents/skills/` owner.
-- Reload or start a fresh Codex task after runtime installation or mapping
-  changes; a current task may retain previously loaded instructions.
+- Resolve the root entrypoint, context, Project, access, MCP, tool, template, and
+  adapter targets.
+- Confirm that no live `agents/skills/` tree exists in this repository.
+- Verify required `abpiv-agents` skills through the active Codex skill catalog
+  and run their bundled validators against the repository root when applicable.
+- Reload or start a fresh Codex task after external plugin changes; a current
+  task may retain previously loaded instructions.
 
 ## Secret And Local-State Boundary
 

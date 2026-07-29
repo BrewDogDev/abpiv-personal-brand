@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agent Workflow Organization"
-  short_description: "Organize workflow and stage contracts."
-  default_prompt: "Use $agent-workflow-organization to create or audit this workflow and its stage contracts."
