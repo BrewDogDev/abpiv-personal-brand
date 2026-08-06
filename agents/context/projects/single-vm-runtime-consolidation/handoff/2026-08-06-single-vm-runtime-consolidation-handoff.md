@@ -19,9 +19,10 @@ This Project does not authorize implementation, production mutation, data moveme
 - `PROJECT.md` defines the outcome, non-goals, completion criteria, approval boundaries, cost target, worker/reviewer budgets, and Project ledger.
 - `PLAN.md` defines nine Tasks in seven waves. Task 01 is read-only baseline and capacity evidence; Tasks 02-06 prepare repository changes; Task 07 is the separately approved cutover; Task 08 requires seven stable days plus separate destructive approval; Task 09 reconciles final repository state.
 - The chosen architecture evolves the existing `plausible-analytics-vm` into one shared private host. Application boundaries remain explicit even though the VM is shared.
-- At the time this record was written, the Project artifacts were uncommitted in the isolated worktree `C:\Users\allan\.codex\worktrees\cloud-cost\abpiv-personal-brand` on `codex/consolidate-n8n-compute-engine`, based on `origin/preview` commit `e002dbfa71c493528bd1e6be384e36b4005dce62`.
-- At that same observation, `origin/main` was `2c7f46d43ac41bee6c7a4ca56ce957f1b9416d28`, `origin/preview` was `e002dbfa71c493528bd1e6be384e36b4005dce62`, and their trees were identical. `main` was one promotion merge commit ahead of `preview`.
-- The current session has explicit user authorization to integrate this planning change into `main`, but the repository requires topic branch -> `preview` -> pull request from `preview` to `main`. A merge is not a production deployment.
+- The planning artifacts were committed on `codex/consolidate-n8n-compute-engine` as `19c83bd78486e68ff12a4dd6b9931668d9d3feee`, merged into `preview` by pull request 26 as `dbc1925df518803d53a24dce4e23d3d3d5507a29`, and promoted from `preview` to `main` by pull request 27 as `3d61a2ab69ce35db263d39b98a90ad6ede84e3d9`.
+- Pull request 27's `Require preview source` check passed in GitHub Actions run `31094914647`. After the merge, `origin/main` and `origin/preview` had identical trees; `main` was one promotion merge commit ahead.
+- The primary local `main` worktree was fast-forwarded to `3d61a2ab69ce35db263d39b98a90ad6ede84e3d9`. This dated record was then amended in the isolated topic worktree to capture the completed promotion; resolve the amendment's containing commit live with `git log -1 --` on this path.
+- A merge is not a production deployment. No workflow run targeted the `main` merge commit, and no production workflow was dispatched.
 - No live Google Cloud, Cloudflare, n8n, database, traffic, capacity, or billing state was mutated by planning. Task 01 owns fresh inventory, workload, recovery, utilization, and cost evidence.
 - The primary `main` worktree contains an unrelated untracked file, `Codex Image Aug 4, 2026, 08_43_20 AM.gif`. It is outside this Project and must remain untouched.
 
@@ -40,26 +41,32 @@ This Project does not authorize implementation, production mutation, data moveme
 - Topic branch: `codex/consolidate-n8n-compute-engine`
 - Isolated worktree: `C:\Users\allan\.codex\worktrees\cloud-cost\abpiv-personal-brand`
 - Exact planning base: `e002dbfa71c493528bd1e6be384e36b4005dce62` (`origin/preview` when planning began)
+- Planning commit: `19c83bd78486e68ff12a4dd6b9931668d9d3feee`
+- Topic -> `preview`: pull request 26, merged as `dbc1925df518803d53a24dce4e23d3d3d5507a29`
+- `preview` -> `main`: pull request 27, merged as `3d61a2ab69ce35db263d39b98a90ad6ede84e3d9`
+- Main-source guard: GitHub Actions run `31094914647`, passed
 - Active Project route: `agents/context/projects/ROUTING.md`
 - Project contract: `agents/context/projects/single-vm-runtime-consolidation/PROJECT.md`
 - Task graph: `agents/context/projects/single-vm-runtime-consolidation/PLAN.md`
 - Stable handoff pointer: `agents/context/projects/single-vm-runtime-consolidation/handoff/latest.md`
 - This dated handoff: `agents/context/projects/single-vm-runtime-consolidation/handoff/2026-08-06-single-vm-runtime-consolidation-handoff.md`
 - Empty future Task surface: `agents/context/projects/single-vm-runtime-consolidation/tasks/.gitkeep`
-- Commit, push, pull-request, merge, release, deployment, and infrastructure-operation identities were not yet created when this record was written. Verify them live before resuming.
+- This amendment's containing commit and promotion identities are intentionally not self-referential; resolve them live from this file's Git history. No release, deployment, or infrastructure-operation identity exists for the planning change.
 
 ## Verification
 
-Planning validation observed before this handoff was added:
+Fresh integrated validation against local `main` commit `3d61a2ab69ce35db263d39b98a90ad6ede84e3d9`:
 
 - The externally supplied `agent-project-organization/scripts/test_validate_projects.py` was run with Python bytecode generation disabled: 50 tests, `OK`.
-- The externally supplied `agent-project-organization/scripts/validate_projects.py` was run against the repository root with Python bytecode generation disabled: one active Project, three archives, zero warnings.
+- The externally supplied `agent-project-organization/scripts/validate_projects.py` was run against the repository root with Python bytecode generation disabled: one active Project, three archives, zero Task directories, zero warnings.
 - The agent Workflow validator reported zero warnings.
-- A local Markdown-link check over the three changed Markdown files reported zero missing targets.
-- Trailing-whitespace and credential/machine-local-path safety scans reported zero findings.
-- `git diff --check` passed; Git emitted only the existing LF-to-CRLF working-copy warning for `agents/context/projects/ROUTING.md`.
+- A local Markdown-link check over five changed Markdown files reported zero missing targets.
+- The integrated credential/private-key/plugin-cache safety scan reported zero findings.
+- `git diff --check` passed for the integrated range.
+- Pull request 27's source guard passed, and Git comparison confirmed that the resulting `main` and `preview` trees were identical.
+- GitHub run queries returned no workflow run for the `main` merge commit and only the successful pull-request source guard for the `preview` merge commit.
 
-These checks must be rerun against the exact handoff-inclusive staged state before commit and against the final integrated state before claiming source integration. No application build, OpenTofu plan, container test, endpoint check, restore test, billing check, or production workflow was run because this change is planning-only.
+The narrow post-merge handoff amendment must pass the same applicable Project, Workflow, link, safety, and diff checks before its own promotion. No application build, OpenTofu plan, container test, endpoint check, restore test, billing check, or production workflow was run because this change is planning-only.
 
 ## What Worked
 
@@ -73,11 +80,10 @@ None observed during planning.
 
 ## Remaining Work
 
-1. Verify whether the current publishing session committed the exact Project artifacts, integrated the topic branch into `preview`, opened the required `preview` -> `main` pull request, merged it, and left production workflows undispatched. Reconcile any difference before doing anything else.
-2. Obtain Allan's explicit Project execution approval. Do not infer it from approval to publish this plan.
-3. After approval, invoke `planning-tasks` to create only Task 01's execution-ready `TASK.md`, using the live Project and Plan. Do not pre-create downstream Tasks.
-4. Execute Task 01 as a read-only baseline and capacity investigation. Record exact live resource, cost, workload, data-size, recovery, and utilization evidence without exposing secrets.
-5. Replan before implementation if Task 01 disproves single-host capacity, the savings threshold, the intended ownership boundaries, or the recovery/cutover assumptions.
+1. Confirm whether Allan has explicitly approved Project execution. If not, stop before Task planning and request that approval; do not infer it from approval to publish the plan.
+2. After approval, invoke `planning-tasks` to create only Task 01's execution-ready `TASK.md`, using the live Project and Plan. Do not pre-create downstream Tasks.
+3. Execute Task 01 as a read-only baseline and capacity investigation. Record exact live resource, cost, workload, data-size, recovery, and utilization evidence without exposing secrets.
+4. Replan before implementation if Task 01 disproves single-host capacity, the savings threshold, the intended ownership boundaries, or the recovery/cutover assumptions.
 
 ## Open Decisions Or Blockers
 
@@ -87,7 +93,7 @@ None observed during planning.
 
 ## Do Not Assume
 
-- Do not assume the Git publication steps described above completed; verify topic, `preview`, `main`, pull requests, checks, and workflow runs live.
+- Verify this amendment's containing commit and current topic, `preview`, `main`, pull-request, check, and workflow state rather than assuming the recorded snapshot is still current.
 - Do not assume repository `main` reflects live Google Cloud or Cloudflare state.
 - Do not assume current resource inventory, billing, utilization, database size, binary-data size, backup validity, or machine sizing from historical names or repository definitions.
 - Do not read, print, persist, rotate, or stage secrets, credentials, private payloads, service-account keys, or ignored `.codex-local/` values.
@@ -103,5 +109,5 @@ Continue the goal "Consolidate the ABPIV personal-brand n8n and Plausible runtim
 
 First, read C:\Users\allan\Documents\agent-git-projects\abpiv-personal-brand\agents\context\projects\single-vm-runtime-consolidation\handoff\2026-08-06-single-vm-runtime-consolidation-handoff.md completely. Then load AGENTS.md, agents/context/CONTEXT.md, agents/context/ROUTING.md, agents/context/GLOSSARY.md, agents/context/projects/ROUTING.md, the Project's PROJECT.md and PLAN.md, and the repository-map, verification, Git-policy, and access-routing references cited there. Treat the handoff as working context, not unquestionable truth: verify the current files, Git branches/worktrees/remotes, checks, approvals, live Google Cloud and Cloudflare state, and protected changes before acting.
 
-Resume from the ordered Remaining Work section, beginning with verifying that the Project plan and handoff reached main through topic -> preview -> main and reconciling any publication difference. Do not execute, mutate production, move data, change edge routing, dispatch workflows, or decommission anything without the explicit approvals recorded by the Project. Once Allan explicitly approves Project execution, invoke planning-tasks just in time for Task 01; do not create downstream TASK.md files early. Preserve the unrelated "Codex Image Aug 4, 2026, 08_43_20 AM.gif" file in the primary main worktree and any other user changes, and stay within every scope, safety, review, and stop boundary recorded in the handoff. Do not redo completed work unless live evidence contradicts it. If state has changed, reconcile it, document the difference, and continue toward the goal.
+Resume from the ordered Remaining Work section, beginning with confirming whether Allan has explicitly approved Project execution. If approval is absent, stop before Task planning and request it. If approval is present, invoke planning-tasks just in time for Task 01; do not create downstream TASK.md files early. Do not mutate production, move data, change edge routing, dispatch workflows, or decommission anything without the additional explicit approvals recorded by the Project. Preserve the unrelated "Codex Image Aug 4, 2026, 08_43_20 AM.gif" file in the primary main worktree and any other user changes, and stay within every scope, safety, review, and stop boundary recorded in the handoff. Do not redo completed work unless live evidence contradicts it. If state has changed, reconcile it, document the difference, and continue toward the goal.
 ```
