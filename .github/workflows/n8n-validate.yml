@@ -131,6 +131,25 @@ jobs:
       - name: Validate runtime scripts and Compose model
         run: |
           set -euo pipefail
+          validation_fixture_paths_owned=false
+          cleanup_validation_fixtures() {
+            status=$?
+            set +e
+            if "$validation_fixture_paths_owned"; then
+              sudo rm -rf -- /run/n8n /run/plausible /srv/plausible
+            fi
+            trap - EXIT
+            exit "$status"
+          }
+          trap cleanup_validation_fixtures EXIT
+          for path in /run/n8n /run/plausible /srv/plausible; do
+            if sudo test -e "$path"; then
+              echo "Refusing to replace existing validation fixture path: $path" >&2
+              exit 1
+            fi
+          done
+          validation_fixture_paths_owned=true
+
           find infra/n8n/compute/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
           find infra/analytics/compute/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
           bash -n infra/analytics/tests/restore-rehearsal.sh

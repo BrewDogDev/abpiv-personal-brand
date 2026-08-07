@@ -59,6 +59,7 @@ $precommitNginx = Read-RepositoryFile "infra/analytics/compute/nginx/precommit.c
 $firewall = Read-RepositoryFile "infra/n8n/compute/scripts/configure-container-firewall.sh"
 $cutover = Read-RepositoryFile ".github/workflows/plausible-cutover.yml"
 $rehearsal = Read-RepositoryFile "infra/analytics/tests/restore-rehearsal.sh"
+$validateWorkflow = Read-RepositoryFile ".github/workflows/n8n-validate.yml"
 
 # The approved shared host starts at 1 sustained shared-core vCPU / 6 GiB and has a safe 2 vCPU / 8 GiB fallback.
 Assert-Match $variables 'variable\s+"compute_machine_type"[\s\S]*?default\s*=\s*"e2-custom-medium-6144"' "The shared runtime must default to e2-custom-medium-6144."
@@ -66,6 +67,7 @@ Assert-Match $n8nCutover 'e2-custom-medium-6144\|e2-standard-2' "n8n cutover ret
 Assert-Match $n8nCutover '--machine-type e2-standard-2' "The capacity fallback must resize to e2-standard-2."
 Assert-NotMatch $rehearsal '-v /opt:/host-opt' "The Linux CI rehearsal must not stage its Compose runtime through a helper-container host bind."
 Assert-Match $rehearsal 'host_paths_owned=false[\s\S]*root_command[\s\S]*tar --extract[\s\S]*/opt/abpiv-plausible' "The rehearsal must track ownership and stage its runtime directly on the Linux host."
+Assert-Match $validateWorkflow 'validation_fixture_paths_owned=false[\s\S]*cleanup_validation_fixtures[\s\S]*rm -rf[\s\S]*/srv/plausible' "Static Compose validation must remove only its owned host fixtures before the restore rehearsal starts."
 
 # Plausible gets its own durable non-auto-delete disk on the same private VM.
 Assert-Match $variables 'variable\s+"plausible_data_disk_size_gb"[\s\S]*?default\s*=\s*80' "The Plausible data disk must default to 80 GiB."
