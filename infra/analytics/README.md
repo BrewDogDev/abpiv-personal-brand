@@ -16,6 +16,14 @@ This directory contains operator documentation and configuration examples for th
 
 The dashboard is an operator-only surface served at `analytics.lobst3rs.com` behind Cloudflare Access. Public website analytics requests should stay same-origin through each site's `/_analytics/*` route and be proxied to Plausible by Cloudflare Worker routing.
 
+## Prepared shared-host migration (not yet live)
+
+`compute/` defines a stopped, isolated Plausible/PostgreSQL/ClickHouse/Nginx project for `abpiv-runtime-vm`. It does not change the current analytics DNS, Worker, Access application, Tunnel, or old VM by itself. The target uses its own 80 GiB non-auto-delete data disk mounted by UUID at `/srv/plausible`; only Nginx binds `127.0.0.1:8000`, and runtime values are read from Secret Manager into `/run/plausible` tmpfs through file mounts rather than Docker environment metadata. Target backups use the new shared private, versioned, seven-day bucket; the old Plausible backup bucket remains with the rollback stack.
+
+`plausible-cutover.yml` is the only prepared migration path. It is independently review- and approval-gated, stops the old writer, proves maintenance through the existing same-origin Worker route, creates an age-encrypted package containing a PostgreSQL custom dump, a native ClickHouse backup, and Plausible application state, then requires exact source/target PostgreSQL counts, ClickHouse counts, and state checksums. The target cannot become active if any comparison fails. On failure it restores the old connector and old containers; on success it keeps the old VM intact but stopped for rollback.
+
+No current-state statement in this file should be read as evidence that the shared-host preparation or cutover has run.
+
 ## Current Deployed State
 
 As of 2026-05-26, the initial stack is live:

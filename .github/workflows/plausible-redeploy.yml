@@ -1,0 +1,85 @@
+name: Deploy Plausible shared-runtime release
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Select initial additive provisioning or an in-place release deployment.
+        required: true
+        type: choice
+        options: [provision, deploy]
+      confirm_action:
+        description: Type provision-plausible-shared-runtime or deploy-plausible-shared-runtime to match the selected action.
+        required: true
+        type: string
+      confirm_runtime_secret_access:
+        description: For deployment, type access-plausible-runtime-secrets because an active or maintenance runtime reloads Secret Manager values.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: abpiv-shared-runtime-mutation
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: ${{ vars.N8N_GCP_PROJECT_ID }}
+  GCP_ZONE: ${{ vars.N8N_GCP_ZONE || 'us-east1-c' }}
+  VM_NAME: abpiv-runtime-vm
+
+jobs:
+  deploy:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (
+        (inputs.action == 'provision' && inputs.confirm_action == 'provision-plausible-shared-runtime') ||
+        (inputs.action == 'deploy' && inputs.confirm_action == 'deploy-plausible-shared-runtime' && inputs.confirm_runtime_secret_access == 'access-plausible-runtime-secrets')
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.N8N_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.N8N_GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Check shared-runtime configuration
+        run: |
+          set -euo pipefail
+          test -n "$GCP_PROJECT_ID"
+          gcloud compute instances describe "$VM_NAME" \
+            --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" \
+            --format='value(name)' | grep -Fx "$VM_NAME"
+
+      - name: Upload Plausible release over IAP
+        run: |
+          set -euo pipefail
+          archive="$(mktemp --suffix=.tgz)"
+          trap 'rm -f "$archive"' EXIT
+          tar --create --gzip --file "$archive" --directory infra/analytics compute
+          gcloud compute scp "$archive" "${VM_NAME}:/tmp/abpiv-plausible-release.tgz" \
+            --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet
+
+      - name: Provision Plausible without starting production containers
+        if: inputs.action == 'provision'
+        run: |
+          gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            "until sudo test -f /var/lib/abpiv-n8n-bootstrap-complete && sudo systemctl is-active --quiet docker; do sleep 5; done; sudo rm -rf /tmp/abpiv-plausible-release && sudo mkdir -p /tmp/abpiv-plausible-release && sudo tar -xzf /tmp/abpiv-plausible-release.tgz -C /tmp/abpiv-plausible-release --strip-components=1 && sudo env RELEASE_DIR=/tmp/abpiv-plausible-release GCP_PROJECT_ID='$GCP_PROJECT_ID' PLAUSIBLE_BACKUP_BUCKET='${GCP_PROJECT_ID}-n8n-backups' /tmp/abpiv-plausible-release/scripts/provision-host.sh"
+
+      - name: Deploy release while preserving the Plausible runtime mode
+        if: inputs.action == 'deploy'
+        run: |
+          gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo rm -rf /tmp/abpiv-plausible-release && sudo mkdir -p /tmp/abpiv-plausible-release && sudo tar -xzf /tmp/abpiv-plausible-release.tgz -C /tmp/abpiv-plausible-release --strip-components=1 && sudo env RELEASE_DIR=/tmp/abpiv-plausible-release /opt/abpiv-plausible/scripts/deploy-release.sh"
+
+      - name: Remove remote release artifacts
+        if: always()
+        continue-on-error: true
+        run: |
+          gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo rm -rf -- /tmp/abpiv-plausible-release /tmp/abpiv-plausible-release.tgz"

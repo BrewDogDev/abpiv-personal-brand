@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up ABPIV n8n PostgreSQL and filesystem state
+After=abpiv-n8n.service
+ConditionPathExists=/etc/abpiv-n8n/mode
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/opt/abpiv-n8n/scripts/backup.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

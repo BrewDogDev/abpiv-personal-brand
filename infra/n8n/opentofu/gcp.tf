@@ -24,6 +24,8 @@ resource "google_compute_subnetwork" "n8n" {
 }
 
 resource "google_compute_global_address" "private_services" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name          = "${local.name_prefix}-private-services"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
@@ -32,9 +34,11 @@ resource "google_compute_global_address" "private_services" {
 }
 
 resource "google_service_networking_connection" "private_services" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   network                 = google_compute_network.n8n.id
   service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_services.name]
+  reserved_peering_ranges = [google_compute_global_address.private_services[0].name]
 
   depends_on = [
     google_project_service.required["servicenetworking.googleapis.com"],
@@ -42,6 +46,8 @@ resource "google_service_networking_connection" "private_services" {
 }
 
 resource "google_vpc_access_connector" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name          = "${local.name_prefix}-connector"
   region        = var.gcp_region
   network       = google_compute_network.n8n.name
@@ -56,10 +62,12 @@ resource "google_vpc_access_connector" "n8n" {
 }
 
 resource "google_sql_database_instance" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name                = local.sql_instance_name
   database_version    = var.postgres_version
   region              = var.gcp_region
-  deletion_protection = var.cloud_sql_deletion_protection
+  deletion_protection = var.legacy_destruction_armed ? false : var.cloud_sql_deletion_protection
 
   settings {
     tier              = var.cloud_sql_tier
@@ -91,16 +99,20 @@ resource "google_sql_database_instance" "n8n" {
 
   depends_on = [
     google_project_service.required["sqladmin.googleapis.com"],
-    google_service_networking_connection.private_services,
+    google_service_networking_connection.private_services[0],
   ]
 }
 
 resource "google_sql_database" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name     = var.postgres_database
-  instance = google_sql_database_instance.n8n.name
+  instance = google_sql_database_instance.n8n[0].name
 }
 
 resource "google_storage_bucket" "binary_data" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name                        = local.binary_data_bucket_name
   project                     = var.gcp_project_id
   location                    = var.gcp_region
@@ -132,6 +144,7 @@ resource "google_secret_manager_secret" "runtime" {
 
 resource "google_cloud_run_v2_service" "n8n" {
   provider = google-beta
+  count    = var.legacy_stack_enabled ? 1 : 0
 
   name                 = local.cloud_run_service_name
   location             = var.gcp_region
@@ -145,15 +158,15 @@ resource "google_cloud_run_v2_service" "n8n" {
     labels                           = local.labels
     execution_environment            = "EXECUTION_ENVIRONMENT_GEN2"
     max_instance_request_concurrency = local.cloud_run_concurrency
-    service_account                  = google_service_account.n8n_runtime.email
+    service_account                  = google_service_account.n8n_runtime[0].email
 
     scaling {
-      min_instance_count = 1
+      min_instance_count = var.legacy_cloud_run_min_instances
       max_instance_count = 1
     }
 
     vpc_access {
-      connector = google_vpc_access_connector.n8n.id
+      connector = google_vpc_access_connector.n8n[0].id
       egress    = "PRIVATE_RANGES_ONLY"
     }
 
@@ -210,7 +223,7 @@ resource "google_cloud_run_v2_service" "n8n" {
       name = "n8n-binary-data"
 
       gcs {
-        bucket        = google_storage_bucket.binary_data.name
+        bucket        = google_storage_bucket.binary_data[0].name
         read_only     = false
         mount_options = ["implicit-dirs"]
       }
@@ -231,12 +244,14 @@ resource "google_cloud_run_v2_service" "n8n" {
 }
 
 resource "google_compute_region_network_endpoint_group" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name                  = "${local.name_prefix}-neg"
   region                = var.gcp_region
   network_endpoint_type = "SERVERLESS"
 
   cloud_run {
-    service = google_cloud_run_v2_service.n8n.name
+    service = google_cloud_run_v2_service.n8n[0].name
   }
 
   depends_on = [
@@ -245,13 +260,15 @@ resource "google_compute_region_network_endpoint_group" "n8n" {
 }
 
 resource "google_compute_backend_service" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name                  = "${local.name_prefix}-backend"
   description           = "External HTTPS load balancer backend for n8n Cloud Run."
   protocol              = "HTTP"
   load_balancing_scheme = "EXTERNAL_MANAGED"
 
   backend {
-    group = google_compute_region_network_endpoint_group.n8n.id
+    group = google_compute_region_network_endpoint_group.n8n[0].id
   }
 
   log_config {
@@ -261,13 +278,15 @@ resource "google_compute_backend_service" "n8n" {
 }
 
 resource "google_compute_url_map" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name            = "${local.name_prefix}-url-map"
   description     = "Routes n8n HTTPS load balancer traffic to Cloud Run."
-  default_service = google_compute_backend_service.n8n.id
+  default_service = google_compute_backend_service.n8n[0].id
 }
 
 resource "google_certificate_manager_dns_authorization" "n8n" {
-  for_each = local.hostnames
+  for_each = var.legacy_stack_enabled ? local.hostnames : {}
 
   name        = "${local.name_prefix}-${each.key}-dns-auth"
   description = "DNS authorization for ${each.value}."
@@ -280,6 +299,8 @@ resource "google_certificate_manager_dns_authorization" "n8n" {
 }
 
 resource "google_certificate_manager_certificate" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name        = "${local.name_prefix}-certificate"
   description = "Google-managed certificate for the n8n public forms hostname."
   labels      = local.labels
@@ -295,7 +316,7 @@ resource "google_certificate_manager_certificate" "n8n" {
 }
 
 resource "google_certificate_manager_certificate" "editor" {
-  count = local.editor_enabled ? 1 : 0
+  count = var.legacy_stack_enabled && local.editor_enabled ? 1 : 0
 
   name        = "${local.name_prefix}-editor-certificate"
   description = "Google-managed certificate for the n8n editor hostname."
@@ -312,6 +333,8 @@ resource "google_certificate_manager_certificate" "editor" {
 }
 
 resource "google_certificate_manager_certificate_map" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name        = "${local.name_prefix}-cert-map"
   description = "Certificate map for n8n HTTPS load balancer."
   labels      = local.labels
@@ -322,23 +345,27 @@ resource "google_certificate_manager_certificate_map" "n8n" {
 }
 
 resource "google_certificate_manager_certificate_map_entry" "n8n" {
-  for_each = local.hostnames
+  for_each = var.legacy_stack_enabled ? local.hostnames : {}
 
   name         = "${local.name_prefix}-${each.key}"
   description  = "Certificate map entry for ${each.value}."
-  map          = google_certificate_manager_certificate_map.n8n.name
+  map          = google_certificate_manager_certificate_map.n8n[0].name
   labels       = local.labels
-  certificates = [each.key == "forms" ? google_certificate_manager_certificate.n8n.id : google_certificate_manager_certificate.editor[0].id]
+  certificates = [each.key == "forms" ? google_certificate_manager_certificate.n8n[0].id : google_certificate_manager_certificate.editor[0].id]
   hostname     = each.value
 }
 
 resource "google_compute_target_https_proxy" "n8n" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name            = "${local.name_prefix}-https-proxy"
-  url_map         = google_compute_url_map.n8n.id
-  certificate_map = "//certificatemanager.googleapis.com/${google_certificate_manager_certificate_map.n8n.id}"
+  url_map         = google_compute_url_map.n8n[0].id
+  certificate_map = "//certificatemanager.googleapis.com/${google_certificate_manager_certificate_map.n8n[0].id}"
 }
 
 resource "google_compute_global_address" "n8n_lb" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name         = "${local.name_prefix}-lb-ip"
   address_type = "EXTERNAL"
   ip_version   = "IPV4"
@@ -349,10 +376,12 @@ resource "google_compute_global_address" "n8n_lb" {
 }
 
 resource "google_compute_global_forwarding_rule" "https" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   name                  = "${local.name_prefix}-https"
-  ip_address            = google_compute_global_address.n8n_lb.address
+  ip_address            = google_compute_global_address.n8n_lb[0].address
   ip_protocol           = "TCP"
   load_balancing_scheme = "EXTERNAL_MANAGED"
   port_range            = "443"
-  target                = google_compute_target_https_proxy.n8n.id
+  target                = google_compute_target_https_proxy.n8n[0].id
 }

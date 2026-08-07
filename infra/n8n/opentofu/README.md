@@ -1,130 +1,57 @@
 # ABPIV n8n OpenTofu
 
-This OpenTofu project provisions ABPIV's self-hosted n8n Community Edition infrastructure in the existing `abpiv-personal-brand` GCP project. It is intentionally separate from `infra/analytics`.
+This root manages the current Cloud Run/Cloud SQL stack, the additive private Compute runtime, Cloudflare security, and the staged transition between them. State remains in the private `abpiv-personal-brand-opentofu-state` bucket under `infra/n8n`.
 
-## Managed Resources
+## State model
 
-- Cloud Run v2 service running `docker.io/n8nio/n8n:stable`.
-- One always-warm Cloud Run instance with 1 vCPU, 2 GiB memory, always-allocated CPU, max concurrency 10, and max instances 1.
-- Private VPC, Serverless VPC Access connector, and private services access for private-IP Cloud SQL.
-- Cloud SQL PostgreSQL instance and database.
-- Secret Manager secret containers for the n8n encryption key and PostgreSQL password.
-- Private GCS bucket mounted into Cloud Run for filesystem binary data.
-- Global external HTTPS load balancer with a serverless NEG pointing at Cloud Run.
-- Certificate Manager DNS-authorized Google-managed certificate.
-- Optional Cloudflare DNS, forms WAF/rate-limit/path allowlist rules, and optional Cloudflare Access protection for the editor hostname.
-- Dedicated runtime and GitHub deployer service accounts plus IAM bindings.
+| Phase | Inputs | Permitted effect |
+| --- | --- | --- |
+| Preparation | `runtime_origin=cloud_run`, `legacy_stack_enabled=true` | Create only the shared VM, independent n8n and Plausible data disks, NAT, n8n backup bucket and Tunnel, VM identity/IAM, Plausible secret metadata, and required APIs. |
+| Cutover | `runtime_origin=compute`, `legacy_stack_enabled=true` | Update only the forms and editor DNS records from the load-balancer IP to the Tunnel CNAME. |
+| Decommission arm | `runtime_origin=compute`, `legacy_stack_enabled=true`, `legacy_cloud_run_min_instances=0`, `legacy_destruction_armed=true` | Update only Cloud SQL's Terraform deletion-protection flag; this must be written to state before removal without restarting Cloud Run. |
+| Decommission delete | `runtime_origin=compute`, `legacy_stack_enabled=false`, `legacy_destruction_armed=false` after arming was applied | Delete only the exact reviewed legacy allowlist while retaining the Compute path and Cloudflare security. |
 
-## Authentication
+The defaults select preparation. `migrations.tf` moves existing singleton state addresses to their conditional `[0]` addresses so the first preparation plan does not recreate the old stack. Apply those moves while `legacy_stack_enabled=true`.
 
-The Google provider uses Application Default Credentials locally or GitHub Actions Workload Identity Federation in CI. Do not commit service account JSON keys.
+`../tools/assert-plan-allowlist.py` must inspect the JSON form of every saved plan before apply. It rejects replacements, unexpected updates, unexpected creates, and unexpected destroys. For DNS, Cloud Run rollback, and Cloud SQL arming/protection, it also inspects before/after values and permits only the exact attributes and directions required by that phase. Additive preparation and decommission both use separate plan/apply dispatches: each apply is bound to both the reviewed commit and sorted action-manifest hash. The decommission manifest also binds the round-trip-verified migration prefix and checksum-manifest digest plus deletion of objects from the exact old binary bucket.
 
-The Cloudflare provider reads `CLOUDFLARE_API_TOKEN` from the environment.
+## Retained target resources
 
-OpenTofu state is stored in the private GCS bucket `abpiv-personal-brand-opentofu-state` under the `infra/n8n` prefix. The state bucket is a bootstrap prerequisite and is not created by this project.
+- Existing VPC and subnet
+- Private `abpiv-runtime-vm`, Cloud Router/NAT, IAP-only SSH firewall, and independent non-auto-delete n8n and Plausible data disks
+- VM runtime service account with only Secret Manager, backup/legacy-object, logging, and monitoring access
+- Private versioned backup bucket with seven-day retention and lifecycle
+- Existing n8n secrets plus Plausible secret containers for the unchanged key, database password, existing Tunnel token, and backup age identity
+- Cloudflare Tunnel, WAF, rate limiting, Access application, and MCP service token
+- GitHub OIDC deployer and narrowed Compute-era roles
 
-## Required Variables
+## Conditional legacy resources
 
-Required repository variables are exactly:
+- Cloud Run runtime and its obsolete runtime service account/IAM
+- Cloud SQL database and private-service connection/range
+- Serverless VPC connector and serverless NEG
+- HTTPS load balancer, forwarding rule/IP, Certificate Manager resources, and Cloudflare certificate-authorization records
+- Old GCS binary-data bucket
 
-- `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_ZONE_ID_ALLANBPEDINIV`
-- `CLOUDFLARE_ZONE_ID_LOBST3RS`
-- `N8N_GCP_PROJECT_ID`
-- `N8N_GCP_REGION`
-- `N8N_GCP_SERVICE_ACCOUNT`
-- `N8N_GCP_WORKLOAD_IDENTITY_PROVIDER`
-- `N8N_EDITOR_HOSTNAME`
-- `N8N_EDITOR_ACCESS_ALLOWED_EMAILS`
-- `N8N_ENABLE_CLOUDFLARE_EDGE`
+The VPC/subnet, Secret Manager values, new backup bucket, Cloudflare security controls, and GitHub OIDC identity are never part of the legacy destruction allowlist.
 
-Expected values:
+## Authentication and secrets
 
-- `N8N_GCP_PROJECT_ID=abpiv-personal-brand`
-- `N8N_GCP_REGION=us-east1`
-- `N8N_EDITOR_HOSTNAME=workflows.lobst3rs.com`
-- `N8N_EDITOR_ACCESS_ALLOWED_EMAILS=["allanblankpedin@gmail.com"]`
-- `N8N_ENABLE_CLOUDFLARE_EDGE=true`
+Google uses Application Default Credentials locally or Workload Identity Federation in Actions. Cloudflare reads `CLOUDFLARE_API_TOKEN` from the environment. Never use service-account key files.
 
-Terraform defaults are provided for:
+OpenTofu creates secret containers and IAM only. It does not contain runtime secret versions, output the Tunnel token, or persist secret values in plans or repository files. The Cloudflare Access client-secret output remains sensitive and is handled by the existing approved workflow path.
 
-- `gcp_project_id = "abpiv-personal-brand"`
-- `gcp_region = "us-east1"`
-- `forms_hostname = "forms.allanbpediniv.com"`
-- `n8n_image = "docker.io/n8nio/n8n:stable"`
-- `enable_cloudflare_edge = false`
-
-Optional editor variables:
-
-- `editor_hostname`
-- `editor_zone_id`
-- `editor_zone_name`
-- `editor_access_allowed_emails`
-- `editor_access_allowed_group_ids`
-- `cloudflare_access_organization_name`
-- `cloudflare_access_auth_domain`
-- `manage_cloudflare_access_organization`
-
-When `editor_hostname` is set, provide either `editor_zone_id` or `editor_zone_name`, plus at least one allowed email or Cloudflare Access group ID. The Terraform default for `editor_hostname` stays empty so local validation can run without Cloudflare zone lookups.
+The deployer receives `roles/iam.serviceAccountUser` on both the new shared VM identity and the existing `plausible-analytics-vm` identity so the reviewed cutover can use OS Login through IAP on the two exact hosts. This does not grant either runtime identity access to the other runtime's data.
 
 ## Commands
 
+For offline structure and safety tests:
+
 ```bash
-tofu fmt -recursive infra/n8n/opentofu
-tofu -chdir=infra/n8n/opentofu init -input=false
+tofu fmt -check -recursive infra/n8n/opentofu
+tofu -chdir=infra/n8n/opentofu init -backend=false -input=false
 tofu -chdir=infra/n8n/opentofu validate
+tofu -chdir=infra/n8n/opentofu test
 ```
 
-Do not run `tofu apply` until the generated plan, Cloudflare ruleset ownership, Certificate Manager DNS authorization records, and Secret Manager bootstrap steps have been reviewed.
-
-## Secret Bootstrap
-
-OpenTofu creates secret containers only. It does not commit, generate, or store runtime secret values in code.
-
-Before first successful startup, populate:
-
-- `abpiv-n8n-encryption-key`
-- `abpiv-n8n-postgres-password`
-
-Create the Cloud SQL PostgreSQL user out of band and keep its password in sync with `abpiv-n8n-postgres-password`:
-
-```bash
-gcloud sql users create n8n \
-  --project=abpiv-personal-brand \
-  --instance=abpiv-n8n-postgres \
-  --password='REPLACE_WITH_PRIVATE_PASSWORD'
-
-printf '%s' 'REPLACE_WITH_PRIVATE_PASSWORD' | \
-  gcloud secrets versions add abpiv-n8n-postgres-password \
-    --project=abpiv-personal-brand \
-    --data-file=-
-```
-
-Generate and store the n8n encryption key separately:
-
-```bash
-openssl rand -hex 32 | \
-  gcloud secrets versions add abpiv-n8n-encryption-key \
-    --project=abpiv-personal-brand \
-    --data-file=-
-```
-
-Keep a separate personal recovery copy of the n8n encryption key and bootstrap credentials in private storage outside this repo and outside GitHub. Losing the n8n encryption key can make stored credentials unrecoverable.
-
-## Notes
-
-Cloudflare resources are disabled by default. Set `enable_cloudflare_edge = true`, `cloudflare_account_id`, `allanbpediniv_zone_id`, and `CLOUDFLARE_API_TOKEN` when the zone is ready. The public forms hostname remains on `allanbpediniv_zone_id`; the optional editor hostname can live in another Cloudflare zone through `editor_zone_id` or `editor_zone_name`.
-
-`docker.io/n8nio/n8n:stable` is used for Cloud Run compatibility. On May 27, 2026, `docker.n8n.io/n8nio/n8n:stable` and `docker.io/n8nio/n8n:stable` resolved to the same image manifests, while Cloud Run rejected `docker.n8n.io` directly and returned an internal error when deploying the same image through an Artifact Registry remote repository.
-
-Cloudflare allows only one zone entry-point ruleset per phase. If `allanbpediniv.com` already has Terraform-managed or manually-created `http_request_firewall_custom` or `http_ratelimit` rulesets, import and merge them instead of applying duplicate zone rulesets.
-
-The public forms hostname is allowlisted to `/form/*`, `/form-waiting/*`, `/webhook/*`, and `/webhook-waiting/*`, with exact root-path variants included. Those paths cover public n8n forms, multi-step/waiting forms, production webhooks, and production waiting webhooks. Editor, internal API, static editor UI, test webhook, and other non-public paths are blocked on `forms.allanbpediniv.com`; use the Access-protected editor hostname for n8n administration and manual test URLs.
-
-The default public forms rate limit blocks clients after 20 requests per client IP and Cloudflare colo per 10 seconds, with a 10-second mitigation timeout, because Cloudflare may restrict zone rate-limit periods, mitigation windows, and challenge actions by account plan. Suspicious non-rate-limited traffic still receives the separate managed challenge rule.
-
-n8n basic auth is not configured. n8n 1.x uses built-in user management for application login, and the optional editor hostname adds Cloudflare Access in front of that login. Public forms on `forms.allanbpediniv.com` stay available without Cloudflare Access, and `WEBHOOK_URL` stays pinned to the forms hostname even when `N8N_EDITOR_BASE_URL` points to the editor hostname.
-
-When the editor hostname is enabled, Cloudflare Zero Trust Access must already be enabled for the account. OpenTofu can optionally manage the account-level Zero Trust organization by setting `manage_cloudflare_access_organization = true`, but that requires a Cloudflare token with organization-level Zero Trust permissions. The default auth domain is `lobst3rs.cloudflareaccess.com`; override `cloudflare_access_auth_domain` if that subdomain is unavailable.
-
-Cloud Run ingress remains limited to the internal/external load balancer path. The service disables the Invoker IAM check instead of granting `allUsers` the Invoker role, which avoids customer-domain restricted sharing policies while keeping traffic routed through the HTTPS load balancer.
+Live full-root plans and applies use the gated workflows because they bind all production variables, authenticate through OIDC, and enforce phase-specific action allowlists. Do not apply this root from a local shell.

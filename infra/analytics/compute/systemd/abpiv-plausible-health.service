@@ -1,0 +1,9 @@
+[Unit]
+Description=Check Plausible runtime health on the shared VM
+After=abpiv-plausible.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/opt/abpiv-plausible/scripts/monitor-runtime.sh

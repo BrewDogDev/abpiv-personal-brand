@@ -1,4 +1,6 @@
 resource "google_service_account" "n8n_runtime" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   account_id   = "n8n-cloud-run"
   display_name = "n8n Cloud Run runtime"
   description  = "Runtime identity for the n8n Cloud Run service."
@@ -19,24 +21,28 @@ resource "google_service_account" "github_deployer" {
 }
 
 resource "google_project_iam_member" "runtime_cloudsql_client" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
   project = var.gcp_project_id
   role    = "roles/cloudsql.client"
-  member  = "serviceAccount:${google_service_account.n8n_runtime.email}"
+  member  = "serviceAccount:${google_service_account.n8n_runtime[0].email}"
 }
 
 resource "google_storage_bucket_iam_member" "runtime_binary_data_object_user" {
-  bucket = google_storage_bucket.binary_data.name
+  count = var.legacy_stack_enabled ? 1 : 0
+
+  bucket = google_storage_bucket.binary_data[0].name
   role   = "roles/storage.objectUser"
-  member = "serviceAccount:${google_service_account.n8n_runtime.email}"
+  member = "serviceAccount:${google_service_account.n8n_runtime[0].email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "runtime_secret_accessor" {
-  for_each = google_secret_manager_secret.runtime
+  for_each = var.legacy_stack_enabled ? google_secret_manager_secret.runtime : {}
 
   project   = var.gcp_project_id
   secret_id = each.value.secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.n8n_runtime.email}"
+  member    = "serviceAccount:${google_service_account.n8n_runtime[0].email}"
 }
 
 resource "google_project_iam_member" "github_deployer_project_roles" {
@@ -48,7 +54,81 @@ resource "google_project_iam_member" "github_deployer_project_roles" {
 }
 
 resource "google_service_account_iam_member" "github_deployer_runtime_service_account_user" {
-  service_account_id = google_service_account.n8n_runtime.name
+  count = var.legacy_stack_enabled ? 1 : 0
+
+  service_account_id = google_service_account.n8n_runtime[0].name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.github_deployer.email}"
+}
+
+resource "google_service_account" "n8n_compute" {
+  account_id   = "n8n-compute-runtime"
+  display_name = "ABPIV shared Compute runtime"
+  description  = "Least-privilege runtime identity for the private VM shared by n8n and Plausible."
+
+  depends_on = [
+    google_project_service.required["iam.googleapis.com"],
+  ]
+}
+
+resource "google_secret_manager_secret_iam_member" "compute_runtime_secret_accessor" {
+  for_each = google_secret_manager_secret.runtime
+
+  project   = var.gcp_project_id
+  secret_id = each.value.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.n8n_compute.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "compute_tunnel_secret_accessor" {
+  project   = var.gcp_project_id
+  secret_id = google_secret_manager_secret.cloudflare_tunnel_token.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.n8n_compute.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "compute_plausible_secret_accessor" {
+  for_each = google_secret_manager_secret.plausible_runtime
+
+  project   = var.gcp_project_id
+  secret_id = each.value.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.n8n_compute.email}"
+}
+
+resource "google_storage_bucket_iam_member" "compute_backup_object_user" {
+  bucket = google_storage_bucket.n8n_backups.name
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${google_service_account.n8n_compute.email}"
+}
+
+resource "google_storage_bucket_iam_member" "compute_legacy_binary_object_viewer" {
+  count = var.legacy_stack_enabled ? 1 : 0
+
+  bucket = google_storage_bucket.binary_data[0].name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.n8n_compute.email}"
+}
+
+resource "google_project_iam_member" "compute_observability_roles" {
+  for_each = toset([
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+  ])
+
+  project = var.gcp_project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.n8n_compute.email}"
+}
+
+resource "google_service_account_iam_member" "github_deployer_compute_service_account_user" {
+  service_account_id = google_service_account.n8n_compute.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.github_deployer.email}"
+}
+
+resource "google_service_account_iam_member" "github_deployer_plausible_runtime_service_account_user" {
+  service_account_id = "projects/${var.gcp_project_id}/serviceAccounts/plausible-analytics-vm@${var.gcp_project_id}.iam.gserviceaccount.com"
   role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${google_service_account.github_deployer.email}"
 }

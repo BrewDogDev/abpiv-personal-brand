@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up ABPIV Plausible PostgreSQL, ClickHouse, and application state
+After=abpiv-plausible.service
+ConditionPathExists=/etc/abpiv-plausible/mode
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/opt/abpiv-plausible/scripts/backup.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
