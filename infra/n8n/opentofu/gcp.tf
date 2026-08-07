@@ -154,6 +154,11 @@ resource "google_cloud_run_v2_service" "n8n" {
   deletion_protection  = false
   labels               = local.labels
 
+  scaling {
+    manual_instance_count = 0
+    min_instance_count    = 0
+  }
+
   template {
     labels                           = local.labels
     execution_environment            = "EXECUTION_ENVIRONMENT_GEN2"
