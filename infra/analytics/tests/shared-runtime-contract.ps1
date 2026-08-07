@@ -71,6 +71,10 @@ Assert-Match $rehearsal 'host_paths_owned=false[\s\S]*root_command[\s\S]*tar --e
 Assert-NotMatch $rehearsal 'chmod 0400 /run/plausible/\*' "The rehearsal must not rely on an unprivileged shell expanding root-owned secret paths."
 Assert-NotMatch $rehearsal '"\$\{compose\[@\]\}" cp[\s\S]{0,200}clickhouse:/var/lib/clickhouse/backups' "The rehearsal must not stage root-owned ClickHouse restore archives through docker compose cp."
 Assert-Match $rehearsal 'install -m 0600 -o 101 -g 101[\s\S]*clickhouse-data/backups/fixture\.zip[\s\S]*clickhouse-data/backups/daily-fixture\.zip' "Both rehearsal archives must be readable only by the ClickHouse runtime identity."
+Assert-NotMatch $rehearsal '(?m)^\s*cd /srv/plausible/state\s*$' "The unprivileged rehearsal shell must not enter Plausible-owned state directly."
+Assert-Match $rehearsal 'capture_state_evidence\(\)[\s\S]*root_command[\s\S]*bash -o pipefail -c' "State evidence must be captured through the root wrapper after ownership is restored."
+Assert-NotMatch $rehearsal '(?m)^(find /srv/plausible/state|tar --extract[^\r\n]*--directory /srv/plausible/state|chown -hR 999:65533 /srv/plausible/state)' "Daily state replacement must not access Plausible-owned paths as the runner."
+Assert-Match $rehearsal 'root_command\[@\][\s\S]{0,100}env PACKAGE_DIR=[\s\S]{0,300}create-backup-package\.sh[\s\S]{0,200}chown -R' "The production-equivalent daily package must run as root and return its artifacts to the runner."
 Assert-Match $validateWorkflow 'validation_fixture_paths_owned=false[\s\S]*cleanup_validation_fixtures[\s\S]*rm -rf[\s\S]*/srv/plausible' "Static Compose validation must remove only its owned host fixtures before the restore rehearsal starts."
 
 # Plausible gets its own durable non-auto-delete disk on the same private VM.

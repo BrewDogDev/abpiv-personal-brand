@@ -13,6 +13,23 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 host_paths_owned=false
 
+capture_state_evidence() {
+  local state_dir="$1"
+  local checksum_file="$2"
+  local entries_file="$3"
+  # shellcheck disable=SC2016
+  "${root_command[@]}" bash -o pipefail -c '
+    cd "$1"
+    find . -type f -print0 | LC_ALL=C sort --zero-terminated | \
+      xargs --null --no-run-if-empty sha256sum
+  ' _ "$state_dir" > "$checksum_file"
+  # shellcheck disable=SC2016
+  "${root_command[@]}" bash -o pipefail -c '
+    cd "$1"
+    find . -printf "%y\t%p\t%l\0" | LC_ALL=C sort --zero-terminated
+  ' _ "$state_dir" > "$entries_file"
+}
+
 cleanup() {
   status=$?
   set +e
@@ -177,20 +194,18 @@ phase=state-restore
 docker run --rm --interactive -v /srv/plausible/state:/state alpine:3.22 \
   tar --extract --file - --directory /state < "$work_dir/package/plausible-state.tar"
 docker run --rm -v /srv/plausible/state:/state alpine:3.22 chown -hR 999:65533 /state
-(
-  cd /srv/plausible/state
-  find . -type f -print0 | LC_ALL=C sort --zero-terminated | \
-    xargs --null --no-run-if-empty sha256sum > "$work_dir/target-state-checksums.tsv"
-  find . -printf '%y\t%p\t%l\0' | LC_ALL=C sort --zero-terminated > "$work_dir/target-state-entries.bin"
-)
+capture_state_evidence /srv/plausible/state \
+  "$work_dir/target-state-checksums.tsv" \
+  "$work_dir/target-state-entries.bin"
 cmp --silent "$work_dir/package/source-state-checksums.tsv" "$work_dir/target-state-checksums.tsv"
 cmp --silent "$work_dir/package/source-state-entries.bin" "$work_dir/target-state-entries.bin"
 
 phase=daily-package
 install -d -m 0700 "$work_dir/daily-output" "$work_dir/daily-package"
-env PACKAGE_DIR="$work_dir/daily-output" BACKUP_AGE_RECIPIENT="$recipient" \
+"${root_command[@]}" env PACKAGE_DIR="$work_dir/daily-output" BACKUP_AGE_RECIPIENT="$recipient" \
   COMPOSE_DIR=/opt/plausible STATE_DIR=/srv/plausible/state \
   "$repository_root/infra/analytics/compute/scripts/create-backup-package.sh" >/dev/null
+"${root_command[@]}" chown -R "$(id -u):$(id -g)" "$work_dir/daily-output"
 (cd "$work_dir/daily-output" && sha256sum --check plausible-backup.tar.age.sha256 >/dev/null)
 age --decrypt --identity "$work_dir/age-identity.txt" \
   --output "$work_dir/daily-backup.tar" "$work_dir/daily-output/plausible-backup.tar.age"
@@ -227,15 +242,13 @@ while IFS= read -r table; do
 done < "$work_dir/daily-target-clickhouse-tables.tsv"
 cmp --silent "$work_dir/daily-package/source-clickhouse-counts.tsv" "$work_dir/daily-target-clickhouse-counts.tsv"
 
-find /srv/plausible/state -mindepth 1 -delete
-tar --extract --file "$work_dir/daily-package/plausible-state.tar" --directory /srv/plausible/state --no-same-owner
-chown -hR 999:65533 /srv/plausible/state
-(
-  cd /srv/plausible/state
-  find . -type f -print0 | LC_ALL=C sort --zero-terminated | \
-    xargs --null --no-run-if-empty sha256sum > "$work_dir/daily-target-state-checksums.tsv"
-  find . -printf '%y\t%p\t%l\0' | LC_ALL=C sort --zero-terminated > "$work_dir/daily-target-state-entries.bin"
-)
+"${root_command[@]}" find /srv/plausible/state -mindepth 1 -delete
+"${root_command[@]}" tar --extract --file "$work_dir/daily-package/plausible-state.tar" \
+  --directory /srv/plausible/state --no-same-owner
+"${root_command[@]}" chown -hR 999:65533 /srv/plausible/state
+capture_state_evidence /srv/plausible/state \
+  "$work_dir/daily-target-state-checksums.tsv" \
+  "$work_dir/daily-target-state-entries.bin"
 cmp --silent "$work_dir/daily-package/source-state-checksums.tsv" "$work_dir/daily-target-state-checksums.tsv"
 cmp --silent "$work_dir/daily-package/source-state-entries.bin" "$work_dir/daily-target-state-entries.bin"
 
