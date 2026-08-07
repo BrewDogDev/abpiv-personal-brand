@@ -11,6 +11,16 @@ mock_provider "google" {
       email = "mocksa@abpiv-personal-brand.iam.gserviceaccount.com"
     }
   }
+
+  mock_resource "google_certificate_manager_dns_authorization" {
+    defaults = {
+      dns_resource_record = [{
+        name = "_acme-challenge.mock.example.com."
+        data = "mock.authorization.example.net."
+        type = "CNAME"
+      }]
+    }
+  }
 }
 mock_provider "google-beta" {}
 mock_provider "cloudflare" {}
@@ -58,8 +68,9 @@ run "destroyed_legacy_cannot_be_selected_as_origin" {
   command = plan
 
   variables {
-    runtime_origin       = "cloud_run"
-    legacy_stack_enabled = false
+    runtime_origin         = "cloud_run"
+    legacy_stack_enabled   = false
+    enable_cloudflare_edge = false
   }
 
   expect_failures = [
