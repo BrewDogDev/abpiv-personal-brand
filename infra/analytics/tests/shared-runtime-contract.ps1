@@ -69,6 +69,8 @@ Assert-Match $n8nCutover '--machine-type e2-standard-2' "The capacity fallback m
 Assert-NotMatch $rehearsal '-v /opt:/host-opt' "The Linux CI rehearsal must not stage its Compose runtime through a helper-container host bind."
 Assert-Match $rehearsal 'host_paths_owned=false[\s\S]*root_command[\s\S]*tar --extract[\s\S]*/opt/abpiv-plausible' "The rehearsal must track ownership and stage its runtime directly on the Linux host."
 Assert-NotMatch $rehearsal 'chmod 0400 /run/plausible/\*' "The rehearsal must not rely on an unprivileged shell expanding root-owned secret paths."
+Assert-NotMatch $rehearsal '"\$\{compose\[@\]\}" cp[\s\S]{0,200}clickhouse:/var/lib/clickhouse/backups' "The rehearsal must not stage root-owned ClickHouse restore archives through docker compose cp."
+Assert-Match $rehearsal 'install -m 0600 -o 101 -g 101[\s\S]*clickhouse-data/backups/fixture\.zip[\s\S]*clickhouse-data/backups/daily-fixture\.zip' "Both rehearsal archives must be readable only by the ClickHouse runtime identity."
 Assert-Match $validateWorkflow 'validation_fixture_paths_owned=false[\s\S]*cleanup_validation_fixtures[\s\S]*rm -rf[\s\S]*/srv/plausible' "Static Compose validation must remove only its owned host fixtures before the restore rehearsal starts."
 
 # Plausible gets its own durable non-auto-delete disk on the same private VM.

@@ -151,11 +151,14 @@ phase=postgres-restore
   --no-align --tuples-only --set ON_ERROR_STOP=1 --command "$count_sql" > "$work_dir/target-postgres-counts.tsv"
 cmp --silent "$work_dir/package/source-postgres-counts.tsv" "$work_dir/target-postgres-counts.tsv"
 
-"${compose[@]}" cp "$work_dir/package/clickhouse-plausible-events.zip" clickhouse:/var/lib/clickhouse/backups/fixture.zip
+"${root_command[@]}" install -m 0600 -o 101 -g 101 \
+  "$work_dir/package/clickhouse-plausible-events.zip" \
+  /srv/plausible/clickhouse-data/backups/fixture.zip
 phase=clickhouse-restore
 "${compose[@]}" exec --no-TTY clickhouse clickhouse-client --query 'DROP DATABASE plausible_events_db SYNC'
 "${compose[@]}" exec --no-TTY clickhouse clickhouse-client \
   --query "RESTORE DATABASE plausible_events_db FROM File('fixture.zip')"
+"${root_command[@]}" rm -f /srv/plausible/clickhouse-data/backups/fixture.zip
 clickhouse_container="$("${compose[@]}" ps --all --quiet clickhouse)"
 test -n "$clickhouse_container"
 docker exec "$clickhouse_container" clickhouse-client \
@@ -206,11 +209,13 @@ phase=daily-restore
   --no-align --tuples-only --set ON_ERROR_STOP=1 --command "$count_sql" > "$work_dir/daily-target-postgres-counts.tsv"
 cmp --silent "$work_dir/daily-package/source-postgres-counts.tsv" "$work_dir/daily-target-postgres-counts.tsv"
 
-"${compose[@]}" cp "$work_dir/daily-package/clickhouse-plausible-events.zip" \
-  clickhouse:/var/lib/clickhouse/backups/daily-fixture.zip
+"${root_command[@]}" install -m 0600 -o 101 -g 101 \
+  "$work_dir/daily-package/clickhouse-plausible-events.zip" \
+  /srv/plausible/clickhouse-data/backups/daily-fixture.zip
 "${compose[@]}" exec --no-TTY clickhouse clickhouse-client --query 'DROP DATABASE plausible_events_db SYNC'
 "${compose[@]}" exec --no-TTY clickhouse clickhouse-client \
   --query "RESTORE DATABASE plausible_events_db FROM File('daily-fixture.zip')"
+"${root_command[@]}" rm -f /srv/plausible/clickhouse-data/backups/daily-fixture.zip
 docker exec "$clickhouse_container" clickhouse-client \
   --query "SELECT name FROM system.tables WHERE database='plausible_events_db' ORDER BY name FORMAT TSVRaw" \
   > "$work_dir/daily-target-clickhouse-tables.tsv"
