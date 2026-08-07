@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily ABPIV Plausible encrypted backup timer
+
+[Timer]
+OnCalendar=*-*-* 05:30:00 America/New_York
+Persistent=true
+Unit=abpiv-plausible-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,444 @@
+name: Cut over Plausible to shared Compute
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cutover:
+        description: Type cutover-plausible-to-shared-vm to authorize the approved maintenance-window cutover.
+        required: true
+        type: string
+      confirm_runtime_secret_access:
+        description: Type access-plausible-runtime-secrets to authorize purpose-limited Secret Manager writes and reads.
+        required: true
+        type: string
+      confirm_data_movement:
+        description: Type move-verified-plausible-data to authorize encrypted PostgreSQL, ClickHouse, and state migration.
+        required: true
+        type: string
+      confirm_tunnel_transition:
+        description: Type move-plausible-tunnel-connector to authorize moving the existing Tunnel connector.
+        required: true
+        type: string
+      review_decision:
+        description: Enter the independent review decision exactly as COMPLIANT / APPROVED / READY.
+        required: true
+        type: string
+      reviewer_identity:
+        description: Record the independent rigorous reviewer's GitHub handle or durable identity.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: abpiv-shared-runtime-mutation
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: ${{ vars.N8N_GCP_PROJECT_ID }}
+  SOURCE_VM: plausible-analytics-vm
+  SOURCE_ZONE: ${{ vars.GCP_ZONE || 'us-east1-b' }}
+  TARGET_VM: abpiv-runtime-vm
+  TARGET_ZONE: ${{ vars.N8N_GCP_ZONE || 'us-east1-c' }}
+  PLAUSIBLE_BACKUP_BUCKET: ${{ vars.N8N_GCP_PROJECT_ID }}-n8n-backups
+  PLAUSIBLE_HOSTNAME: ${{ vars.PLAUSIBLE_HOSTNAME || 'analytics.lobst3rs.com' }}
+  PUBLIC_SCRIPT_URL: https://allanbpediniv.com/_analytics/js/script.js
+  REVIEWER_IDENTITY: ${{ inputs.reviewer_identity }}
+
+jobs:
+  cutover:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm_cutover == 'cutover-plausible-to-shared-vm' &&
+      inputs.confirm_runtime_secret_access == 'access-plausible-runtime-secrets' &&
+      inputs.confirm_data_movement == 'move-verified-plausible-data' &&
+      inputs.confirm_tunnel_transition == 'move-plausible-tunnel-connector' &&
+      inputs.review_decision == 'COMPLIANT / APPROVED / READY' &&
+      inputs.reviewer_identity != ''
+    runs-on: ubuntu-latest
+    environment: production-cutover
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.N8N_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.N8N_GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Install the age client on the ephemeral runner
+        run: |
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes --no-install-recommends age >/dev/null
+
+      - id: target
+        name: Verify both exact hosts, matching source images, and the stopped prepared target
+        run: |
+          set -euo pipefail
+          test -n "$GCP_PROJECT_ID"
+          test -n "$PLAUSIBLE_HOSTNAME"
+          for spec in "$SOURCE_VM:$SOURCE_ZONE" "$TARGET_VM:$TARGET_ZONE"; do
+            vm="${spec%%:*}"
+            zone="${spec#*:}"
+            test "$(gcloud compute instances describe "$vm" --project "$GCP_PROJECT_ID" --zone "$zone" --format='value(status)')" = RUNNING
+          done
+          machine_type="$(gcloud compute instances describe "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --format='value(machineType.basename())')"
+          case "$machine_type" in
+            e2-custom-medium-6144|e2-standard-2) ;;
+            *) echo "Unexpected shared-host machine type: $machine_type" >&2; exit 1 ;;
+          esac
+          echo "machine_type=$machine_type" >> "$GITHUB_OUTPUT"
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; test \"\$(cat /etc/abpiv-plausible/mode)\" = stopped; sudo /opt/abpiv-plausible/scripts/assert-data-disk.sh"
+          gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; sudo systemctl is-active --quiet cloudflared.service; test \"\$(sudo docker compose --project-directory /opt/plausible --file /opt/plausible/docker-compose.yml ps --status running --services | sort | tr '\n' ' ')\" = 'clickhouse plausible postgres '"
+          for service in plausible postgres clickhouse; do
+            case "$service" in
+              plausible) target_ref='ghcr.io/plausible/community-edition@sha256:4c2553516d09e3c7b1b9c39cca04a04c28c871f525adc8dbb7a2a8a20fed0857' ;;
+              postgres) target_ref='docker.io/library/postgres@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777' ;;
+              clickhouse) target_ref='docker.io/clickhouse/clickhouse-server@sha256:f226fe41f0578968b7f68a54b902d203ff4decfddfccb97c89fe5bfc36a51b66' ;;
+              *) exit 1 ;;
+            esac
+            source_image_id="$(gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+              "container_id=\$(sudo docker compose --project-directory /opt/plausible --file /opt/plausible/docker-compose.yml ps --quiet '$service'); sudo docker inspect --format '{{.Image}}' \"\$container_id\"")"
+            target_image_id="$(gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+              "sudo docker image inspect --format '{{.Id}}' '$target_ref'")"
+            test "$target_image_id" = "$source_image_id"
+          done
+          curl --fail --silent --show-error --max-time 15 "$PUBLIC_SCRIPT_URL" >/dev/null
+
+      - name: Install the export encryption client on the old host before downtime
+        run: |
+          gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo apt-get update >/dev/null && sudo apt-get install --yes --no-install-recommends age >/dev/null"
+
+      - name: Import unchanged legacy runtime secrets without exposing them
+        run: |
+          set -euo pipefail
+          set +x
+
+          has_enabled_version() {
+            test -n "$(gcloud secrets versions list "$1" --project "$GCP_PROJECT_ID" --filter='state=ENABLED' --limit=1 --format='value(name)')"
+          }
+
+          source_emitter() {
+            case "$1" in
+              abpiv-plausible-postgres-password)
+                printf '%s' "sudo sh -c 'value=\$(sed -n \"s/^POSTGRES_PASSWORD=//p\" /opt/plausible/runtime-secrets.env | tail -n1); test -n \"\$value\"; printf %s \"\$value\"'"
+                ;;
+              abpiv-plausible-secret-key-base)
+                printf '%s' "sudo sh -c 'value=\$(sed -n \"s/^SECRET_KEY_BASE=//p\" /opt/plausible/runtime-secrets.env | tail -n1); test -n \"\$value\"; printf %s \"\$value\"'"
+                ;;
+              abpiv-plausible-tunnel-token)
+                printf '%s' "sudo sh -c 'value=\$(sed -n \"s/^TUNNEL_TOKEN=//p\" /etc/cloudflared/token.env | tail -n1); test -n \"\$value\"; printf %s \"\$value\"'"
+                ;;
+              *) return 1 ;;
+            esac
+          }
+
+          for secret_id in abpiv-plausible-postgres-password abpiv-plausible-secret-key-base abpiv-plausible-tunnel-token; do
+            emitter="$(source_emitter "$secret_id")"
+            source_hash="$(gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command "$emitter | sha256sum | cut -d ' ' -f1")"
+            test -n "$source_hash"
+            if ! has_enabled_version "$secret_id"; then
+              gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command "$emitter" | \
+                gcloud secrets versions add "$secret_id" --project "$GCP_PROJECT_ID" --data-file=- >/dev/null
+            fi
+            target_hash="$(gcloud secrets versions access latest --secret "$secret_id" --project "$GCP_PROJECT_ID" | sha256sum | cut -d ' ' -f1)"
+            test "$target_hash" = "$source_hash"
+          done
+
+          if ! has_enabled_version abpiv-plausible-backup-age-key; then
+            age-keygen 2>/dev/null | \
+              gcloud secrets versions add abpiv-plausible-backup-age-key --project "$GCP_PROJECT_ID" --data-file=- >/dev/null
+          fi
+          gcloud secrets versions access latest --secret abpiv-plausible-backup-age-key --project "$GCP_PROJECT_ID" | \
+            age-keygen -y - | grep -Eq '^age1'
+
+      - id: window
+        name: Start the 60-minute production window
+        run: echo "start_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+      - id: transition
+        name: Mark the Tunnel transition attempted before changing either connector
+        run: echo "attempted=true" >> "$GITHUB_OUTPUT"
+
+      - name: Quiesce the old Plausible origin
+        timeout-minutes: 5
+        run: |
+          gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; sudo systemctl stop cloudflared.service; container_id=\$(sudo docker compose --project-directory /opt/plausible --file /opt/plausible/docker-compose.yml ps --all --quiet plausible); test -n \"\$container_id\"; sudo docker compose --project-directory /opt/plausible --file /opt/plausible/docker-compose.yml stop plausible; test \"\$(sudo docker inspect --format '{{.State.Running}}' \"\$container_id\")\" = false"
+
+      - name: Start the shared target in maintenance mode
+        timeout-minutes: 5
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo /opt/abpiv-plausible/scripts/runtime-mode.sh maintenance"
+
+      - name: Prove the public same-origin route is in maintenance
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          consecutive=0
+          for _ in $(seq 1 60); do
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 10 "$PUBLIC_SCRIPT_URL")"
+            if [ "$status" = 503 ]; then
+              consecutive="$((consecutive + 1))"
+              test "$consecutive" -lt 5 || exit 0
+            else
+              consecutive=0
+            fi
+            sleep 5
+          done
+          echo "The public analytics route did not remain on target maintenance for five consecutive checks." >&2
+          exit 1
+
+      - id: package
+        name: Export, encrypt, upload, and round-trip the complete legacy dataset
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          runner_dir="$(mktemp -d)"
+          remote_transfer_dir="/tmp/plausible-migration-${GITHUB_RUN_ID}"
+          export_script="/tmp/export-legacy-plausible-${GITHUB_RUN_ID}.sh"
+          source_export_dir=/nonexistent
+          cleanup() {
+            status=$?
+            rm -rf -- "$runner_dir"
+            gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+              "sudo rm -rf -- '$remote_transfer_dir' '$source_export_dir' '$export_script'" >/dev/null 2>&1 || true
+            trap - EXIT
+            exit "$status"
+          }
+          trap cleanup EXIT
+
+          gcloud compute scp infra/analytics/compute/scripts/export-legacy-plausible.sh "${SOURCE_VM}:${export_script}" \
+            --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet
+          gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "chmod 0700 '$export_script'"
+          recipient="$(gcloud secrets versions access latest --secret abpiv-plausible-backup-age-key --project "$GCP_PROJECT_ID" | age-keygen -y -)"
+          case "$recipient" in age1*) ;; *) echo "Invalid age recipient." >&2; exit 1 ;; esac
+
+          export_candidate="$(gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo env MIGRATION_AGE_RECIPIENT='$recipient' CONFIRM_EXPORT=export-legacy-plausible-data '$export_script'" | tail -n1)"
+          if ! [[ "$export_candidate" =~ ^/var/backups/plausible-migration-packages/[0-9]{8}T[0-9]{6}Z$ ]]; then
+            echo "Unexpected source export directory." >&2
+            exit 1
+          fi
+          source_export_dir="$export_candidate"
+
+          gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; install -d -m 0700 '$remote_transfer_dir'; sudo install -m 0600 -o \"\$(id -u)\" -g \"\$(id -g)\" '$source_export_dir/plausible-migration.tar.age' '$remote_transfer_dir/plausible-migration.tar.age'; sudo install -m 0600 -o \"\$(id -u)\" -g \"\$(id -g)\" '$source_export_dir/plausible-migration.tar.age.sha256' '$remote_transfer_dir/plausible-migration.tar.age.sha256'"
+          gcloud compute scp --recurse "${SOURCE_VM}:${remote_transfer_dir}/." "$runner_dir/" \
+            --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet
+          (cd "$runner_dir" && sha256sum --check plausible-migration.tar.age.sha256 >/dev/null)
+
+          destination="gs://${PLAUSIBLE_BACKUP_BUCKET}/plausible/migration/${GITHUB_RUN_ID}"
+          gcloud storage buckets describe "gs://${PLAUSIBLE_BACKUP_BUCKET}" >/dev/null
+          gcloud storage cp "$runner_dir/plausible-migration.tar.age" "${destination}/plausible-migration.tar.age"
+          gcloud storage cp "$runner_dir/plausible-migration.tar.age.sha256" "${destination}/plausible-migration.tar.age.sha256"
+          rm -f "$runner_dir/plausible-migration.tar.age" "$runner_dir/plausible-migration.tar.age.sha256"
+          gcloud storage cp "${destination}/plausible-migration.tar.age" "$runner_dir/plausible-migration.tar.age" >/dev/null
+          gcloud storage cp "${destination}/plausible-migration.tar.age.sha256" "$runner_dir/plausible-migration.tar.age.sha256" >/dev/null
+          (cd "$runner_dir" && sha256sum --check plausible-migration.tar.age.sha256 >/dev/null)
+          echo "uri=${destination}/plausible-migration.tar.age" >> "$GITHUB_OUTPUT"
+
+      - name: Restore and compare PostgreSQL, ClickHouse, and application state
+        timeout-minutes: 15
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo env MIGRATION_URI='${{ steps.package.outputs.uri }}' CONFIRM_RESTORE=restore-legacy-plausible-data /opt/abpiv-plausible/scripts/restore-migration.sh"
+
+      - name: Enforce the minute-45 migration deadline
+        run: |
+          elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
+          if [ "$elapsed" -ge 2700 ]; then
+            echo "Plausible migration missed the minute-45 green deadline." >&2
+            exit 1
+          fi
+
+      - name: Reverify migrated data while the target remains in maintenance
+        timeout-minutes: 5
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo /opt/abpiv-plausible/scripts/verify-restored-runtime.sh"
+
+      - name: Start the verified runtime behind read-only precommit ingress
+        timeout-minutes: 5
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo /opt/abpiv-plausible/scripts/prepare-cutover-runtime.sh"
+
+      - name: Verify the public precommit route without sending an event
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error --max-time 15 "$PUBLIC_SCRIPT_URL" >/dev/null; then
+              break
+            fi
+            sleep 5
+          done
+          script_body="$(mktemp)"
+          headers="$(mktemp)"
+          trap 'rm -f "$headers" "$script_body"' EXIT
+          curl --fail --silent --show-error --max-time 15 --output "$script_body" "$PUBLIC_SCRIPT_URL"
+          grep -Fq 'plausible' "$script_body"
+          test "$(curl --silent --output /dev/null --dump-header "$headers" --write-out '%{http_code}' --max-time 15 \
+            "https://${PLAUSIBLE_HOSTNAME}/")" = 302
+          grep -Eqi '^location: .*\/cdn-cgi\/access\/' "$headers"
+
+      - name: Enforce the minute-45 rollback boundary before event exposure
+        run: |
+          elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
+          test "$elapsed" -lt 2700
+
+      - id: commit
+        name: Make the restored target canonical before exposing the analytics endpoint
+        run: echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open event writes only on the canonical target
+        timeout-minutes: 5
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo /opt/abpiv-plausible/scripts/runtime-mode.sh active"
+
+      - name: Verify active public routing and Access without sending an event
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error --max-time 15 "$PUBLIC_SCRIPT_URL" >/dev/null; then
+              break
+            fi
+            sleep 5
+          done
+          script_body="$(mktemp)"
+          headers="$(mktemp)"
+          trap 'rm -f "$headers" "$script_body"' EXIT
+          curl --fail --silent --show-error --max-time 15 --output "$script_body" "$PUBLIC_SCRIPT_URL"
+          grep -Fq 'plausible' "$script_body"
+          status="$(curl --silent --output /dev/null --dump-header "$headers" --write-out '%{http_code}' --max-time 15 "https://${PLAUSIBLE_HOSTNAME}/")"
+          test "$status" = 302
+          grep -Eqi '^location: .*\/cdn-cgi\/access\/' "$headers"
+
+      - name: Enforce the minute-45 green deadline after active acceptance
+        run: |
+          elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
+          if [ "$elapsed" -ge 2700 ]; then
+            echo "Plausible was not fully accepted by minute 45." >&2
+            exit 1
+          fi
+
+      - id: observe
+        name: Observe the complete shared host for at least 15 minutes
+        continue-on-error: true
+        timeout-minutes: 20
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo env OBSERVATION_SECONDS=900 /opt/abpiv-plausible/scripts/observe-runtime.sh"
+
+      - id: resize_modes
+        name: Capture runtime modes before an allowed fallback resize
+        if: steps.observe.outcome == 'failure' && steps.target.outputs.machine_type == 'e2-custom-medium-6144'
+        run: |
+          elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
+          test "$elapsed" -lt 3300
+          n8n_mode="$(gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "if sudo test -f /etc/abpiv-n8n/mode; then sudo cat /etc/abpiv-n8n/mode; else printf stopped; fi")"
+          case "$n8n_mode" in active|maintenance|stopped) ;; *) exit 1 ;; esac
+          echo "n8n_mode=$n8n_mode" >> "$GITHUB_OUTPUT"
+
+      - name: Resize the whole shared host to the approved fallback and reaccept
+        if: steps.observe.outcome == 'failure' && steps.target.outputs.machine_type == 'e2-custom-medium-6144'
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; if sudo test -x /opt/abpiv-n8n/scripts/runtime-mode.sh; then sudo /opt/abpiv-n8n/scripts/runtime-mode.sh stopped; fi; sudo /opt/abpiv-plausible/scripts/runtime-mode.sh stopped"
+          gcloud compute instances stop "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --quiet
+          gcloud compute instances set-machine-type "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --machine-type e2-standard-2 --quiet
+          gcloud compute instances start "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --quiet
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "until sudo test -f /var/lib/abpiv-n8n-bootstrap-complete && sudo systemctl is-active --quiet docker; do sleep 5; done; case '${{ steps.resize_modes.outputs.n8n_mode }}' in active|maintenance) sudo /opt/abpiv-n8n/scripts/runtime-mode.sh '${{ steps.resize_modes.outputs.n8n_mode }}' ;; stopped) ;; *) exit 1 ;; esac; sudo /opt/abpiv-plausible/scripts/runtime-mode.sh active; sudo env OBSERVATION_SECONDS=900 /opt/abpiv-plausible/scripts/observe-runtime.sh"
+
+      - name: Fail closed if the approved fallback itself misses an observation threshold
+        if: steps.observe.outcome == 'failure' && steps.target.outputs.machine_type == 'e2-standard-2'
+        run: |
+          echo "The approved e2-standard-2 fallback missed a shared-host threshold." >&2
+          exit 1
+
+      - name: Create and round-trip the first encrypted shared-host backup
+        timeout-minutes: 15
+        run: |
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo /opt/abpiv-plausible/scripts/backup.sh"
+          curl --fail --silent --show-error --max-time 15 "$PUBLIC_SCRIPT_URL" >/dev/null
+
+      - name: Stop the retained old VM only after all target checks pass
+        timeout-minutes: 10
+        run: |
+          gcloud compute instances stop "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --quiet
+          test "$(gcloud compute instances describe "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --format='value(status)')" = TERMINATED
+
+      - name: Record the rollback-safe outcome
+        run: |
+          echo "Plausible PostgreSQL counts, ClickHouse counts, and application-state checksums matched the old VM. The encrypted migration package was round-trip verified, the target passed the observation gate, and the intact old VM is stopped for rollback after review by ${REVIEWER_IDENTITY}." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Rollback plausible-analytics-vm from its intact old disk on any transition failure
+        if: failure() && steps.transition.outputs.attempted == 'true' && steps.commit.outputs.committed != 'true'
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          target_isolated=false
+          for _ in $(seq 1 3); do
+            if gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+              "set -euo pipefail; sudo /opt/abpiv-plausible/scripts/runtime-mode.sh stopped; ! sudo systemctl is-active --quiet abpiv-plausible-cloudflared.service"; then
+              target_isolated=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$target_isolated" != true ]; then
+            echo "Target Tunnel connector inactivity could not be proven; refusing to start the old connector." >&2
+            exit 1
+          fi
+          source_status="$(gcloud compute instances describe "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --format='value(status)')"
+          if [ "$source_status" != RUNNING ]; then
+            gcloud compute instances start "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --quiet
+          fi
+          gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; sudo docker compose --project-directory /opt/plausible --file /opt/plausible/docker-compose.yml up --detach --wait; sudo systemctl start cloudflared.service; sudo systemctl is-active --quiet cloudflared.service"
+          consecutive=0
+          for _ in $(seq 1 60); do
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 10 "$PUBLIC_SCRIPT_URL")"
+            if [ "$status" = 200 ]; then
+              consecutive="$((consecutive + 1))"
+              if [ "$consecutive" -ge 5 ]; then
+                echo "Old Plausible origin restored after the failed pre-commit transition." >&2
+                exit 1
+              fi
+            else
+              consecutive=0
+            fi
+            sleep 5
+          done
+          echo "Rollback did not restore the same-origin analytics script." >&2
+          exit 1
+
+      - name: Recover the canonical target without reversing post-acceptance data
+        if: failure() && steps.commit.outputs.committed == 'true'
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          target_status="$(gcloud compute instances describe "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --format='value(status)')"
+          if [ "$target_status" != RUNNING ]; then
+            gcloud compute instances start "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --quiet
+          fi
+          gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+            "set -euo pipefail; until sudo test -f /var/lib/abpiv-n8n-bootstrap-complete && sudo systemctl is-active --quiet docker; do sleep 5; done; n8n_mode='${{ steps.resize_modes.outputs.n8n_mode }}'; if test -n \"\$n8n_mode\"; then case \"\$n8n_mode\" in active|maintenance) sudo /opt/abpiv-n8n/scripts/runtime-mode.sh \"\$n8n_mode\" ;; stopped) sudo /opt/abpiv-n8n/scripts/runtime-mode.sh stopped ;; *) exit 1 ;; esac; fi; sudo /opt/abpiv-plausible/scripts/runtime-mode.sh active"
+          curl --fail --silent --show-error --max-time 15 "$PUBLIC_SCRIPT_URL" >/dev/null
+          echo "Post-acceptance failure left the verified target canonical; old-origin rollback was intentionally not attempted." >&2
+          exit 1

@@ -1,0 +1,21 @@
+[Unit]
+Description=ABPIV n8n Cloudflare Tunnel
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStartPre=/opt/abpiv-n8n/scripts/load-runtime-secrets.sh
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --token-file /run/cloudflared/token run
+Restart=always
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/run/cloudflared /run/n8n
+
+[Install]
+WantedBy=multi-user.target

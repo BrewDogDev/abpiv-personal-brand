@@ -8,6 +8,13 @@ locals {
     managed_by  = "opentofu"
   }
 
+  compute_labels = {
+    app         = "shared-runtime"
+    component   = "runtime"
+    environment = "production"
+    managed_by  = "opentofu"
+  }
+
   network_cidr   = "10.58.0.0/24"
   connector_cidr = "10.58.16.0/28"
 
@@ -17,14 +24,18 @@ locals {
 
   sql_instance_name = "${local.name_prefix}-postgres"
 
-  binary_data_bucket_name = var.binary_data_bucket_name != "" ? var.binary_data_bucket_name : "${var.gcp_project_id}-n8n-binary-data"
-  binary_data_mount_path  = "/mnt/n8n-binary-data"
+  binary_data_bucket_name          = var.binary_data_bucket_name != "" ? var.binary_data_bucket_name : "${var.gcp_project_id}-n8n-binary-data"
+  binary_data_mount_path           = "/mnt/n8n-binary-data"
+  backup_bucket_name               = var.backup_bucket_name != "" ? var.backup_bucket_name : "${var.gcp_project_id}-n8n-backups"
+  compute_instance_name            = "abpiv-runtime-vm"
+  compute_data_disk_name           = "abpiv-n8n-data"
+  compute_plausible_data_disk_name = "abpiv-plausible-data"
 
   editor_enabled = trimspace(var.editor_hostname) != ""
   editor_cloudflare_zone_id = (
     var.editor_zone_id != "" ?
     var.editor_zone_id :
-    data.cloudflare_zones.editor[0].result[0].id
+    try(data.cloudflare_zones.editor[0].result[0].id, "")
   )
 
   hostnames = merge(
@@ -79,6 +90,10 @@ locals {
     "certificatemanager.googleapis.com",
     "compute.googleapis.com",
     "iam.googleapis.com",
+    "iap.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
+    "oslogin.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",
     "servicenetworking.googleapis.com",
@@ -99,10 +114,25 @@ locals {
     }
   }
 
+  plausible_runtime_secrets = {
+    secret_key_base = {
+      secret_id = "abpiv-plausible-secret-key-base"
+    }
+    postgres_password = {
+      secret_id = "abpiv-plausible-postgres-password"
+    }
+    tunnel_token = {
+      secret_id = "abpiv-plausible-tunnel-token"
+    }
+    backup_age_key = {
+      secret_id = "abpiv-plausible-backup-age-key"
+    }
+  }
+
   n8n_static_env = merge({
     DB_POSTGRESDB_CONNECTION_TIMEOUT      = "20000"
     DB_POSTGRESDB_DATABASE                = var.postgres_database
-    DB_POSTGRESDB_HOST                    = google_sql_database_instance.n8n.private_ip_address
+    DB_POSTGRESDB_HOST                    = try(google_sql_database_instance.n8n[0].private_ip_address, "")
     DB_POSTGRESDB_IDLE_CONNECTION_TIMEOUT = "30000"
     DB_POSTGRESDB_PORT                    = "5432"
     DB_POSTGRESDB_SSL_ENABLED             = "false"
@@ -132,18 +162,50 @@ locals {
     } : {}
   )
 
-  github_deployer_project_roles = toset([
-    "roles/certificatemanager.editor",
-    "roles/cloudsql.admin",
-    "roles/compute.loadBalancerAdmin",
+  github_deployer_project_roles = toset(concat([
+    "roles/compute.instanceAdmin.v1",
     "roles/compute.networkAdmin",
+    "roles/compute.osAdminLogin",
     "roles/iam.serviceAccountAdmin",
-    "roles/run.admin",
+    "roles/iap.tunnelResourceAccessor",
+    "roles/logging.configWriter",
+    "roles/monitoring.editor",
     "roles/secretmanager.admin",
-    "roles/servicenetworking.networksAdmin",
     "roles/serviceusage.serviceUsageAdmin",
     "roles/resourcemanager.projectIamAdmin",
     "roles/storage.admin",
+    ], var.legacy_stack_enabled ? [
+    "roles/certificatemanager.editor",
+    "roles/cloudsql.admin",
+    "roles/compute.loadBalancerAdmin",
+    "roles/run.admin",
+    "roles/servicenetworking.networksAdmin",
     "roles/vpcaccess.admin",
-  ])
+    ] : []
+  ))
+}
+
+check "rollback_origin_available" {
+  assert {
+    condition = (
+      var.runtime_origin != "cloud_run" ||
+      (var.legacy_stack_enabled && var.legacy_cloud_run_min_instances == 1)
+    )
+    error_message = "runtime_origin=cloud_run requires the retained legacy stack with one minimum instance."
+  }
+
+}
+
+check "compute_origin_has_managed_edge" {
+  assert {
+    condition     = var.runtime_origin != "compute" || (var.enable_cloudflare_edge && local.editor_enabled)
+    error_message = "runtime_origin=compute requires managed Cloudflare edge resources and the editor hostname so both production records switch together."
+  }
+}
+
+check "destruction_arming_is_narrow" {
+  assert {
+    condition     = !var.legacy_destruction_armed || (var.runtime_origin == "compute" && var.legacy_stack_enabled)
+    error_message = "legacy_destruction_armed is valid only after the Compute origin is active while the legacy stack is still retained."
+  }
 }

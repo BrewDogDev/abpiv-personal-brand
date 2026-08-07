@@ -9,7 +9,7 @@ data "cloudflare_zones" "editor" {
 }
 
 resource "cloudflare_dns_record" "certificate_authorization" {
-  for_each = var.enable_cloudflare_edge ? google_certificate_manager_dns_authorization.n8n : {}
+  for_each = var.enable_cloudflare_edge && var.legacy_stack_enabled ? google_certificate_manager_dns_authorization.n8n : {}
 
   zone_id = local.hostname_zone_ids[each.key]
   name    = trimsuffix(each.value.dns_resource_record[0].name, ".")
@@ -24,8 +24,8 @@ resource "cloudflare_dns_record" "forms" {
 
   zone_id = var.allanbpediniv_zone_id
   name    = var.forms_hostname
-  content = google_compute_global_address.n8n_lb.address
-  type    = "A"
+  content = var.runtime_origin == "compute" ? "${cloudflare_zero_trust_tunnel_cloudflared.n8n[0].id}.cfargotunnel.com" : google_compute_global_address.n8n_lb[0].address
+  type    = var.runtime_origin == "compute" ? "CNAME" : "A"
   ttl     = 1
   proxied = true
 }
@@ -35,10 +35,48 @@ resource "cloudflare_dns_record" "editor" {
 
   zone_id = local.editor_cloudflare_zone_id
   name    = var.editor_hostname
-  content = google_compute_global_address.n8n_lb.address
-  type    = "A"
+  content = var.runtime_origin == "compute" ? "${cloudflare_zero_trust_tunnel_cloudflared.n8n[0].id}.cfargotunnel.com" : google_compute_global_address.n8n_lb[0].address
+  type    = var.runtime_origin == "compute" ? "CNAME" : "A"
   ttl     = 1
   proxied = true
+}
+
+resource "cloudflare_zero_trust_tunnel_cloudflared" "n8n" {
+  count = var.enable_cloudflare_edge ? 1 : 0
+
+  account_id = var.cloudflare_account_id
+  name       = "abpiv-n8n-compute"
+  config_src = "cloudflare"
+}
+
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "n8n" {
+  count = var.enable_cloudflare_edge ? 1 : 0
+
+  account_id = var.cloudflare_account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.n8n[0].id
+  source     = "cloudflare"
+
+  config = {
+    ingress = concat(
+      [
+        {
+          hostname = var.forms_hostname
+          service  = "http://127.0.0.1:8080"
+        },
+      ],
+      local.editor_enabled ? [
+        {
+          hostname = var.editor_hostname
+          service  = "http://127.0.0.1:8080"
+        },
+      ] : [],
+      [
+        {
+          service = "http_status:404"
+        },
+      ]
+    )
+  }
 }
 
 resource "cloudflare_ruleset" "forms_firewall_custom" {

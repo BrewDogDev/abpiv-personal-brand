@@ -1,11 +1,24 @@
-name: Redeploy n8n
+name: Deploy private n8n runtime release
 
 on:
   workflow_dispatch:
     inputs:
-      confirm_redeploy:
-        description: Type redeploy to update Cloud Run to the current stable n8n image.
+      action:
+        description: Select initial provisioning or an in-place release deployment.
         required: true
+        type: choice
+        options: [provision, deploy]
+      confirm_action:
+        description: Type provision-private-n8n-vm or deploy-private-n8n-runtime to match the selected action.
+        required: true
+        type: string
+      confirm_tunnel_secret:
+        description: For initial provisioning, type store-tunnel-token to authorize its purpose-limited secret lifecycle.
+        required: false
+        type: string
+      confirm_runtime_secret_access:
+        description: For deployment, type access-n8n-runtime-secrets because an active runtime reloads its Secret Manager values.
+        required: false
         type: string
 
 permissions:
@@ -13,64 +26,85 @@ permissions:
   id-token: write
 
 concurrency:
-  group: n8n-redeploy
+  group: abpiv-shared-runtime-mutation
   cancel-in-progress: false
 
 env:
-  N8N_IMAGE: docker.io/n8nio/n8n:stable
-  N8N_CLOUD_RUN_SERVICE: ${{ vars.N8N_CLOUD_RUN_SERVICE || 'abpiv-n8n' }}
-  N8N_GCP_PROJECT_ID: ${{ vars.N8N_GCP_PROJECT_ID }}
-  N8N_GCP_REGION: ${{ vars.N8N_GCP_REGION }}
+  GCP_PROJECT_ID: ${{ vars.N8N_GCP_PROJECT_ID }}
+  GCP_ZONE: ${{ vars.N8N_GCP_ZONE || 'us-east1-c' }}
+  VM_NAME: abpiv-runtime-vm
 
 jobs:
-  redeploy:
-    if: inputs.confirm_redeploy == 'redeploy'
-    name: Redeploy n8n Cloud Run service
+  deploy:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (
+        (inputs.action == 'provision' && inputs.confirm_action == 'provision-private-n8n-vm' && inputs.confirm_tunnel_secret == 'store-tunnel-token') ||
+        (inputs.action == 'deploy' && inputs.confirm_action == 'deploy-private-n8n-runtime' && inputs.confirm_runtime_secret_access == 'access-n8n-runtime-secrets')
+      )
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Check required configuration
-        env:
-          N8N_GCP_PROJECT_ID: ${{ vars.N8N_GCP_PROJECT_ID }}
-          N8N_GCP_REGION: ${{ vars.N8N_GCP_REGION }}
-          N8N_GCP_SERVICE_ACCOUNT: ${{ vars.N8N_GCP_SERVICE_ACCOUNT }}
-          N8N_GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.N8N_GCP_WORKLOAD_IDENTITY_PROVIDER }}
-        run: |
-          missing=0
-
-          for name in \
-            N8N_GCP_PROJECT_ID \
-            N8N_GCP_REGION \
-            N8N_GCP_SERVICE_ACCOUNT \
-            N8N_GCP_WORKLOAD_IDENTITY_PROVIDER
-          do
-            if [ -z "${!name}" ]; then
-              echo "::error title=Missing required configuration::$name is not configured"
-              missing=1
-            fi
-          done
-
-          exit "$missing"
-
-      - id: auth
-        uses: google-github-actions/auth@v3
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.N8N_GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.N8N_GCP_SERVICE_ACCOUNT }}
-
       - uses: google-github-actions/setup-gcloud@v3
+      - uses: opentofu/setup-opentofu@v1
 
-      - name: Redeploy stable n8n image
+      - name: Check configuration
         run: |
-          gcloud run services update "${N8N_CLOUD_RUN_SERVICE}" \
-            --project="${N8N_GCP_PROJECT_ID}" \
-            --region="${N8N_GCP_REGION}" \
-            --image="${N8N_IMAGE}" \
-            --quiet
+          set -euo pipefail
+          test -n "$GCP_PROJECT_ID"
+          test -n "${{ vars.CLOUDFLARE_ACCOUNT_ID }}"
 
-      - name: Show deployed image
+      - name: Store Tunnel token without logging or retaining it
+        if: inputs.action == 'provision'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          gcloud run services describe "${N8N_CLOUD_RUN_SERVICE}" \
-            --project="${N8N_GCP_PROJECT_ID}" \
-            --region="${N8N_GCP_REGION}" \
-            --format='value(spec.template.spec.containers[0].image)'
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          tofu -chdir=infra/n8n/opentofu init -input=false
+          tunnel_id="$(tofu -chdir=infra/n8n/opentofu output -raw cloudflare_tunnel_id)"
+          test -n "$tunnel_id"
+          token_file="$(mktemp)"
+          trap 'rm -f "$token_file"' EXIT
+          chmod 0600 "$token_file"
+          curl --fail --silent --show-error \
+            --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/cfd_tunnel/${tunnel_id}/token" \
+            | jq --exit-status --raw-output '.result' > "$token_file"
+          test -s "$token_file"
+          gcloud secrets versions add abpiv-n8n-cloudflare-tunnel-token \
+            --project "$GCP_PROJECT_ID" --data-file "$token_file" >/dev/null
+
+      - name: Upload runtime release over IAP
+        run: |
+          set -euo pipefail
+          archive="$(mktemp --suffix=.tgz)"
+          trap 'rm -f "$archive"' EXIT
+          tar --create --gzip --file "$archive" --directory infra/n8n compute
+          gcloud compute scp "$archive" "${VM_NAME}:/tmp/abpiv-n8n-release.tgz" \
+            --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet
+
+      - name: Provision host without starting production containers
+        if: inputs.action == 'provision'
+        run: |
+          gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            "until sudo test -f /var/lib/abpiv-n8n-bootstrap-complete; do sleep 5; done; sudo rm -rf /tmp/abpiv-n8n-release && sudo mkdir -p /tmp/abpiv-n8n-release && sudo tar -xzf /tmp/abpiv-n8n-release.tgz -C /tmp/abpiv-n8n-release --strip-components=1 && sudo env RELEASE_DIR=/tmp/abpiv-n8n-release GCP_PROJECT_ID='$GCP_PROJECT_ID' BACKUP_BUCKET='${GCP_PROJECT_ID}-n8n-backups' /tmp/abpiv-n8n-release/scripts/provision-host.sh"
+
+      - name: Deploy release while preserving runtime mode
+        if: inputs.action == 'deploy'
+        run: |
+          gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo rm -rf /tmp/abpiv-n8n-release && sudo mkdir -p /tmp/abpiv-n8n-release && sudo tar -xzf /tmp/abpiv-n8n-release.tgz -C /tmp/abpiv-n8n-release --strip-components=1 && sudo env RELEASE_DIR=/tmp/abpiv-n8n-release /opt/abpiv-n8n/scripts/deploy-release.sh"
+
+      - name: Remove remote release artifacts
+        if: always()
+        continue-on-error: true
+        run: |
+          gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            "sudo rm -rf -- /tmp/abpiv-n8n-release /tmp/abpiv-n8n-release.tgz"
