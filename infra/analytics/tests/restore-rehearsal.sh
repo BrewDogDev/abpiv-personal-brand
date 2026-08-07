@@ -11,18 +11,30 @@ root_command=()
 if [ "$(id -u)" -ne 0 ]; then
   root_command=(sudo)
 fi
+host_paths_owned=false
 
 cleanup() {
   status=$?
   set +e
   if [ "$status" -ne 0 ]; then
     echo "Plausible restore rehearsal failed during phase: $phase" >&2
-    "${compose[@]}" ps >&2
-    "${compose[@]}" logs --tail=120 plausible clickhouse postgres nginx >&2
+    if [ -f "$compose_file" ]; then
+      "${compose[@]}" ps >&2
+      "${compose[@]}" logs --tail=120 plausible clickhouse postgres nginx >&2
+    fi
   fi
-  "${compose[@]}" down --volumes --remove-orphans >/dev/null 2>&1
-  docker run --rm -v /srv:/host-srv -v /opt:/host-opt -v /run:/host-run -v /var/backups:/host-backups alpine:3.22 \
-    sh -c 'rm -rf -- /host-srv/plausible /host-opt/abpiv-plausible /host-opt/plausible /host-run/plausible /host-backups/plausible-migration /host-backups/plausible-migration-packages' >/dev/null 2>&1
+  if [ -f "$compose_file" ]; then
+    "${compose[@]}" down --volumes --remove-orphans >/dev/null 2>&1
+  fi
+  if "$host_paths_owned"; then
+    "${root_command[@]}" rm -rf -- \
+      /srv/plausible \
+      /opt/abpiv-plausible \
+      /opt/plausible \
+      /run/plausible \
+      /var/backups/plausible-migration \
+      /var/backups/plausible-migration-packages
+  fi
   rm -rf -- "$work_dir"
   trap - EXIT
   exit "$status"
@@ -34,28 +46,47 @@ if [ -n "$(docker ps --all --quiet --filter label=com.docker.compose.project=abp
   exit 1
 fi
 
-docker run --rm -v /srv:/host-srv -v /opt:/host-opt -v /run:/host-run -v /var/backups:/host-backups alpine:3.22 sh -c '
-  set -eu
-  test ! -e /host-srv/plausible
-  test ! -e /host-opt/abpiv-plausible
-  test ! -e /host-opt/plausible
-  test ! -e /host-run/plausible
-  test ! -e /host-backups/plausible-migration
-  test ! -e /host-backups/plausible-migration-packages
-  install -d -m 0750 /host-srv/plausible/state /host-srv/plausible/clickhouse-data /host-srv/plausible/clickhouse-logs /host-srv/plausible/clickhouse-backups
-  install -d -m 0700 /host-srv/plausible/postgres /host-run/plausible /host-opt/abpiv-plausible
-  printf %s fixture-password > /host-run/plausible/POSTGRES_PASSWORD
-  printf %s fixture-secret-key-base-longer-than-sixty-four-bytes-01234567890123456789 > /host-run/plausible/SECRET_KEY_BASE
-  printf %s postgres://plausible:fixture-password@postgres:5432/plausible > /host-run/plausible/DATABASE_URL
-  chmod 0400 /host-run/plausible/*
-  chown -R 70:70 /host-srv/plausible/postgres
-  chown -R 999:65533 /host-srv/plausible/state
-  chown -R 101:101 /host-srv/plausible/clickhouse-data /host-srv/plausible/clickhouse-logs /host-srv/plausible/clickhouse-backups
-'
+for path in \
+  /srv/plausible \
+  /opt/abpiv-plausible \
+  /opt/plausible \
+  /run/plausible \
+  /var/backups/plausible-migration \
+  /var/backups/plausible-migration-packages; do
+  if "${root_command[@]}" test -e "$path"; then
+    echo "Refusing to replace existing rehearsal path: $path" >&2
+    exit 1
+  fi
+done
+host_paths_owned=true
+
+"${root_command[@]}" install -d -m 0750 \
+  /srv/plausible/state \
+  /srv/plausible/clickhouse-data \
+  /srv/plausible/clickhouse-logs \
+  /srv/plausible/clickhouse-backups
+"${root_command[@]}" install -d -m 0700 \
+  /srv/plausible/postgres \
+  /run/plausible \
+  /opt/abpiv-plausible
+printf %s fixture-password | "${root_command[@]}" tee /run/plausible/POSTGRES_PASSWORD >/dev/null
+printf %s fixture-secret-key-base-longer-than-sixty-four-bytes-01234567890123456789 | \
+  "${root_command[@]}" tee /run/plausible/SECRET_KEY_BASE >/dev/null
+printf %s postgres://plausible:fixture-password@postgres:5432/plausible | \
+  "${root_command[@]}" tee /run/plausible/DATABASE_URL >/dev/null
+"${root_command[@]}" chmod 0400 /run/plausible/*
+"${root_command[@]}" chown -R 70:70 /srv/plausible/postgres
+"${root_command[@]}" chown -R 999:65533 /srv/plausible/state
+"${root_command[@]}" chown -R 101:101 \
+  /srv/plausible/clickhouse-data \
+  /srv/plausible/clickhouse-logs \
+  /srv/plausible/clickhouse-backups
 
 tar --create --file - --directory "$repository_root/infra/analytics/compute" . | \
-  docker run --rm --interactive -v /opt:/host-opt alpine:3.22 \
-    sh -c 'tar --extract --file - --directory /host-opt/abpiv-plausible && cp /host-opt/abpiv-plausible/nginx/active.conf /host-opt/abpiv-plausible/nginx/current.conf && chmod 0755 /host-opt/abpiv-plausible/scripts/*.sh && cp -a /host-opt/abpiv-plausible /host-opt/plausible'
+  "${root_command[@]}" tar --extract --file - --directory /opt/abpiv-plausible
+"${root_command[@]}" cp /opt/abpiv-plausible/nginx/active.conf /opt/abpiv-plausible/nginx/current.conf
+"${root_command[@]}" chmod 0755 /opt/abpiv-plausible/scripts/*.sh
+"${root_command[@]}" cp -a /opt/abpiv-plausible /opt/plausible
 
 "${compose[@]}" config --quiet
 phase=container-startup
