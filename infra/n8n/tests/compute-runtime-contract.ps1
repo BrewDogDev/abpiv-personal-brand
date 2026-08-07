@@ -40,6 +40,7 @@ function Assert-NotMatch {
 }
 
 $variables = Read-RepositoryFile "infra/n8n/opentofu/variables.tf"
+$gcp = Read-RepositoryFile "infra/n8n/opentofu/gcp.tf"
 $compute = Read-RepositoryFile "infra/n8n/opentofu/compute.tf"
 $cloudflare = Read-RepositoryFile "infra/n8n/opentofu/cloudflare.tf"
 $compose = Read-RepositoryFile "infra/n8n/compute/docker-compose.yml"
@@ -69,6 +70,7 @@ Assert-Match $variables 'variable\s+"legacy_stack_enabled"[\s\S]*?default\s*=\s*
 Assert-Match $variables 'variable\s+"legacy_destruction_armed"[\s\S]*?default\s*=\s*false' "Legacy destruction arming must default to false."
 Assert-Match $variables 'variable\s+"compute_machine_type"[\s\S]*?default\s*=\s*"e2-custom-medium-6144"' "The shared VM must default to e2-custom-medium-6144."
 Assert-Match $variables 'variable\s+"compute_data_disk_size_gb"[\s\S]*?default\s*=\s*30' "The data disk must default to 30 GiB."
+Assert-Match $gcp 'resource\s+"google_cloud_run_v2_service"\s+"n8n"\s*\{[\s\S]*?labels\s*=\s*local\.labels\s+scaling\s*\{\s*manual_instance_count\s*=\s*0\s+min_instance_count\s*=\s*0\s*\}\s+template\s*\{' "Additive preparation must preserve the legacy Cloud Run service-level scaling values."
 
 # The host is private, uses a durable data disk, and has NAT plus IAP/OS Login.
 Assert-Match $compute 'resource\s+"google_compute_instance"\s+"n8n"' "The Compute Engine runtime VM is missing."
