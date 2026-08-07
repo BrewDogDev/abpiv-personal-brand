@@ -1,0 +1,11 @@
+[Unit]
+Description=ABPIV n8n one-minute health monitor
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=abpiv-n8n-health.service
+
+[Install]
+WantedBy=timers.target

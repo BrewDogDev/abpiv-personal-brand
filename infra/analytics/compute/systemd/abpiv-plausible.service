@@ -1,0 +1,19 @@
+[Unit]
+Description=ABPIV Plausible Docker stack on the shared runtime VM
+After=docker.service network-online.target srv-plausible.mount
+Requires=docker.service
+RequiresMountsFor=/srv/plausible
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/opt/abpiv-plausible/scripts/assert-data-disk.sh
+ExecStartPre=/usr/local/sbin/abpiv-container-firewall --check
+ExecStart=/opt/abpiv-plausible/scripts/start-on-boot.sh
+ExecStop=/opt/abpiv-plausible/scripts/stop-for-shutdown.sh
+TimeoutStartSec=360
+TimeoutStopSec=180
+
+[Install]
+WantedBy=multi-user.target

@@ -10,6 +10,97 @@ variable "gcp_region" {
   default     = "us-east1"
 }
 
+variable "gcp_zone" {
+  description = "Google Cloud zone for the private Compute Engine VM shared by the isolated n8n and Plausible projects."
+  type        = string
+  default     = "us-east1-c"
+}
+
+variable "runtime_origin" {
+  description = "Active production origin. Keep cloud_run during additive preparation; switch to compute only in the approved cutover window."
+  type        = string
+  default     = "cloud_run"
+
+  validation {
+    condition     = contains(["cloud_run", "compute"], var.runtime_origin)
+    error_message = "runtime_origin must be cloud_run or compute."
+  }
+}
+
+variable "legacy_stack_enabled" {
+  description = "Retains the rollback Cloud Run, Cloud SQL, connector, load balancer, and legacy bucket. Disable only after verified cutover and explicit destructive approval."
+  type        = bool
+  default     = true
+}
+
+variable "legacy_destruction_armed" {
+  description = "Writes Cloud SQL deletion_protection=false into state before the separately planned legacy deletion. Keep false outside an explicitly approved decommission."
+  type        = bool
+  default     = false
+}
+
+variable "legacy_cloud_run_min_instances" {
+  description = "Minimum legacy Cloud Run instances. Keep one before cutover, zero while retained only for rollback after a successful cutover."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = contains([0, 1], var.legacy_cloud_run_min_instances)
+    error_message = "legacy_cloud_run_min_instances must be 0 or 1."
+  }
+}
+
+variable "compute_machine_type" {
+  description = "Approved machine type for the private VM shared by n8n and Plausible. Start with 6 GiB shared-core; use the 8 GiB fallback only after an observed threshold failure."
+  type        = string
+  default     = "e2-custom-medium-6144"
+
+  validation {
+    condition     = contains(["e2-custom-medium-6144", "e2-standard-2"], var.compute_machine_type)
+    error_message = "compute_machine_type must be e2-custom-medium-6144 or the approved e2-standard-2 fallback."
+  }
+}
+
+variable "compute_boot_image" {
+  description = "Exact Ubuntu 24.04 image self-link for the VM boot disk. Update deliberately after testing; never use an image family."
+  type        = string
+  default     = "projects/ubuntu-os-cloud/global/images/ubuntu-2404-noble-amd64-v20260805"
+
+  validation {
+    condition     = can(regex("^projects/ubuntu-os-cloud/global/images/ubuntu-2404-noble-amd64-v[0-9]+$", var.compute_boot_image))
+    error_message = "compute_boot_image must be an exact Ubuntu 24.04 image, not an image family."
+  }
+}
+
+variable "compute_boot_disk_size_gb" {
+  description = "Boot disk size for the runtime VM."
+  type        = number
+  default     = 20
+}
+
+variable "compute_data_disk_size_gb" {
+  description = "Non-auto-delete persistent data disk size for PostgreSQL, n8n state, binary data, and local backup staging."
+  type        = number
+  default     = 30
+}
+
+variable "plausible_data_disk_size_gb" {
+  description = "Non-auto-delete persistent disk size for Plausible PostgreSQL, ClickHouse, application state, and migration staging."
+  type        = number
+  default     = 80
+
+  validation {
+    condition     = var.plausible_data_disk_size_gb >= 80
+    error_message = "plausible_data_disk_size_gb must be at least the legacy analytics VM's 80 GiB boot-disk capacity."
+  }
+}
+
+variable "backup_bucket_name" {
+  description = "Optional explicit GCS bucket name for versioned seven-day n8n and Plausible target backups."
+  type        = string
+  default     = ""
+}
+
 variable "cloudflare_account_id" {
   description = "Cloudflare account ID that owns Zero Trust Access resources."
   type        = string

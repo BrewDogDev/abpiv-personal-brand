@@ -1,0 +1,19 @@
+[Unit]
+Description=Cloudflare Tunnel connector for Plausible on the shared runtime VM
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --token-file /run/plausible/TUNNEL_TOKEN run
+Restart=always
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/plausible
+
+[Install]
+WantedBy=multi-user.target

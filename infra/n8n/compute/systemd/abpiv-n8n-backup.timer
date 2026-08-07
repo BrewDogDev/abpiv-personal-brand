@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily ABPIV n8n backup timer
+
+[Timer]
+OnCalendar=*-*-* 06:30:00 America/New_York
+Persistent=true
+Unit=abpiv-n8n-backup.service
+
+[Install]
+WantedBy=timers.target

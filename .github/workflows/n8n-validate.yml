@@ -2,14 +2,20 @@ name: Validate n8n Infrastructure
 
 on:
   push:
-    branches: [main]
+    branches: [preview, main]
     paths:
       - 'infra/n8n/**'
+      - 'infra/analytics/compute/**'
+      - 'infra/analytics/tests/**'
       - '.github/workflows/n8n-*.yml'
+      - '.github/workflows/plausible-*.yml'
   pull_request:
     paths:
       - 'infra/n8n/**'
+      - 'infra/analytics/compute/**'
+      - 'infra/analytics/tests/**'
       - '.github/workflows/n8n-*.yml'
+      - '.github/workflows/plausible-*.yml'
   workflow_dispatch:
 
 permissions:
@@ -116,8 +122,72 @@ jobs:
       - name: Check OpenTofu formatting
         run: tofu fmt -check -recursive ${{ env.TOFU_DIR }}
 
+      - name: Run private-runtime contract tests
+        shell: pwsh
+        run: |
+          ./infra/n8n/tests/compute-runtime-contract.ps1
+          ./infra/analytics/tests/shared-runtime-contract.ps1
+
+      - name: Validate runtime scripts and Compose model
+        run: |
+          set -euo pipefail
+          validation_fixture_paths_owned=false
+          cleanup_validation_fixtures() {
+            status=$?
+            set +e
+            if "$validation_fixture_paths_owned"; then
+              sudo rm -rf -- /run/n8n /run/plausible /srv/plausible
+            fi
+            trap - EXIT
+            exit "$status"
+          }
+          trap cleanup_validation_fixtures EXIT
+          for path in /run/n8n /run/plausible /srv/plausible; do
+            if sudo test -e "$path"; then
+              echo "Refusing to replace existing validation fixture path: $path" >&2
+              exit 1
+            fi
+          done
+          validation_fixture_paths_owned=true
+
+          find infra/n8n/compute/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
+          find infra/analytics/compute/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
+          bash -n infra/analytics/tests/restore-rehearsal.sh
+          shellcheck infra/n8n/compute/scripts/*.sh infra/n8n/tools/*.sh infra/analytics/compute/scripts/*.sh infra/analytics/tests/restore-rehearsal.sh
+          python -m py_compile infra/n8n/tools/assert-plan-allowlist.py
+          python -m unittest discover -s infra/n8n/tests -p 'test_*.py'
+          sudo install -d -m 0700 /run/n8n
+          sudo install -m 0600 /dev/null /run/n8n/runtime.env
+          sudo install -m 0600 /dev/null /run/n8n/postgres.env
+          docker compose --project-directory infra/n8n/compute --file infra/n8n/compute/docker-compose.yml config --quiet
+          sudo install -d -m 0700 /run/plausible
+          for name in POSTGRES_PASSWORD SECRET_KEY_BASE DATABASE_URL; do
+            sudo install -m 0400 /dev/null "/run/plausible/$name"
+          done
+          sudo install -d -m 0750 /srv/plausible/state /srv/plausible/postgres /srv/plausible/clickhouse-data /srv/plausible/clickhouse-logs /srv/plausible/clickhouse-backups
+          docker compose --project-directory infra/analytics/compute --file infra/analytics/compute/docker-compose.yml config --quiet
+          for config in infra/n8n/compute/nginx/*.conf; do
+            docker run --rm --add-host n8n:127.0.0.1 \
+              --volume "$PWD/$config:/etc/nginx/conf.d/default.conf:ro" \
+              docker.io/library/nginx@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de nginx -t
+          done
+          for config in infra/analytics/compute/nginx/*.conf; do
+            docker run --rm --add-host plausible:127.0.0.1 \
+              --volume "$PWD/$config:/etc/nginx/conf.d/default.conf:ro" \
+              docker.io/library/nginx@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de nginx -t
+          done
+
+      - name: Rehearse Plausible database and state restore with pinned images
+        run: |
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes --no-install-recommends age >/dev/null
+          bash infra/analytics/tests/restore-rehearsal.sh
+
       - name: Initialize OpenTofu
         run: tofu -chdir=${{ env.TOFU_DIR }} init -input=false
 
       - name: Validate OpenTofu
         run: tofu -chdir=${{ env.TOFU_DIR }} validate
+
+      - name: Test OpenTofu safety invariants
+        run: tofu -chdir=${{ env.TOFU_DIR }} test

@@ -1,0 +1,165 @@
+name: abpiv-plausible
+
+x-logging: &default-logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: docker.io/library/postgres@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: plausible
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_USER: plausible
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - type: bind
+        source: /run/plausible/POSTGRES_PASSWORD
+        target: /run/secrets/POSTGRES_PASSWORD
+        read_only: true
+      - type: bind
+        source: /srv/plausible/postgres
+        target: /var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=plausible --dbname=plausible"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 384m
+    cpus: 0.15
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server@sha256:f226fe41f0578968b7f68a54b902d203ff4decfddfccb97c89fe5bfc36a51b66
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_SKIP_USER_SETUP: "1"
+    volumes:
+      - type: bind
+        source: /srv/plausible/clickhouse-data
+        target: /var/lib/clickhouse
+      - type: bind
+        source: /srv/plausible/clickhouse-logs
+        target: /var/log/clickhouse-server
+      - type: bind
+        source: /srv/plausible/clickhouse-backups
+        target: /backups
+      - type: bind
+        source: /opt/abpiv-plausible/clickhouse/logs.xml
+        target: /etc/clickhouse-server/config.d/logs.xml
+        read_only: true
+      - type: bind
+        source: /opt/abpiv-plausible/clickhouse/ipv4-only.xml
+        target: /etc/clickhouse-server/config.d/ipv4-only.xml
+        read_only: true
+      - type: bind
+        source: /opt/abpiv-plausible/clickhouse/low-resources.xml
+        target: /etc/clickhouse-server/config.d/low-resources.xml
+        read_only: true
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --output-document=- http://127.0.0.1:8123/ping | grep -Eq '^Ok\\.?$'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    mem_limit: 1024m
+    cpus: 0.35
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  plausible:
+    image: ghcr.io/plausible/community-edition@sha256:4c2553516d09e3c7b1b9c39cca04a04c28c871f525adc8dbb7a2a8a20fed0857
+    restart: unless-stopped
+    user: "0:0"
+    entrypoint: ["/opt/abpiv-plausible/scripts/plausible-entrypoint.sh"]
+    command: ["sh", "-c", "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"]
+    environment:
+      BASE_URL: https://analytics.lobst3rs.com
+      CLICKHOUSE_DATABASE_URL: http://clickhouse:8123/plausible_events_db
+      CONFIG_DIR: /run/secrets
+      DISABLE_REGISTRATION: "true"
+      ERL_FLAGS: +sbwt none +sbwtdcpu none +sbwtdio none
+      TMPDIR: /var/lib/plausible/tmp
+      TZ: UTC
+    volumes:
+      - type: bind
+        source: /run/plausible/SECRET_KEY_BASE
+        target: /run/host-secrets/SECRET_KEY_BASE
+        read_only: true
+      - type: bind
+        source: /run/plausible/DATABASE_URL
+        target: /run/host-secrets/DATABASE_URL
+        read_only: true
+      - type: bind
+        source: /opt/abpiv-plausible/scripts
+        target: /opt/abpiv-plausible/scripts
+        read_only: true
+      - type: bind
+        source: /srv/plausible/state
+        target: /var/lib/plausible
+    networks:
+      - backend
+      - egress
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    mem_limit: 640m
+    cpus: 0.25
+    tmpfs:
+      - /run/secrets:rw,noexec,nosuid,nodev,mode=0700,uid=999,gid=65533
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  nginx:
+    image: docker.io/library/nginx@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - type: bind
+        source: /opt/abpiv-plausible/nginx/current.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    mem_limit: 64m
+    cpus: 0.05
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+networks:
+  backend:
+    internal: true
+  egress:
+    driver: bridge
