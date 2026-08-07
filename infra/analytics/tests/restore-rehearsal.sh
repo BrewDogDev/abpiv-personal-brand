@@ -74,7 +74,10 @@ printf %s fixture-secret-key-base-longer-than-sixty-four-bytes-01234567890123456
   "${root_command[@]}" tee /run/plausible/SECRET_KEY_BASE >/dev/null
 printf %s postgres://plausible:fixture-password@postgres:5432/plausible | \
   "${root_command[@]}" tee /run/plausible/DATABASE_URL >/dev/null
-"${root_command[@]}" chmod 0400 /run/plausible/*
+"${root_command[@]}" chmod 0400 \
+  /run/plausible/POSTGRES_PASSWORD \
+  /run/plausible/SECRET_KEY_BASE \
+  /run/plausible/DATABASE_URL
 "${root_command[@]}" chown -R 70:70 /srv/plausible/postgres
 "${root_command[@]}" chown -R 999:65533 /srv/plausible/state
 "${root_command[@]}" chown -R 101:101 \
