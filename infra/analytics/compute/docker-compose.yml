@@ -146,6 +146,7 @@ services:
         read_only: true
     networks:
       - backend
+      - ingress
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:8000/healthz || exit 1"]
       interval: 10s
@@ -163,3 +164,8 @@ networks:
     internal: true
   egress:
     driver: bridge
+  ingress:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "false"
