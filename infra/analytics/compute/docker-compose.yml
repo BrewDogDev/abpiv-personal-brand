@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: docker.io/library/postgres@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    image: docker.io/library/postgres@sha256:16bc17c64a573ef34162af9298258d1aec548232985b33ed7b1eac33ba35c229
     restart: unless-stopped
     environment:
       POSTGRES_DB: plausible
