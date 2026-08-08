@@ -93,7 +93,8 @@ Assert-Match $iam 'github_deployer_plausible_runtime_service_account_user' "The 
 
 # Plausible, PostgreSQL, ClickHouse, and Nginx are pinned and isolated from n8n and the host network.
 Assert-Match $compose 'ghcr\.io/plausible/community-edition@sha256:4c2553516d09e3c7b1b9c39cca04a04c28c871f525adc8dbb7a2a8a20fed0857' "Plausible must remain on the deployed v2.1.4 digest for migration."
-Assert-Match $compose 'postgres@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777' "Plausible PostgreSQL must use the pinned PostgreSQL 16 digest."
+Assert-Match $compose 'postgres@sha256:16bc17c64a573ef34162af9298258d1aec548232985b33ed7b1eac33ba35c229' "Plausible PostgreSQL must use the exact immutable image observed on the legacy source."
+Assert-Match $cutover "postgres\) target_ref='docker\.io/library/postgres@sha256:16bc17c64a573ef34162af9298258d1aec548232985b33ed7b1eac33ba35c229'" "Plausible cutover must compare the target to the same exact legacy PostgreSQL image."
 Assert-Match $compose 'clickhouse-server@sha256:f226fe41f0578968b7f68a54b902d203ff4decfddfccb97c89fe5bfc36a51b66' "ClickHouse must use the deployed pinned digest."
 Assert-Match $compose 'nginx@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de' "Plausible ingress must use the pinned Nginx digest."
 Assert-Match $compose '127\.0\.0\.1:8000:8000' "Only Plausible Nginx may bind the loopback origin port."
