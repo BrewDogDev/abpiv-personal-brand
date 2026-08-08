@@ -27,4 +27,10 @@ for _ in $(seq 1 30); do
 done
 
 echo "Plausible local ingress did not reach ${expected_mode} within 30 attempts." >&2
+echo "Safe Docker host-port diagnostics follow." >&2
+docker port abpiv-plausible-nginx-1 8000/tcp >&2 || true
+docker inspect --format 'ports={{json .NetworkSettings.Ports}} networks={{json .NetworkSettings.Networks}}' \
+  abpiv-plausible-nginx-1 >&2 || true
+ss --listening --tcp --numeric | grep -E '(^State|:8000[[:space:]])' >&2 || true
+iptables --wait 5 --table nat --list-rules DOCKER | grep -F -- '--dport 8000' >&2 || true
 exit 1
