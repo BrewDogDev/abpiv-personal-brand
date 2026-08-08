@@ -61,6 +61,7 @@ $prepareCutover = Read-RepositoryFile "infra/n8n/compute/scripts/prepare-cutover
 $precommitNginx = Read-RepositoryFile "infra/n8n/compute/nginx/precommit.conf"
 $backupTimer = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-n8n-backup.timer"
 $prepareWorkflow = Read-RepositoryFile ".github/workflows/n8n-apply.yml"
+$canonicalPlanValues = Read-RepositoryFile "infra/n8n/tools/canonical-plan-values.py"
 $decommission = Read-RepositoryFile ".github/workflows/n8n-decommission.yml"
 $cutover = (Read-RepositoryFile ".github/workflows/n8n-cutover.yml") + $decommission
 
@@ -169,6 +170,12 @@ Assert-Match $prepareWorkflow 'mode:[\s\S]*options:\s*\[plan, apply\]' "Additive
 Assert-Match $prepareWorkflow "environment:\s*\$\{\{ inputs\.mode == 'apply' && 'production' \|\| 'production-plan' \}\}" "Plan and apply dispatches must use their separately protected GitHub environments."
 Assert-Match $prepareWorkflow 'reviewed_commit_sha[\s\S]*GITHUB_SHA[\s\S]*REVIEWED_COMMIT_SHA' "Apply must be bound to the exact independently reviewed commit."
 Assert-Match $prepareWorkflow 'reviewed_actions_sha256[\s\S]*preparation-actions\.sha256[\s\S]*REVIEWED_ACTIONS_SHA256' "Apply must regenerate and match the independently reviewed preparation action manifest."
+Assert-Match $prepareWorkflow 'reviewed_plan_values_sha256[\s\S]*preparation-plan-values\.sha256[\s\S]*REVIEWED_PLAN_VALUES_SHA256' "Apply must regenerate and match the independently reviewed non-sensitive plan values."
+Assert-Match $prepareWorkflow 'cloudresourcemanager\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current project permissions before planning or applying."
+Assert-Match $prepareWorkflow 'resourcemanager\.projects\.setIamPolicy' "Preparation must prove the deployer can apply the planned project IAM bindings."
+Assert-Match $prepareWorkflow 'iam\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current service-account permissions before planning or applying."
+Assert-Match $prepareWorkflow 'iam\.serviceAccounts\.actAs' "Preparation must prove the deployer can already act as the existing runtime identity."
+Assert-Match $canonicalPlanValues 'after_sensitive[\s\S]*after_unknown[\s\S]*sort_keys=True' "Canonical plan evidence must redact sensitive values while binding resolved values and unknown structure deterministically."
 Assert-Match $prepareWorkflow "if:\s*inputs\.mode == 'apply'[\s\S]*tofu[\s\S]*apply" "Only the separately approved apply dispatch may execute the saved preparation plan."
 
 foreach ($workflowPath in @(
