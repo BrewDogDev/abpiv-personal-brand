@@ -163,6 +163,7 @@ Assert-Match $precommitNginx 'limit_except GET[\s\S]*deny all' "Plausible precom
 Assert-Match $prepareCutover 'precommit\.conf[\s\S]*precommit-ready[\s\S]*/healthz/readiness' "The restored Plausible app must be proven behind read-only ingress before commit."
 Assert-Match $cutover 'prepare-cutover-runtime\.sh[\s\S]*id: commit[\s\S]*runtime-mode\.sh active' "The Plausible canonical boundary must follow read-only readiness and precede event exposure."
 Assert-Match $cutover 'target_isolated=false[\s\S]*abpiv-plausible-cloudflared\.service[\s\S]*refusing to start the old connector' "Rollback must prove the target connector inactive before starting the old connector."
+Assert-Match $cutover 'target_image_id" != "\$source_image_id[\s\S]*source_repo_digests[\s\S]*target_repo_digests[\s\S]*Image identity mismatch' "A pinned-image preflight failure must report safe source and target image evidence before any transition."
 Assert-Match $cutover "steps\.resize_modes\.outputs\.n8n_mode[\s\S]*runtime-mode\.sh" "Post-resize recovery must restore the captured n8n mode."
 Assert-NotMatch $cutover 'instances delete|terraform destroy|tofu[^\r\n]*apply' "Plausible cutover must never delete either VM or apply infrastructure."
 
