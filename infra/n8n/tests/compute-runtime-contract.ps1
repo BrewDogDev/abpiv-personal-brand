@@ -62,6 +62,7 @@ $precommitNginx = Read-RepositoryFile "infra/n8n/compute/nginx/precommit.conf"
 $backupTimer = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-n8n-backup.timer"
 $prepareWorkflow = Read-RepositoryFile ".github/workflows/n8n-apply.yml"
 $bootstrapWorkflow = Read-RepositoryFile ".github/workflows/n8n-iam-bootstrap.yml"
+$migrations = Read-RepositoryFile "infra/n8n/opentofu/migrations.tf"
 $canonicalPlanValues = Read-RepositoryFile "infra/n8n/tools/canonical-plan-values.py"
 $decommission = Read-RepositoryFile ".github/workflows/n8n-decommission.yml"
 $cutover = (Read-RepositoryFile ".github/workflows/n8n-cutover.yml") + $decommission
@@ -174,9 +175,20 @@ Assert-Match $prepareWorkflow 'reviewed_actions_sha256[\s\S]*preparation-actions
 Assert-Match $prepareWorkflow 'reviewed_plan_values_sha256[\s\S]*preparation-plan-values\.sha256[\s\S]*REVIEWED_PLAN_VALUES_SHA256' "Apply must regenerate and match the independently reviewed non-sensitive plan values."
 Assert-Match $bootstrapWorkflow 'mode:[\s\S]*options:\s*\[plan, apply\]' "IAM bootstrap must separate planning from applying."
 Assert-Match $bootstrapWorkflow 'plan-preparation-iam-bootstrap[\s\S]*apply-preparation-iam-bootstrap' "IAM bootstrap must require separate typed plan and apply confirmations."
-Assert-Match $bootstrapWorkflow 'reviewed_commit_sha[\s\S]*reviewed_actions_sha256[\s\S]*reviewed_plan_values_sha256' "IAM bootstrap apply must bind the reviewed commit, actions, and non-sensitive values."
+Assert-Match $bootstrapWorkflow 'reviewed_commit_sha[\s\S]*reviewed_actions_sha256[\s\S]*reviewed_moves_sha256[\s\S]*reviewed_plan_values_sha256' "IAM bootstrap apply must bind the reviewed commit, actions, state moves, and non-sensitive values."
 Assert-Match $bootstrapWorkflow '--phase bootstrap' "IAM bootstrap must use its own strict plan allowlist."
-Assert-Match $bootstrapWorkflow '-target=google_project_iam_member\.github_deployer_project_roles[\s\S]*-target=google_service_account\.n8n_compute[\s\S]*-target=google_service_account_iam_member\.github_deployer_compute_service_account_user[\s\S]*-target=google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user' "IAM bootstrap must target only the approved identity and deployer bindings."
+Assert-Match $bootstrapWorkflow 'previous_address[\s\S]*bootstrap-moves\.txt[\s\S]*bootstrap-moves\.sha256[\s\S]*REVIEWED_MOVES_SHA256' "IAM bootstrap must extract, hash, and match the exact state-address moves."
+$expectedBootstrapTargets = @(
+    "google_project_iam_member.github_deployer_project_roles"
+    "google_service_account.n8n_compute"
+    "google_service_account_iam_member.github_deployer_compute_service_account_user"
+    "google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user"
+)
+$expectedBootstrapTargets += [regex]::Matches($migrations, '(?m)^\s*from\s*=\s*([^\r\n]+)$') | ForEach-Object { $_.Groups[1].Value.Trim() }
+$actualBootstrapTargets = [regex]::Matches($bootstrapWorkflow, "'-target=([^']+)'") | ForEach-Object { $_.Groups[1].Value }
+if (Compare-Object -ReferenceObject $expectedBootstrapTargets -DifferenceObject $actualBootstrapTargets -SyncWindow 0) {
+    $failures.Add("IAM bootstrap targets must equal the four approved IAM/identity resources followed by every exact migrations.tf source address.")
+}
 Assert-Match $bootstrapWorkflow "environment:\s*\$\{\{ inputs\.mode == 'apply' && 'production' \|\| 'production-plan' \}\}" "IAM bootstrap plan and apply must use separately protected environments."
 Assert-Match $prepareWorkflow 'cloudresourcemanager\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current project permissions before planning or applying."
 Assert-Match $prepareWorkflow 'resourcemanager\.projects\.setIamPolicy' "Preparation must prove the deployer can apply the planned project IAM bindings."
