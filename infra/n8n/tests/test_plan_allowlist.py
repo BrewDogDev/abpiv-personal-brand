@@ -86,6 +86,32 @@ class PlanAllowlistTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_bootstrap_accepts_only_deployer_identity_and_iam_additions(self) -> None:
+        accepted = self.run_plan(
+            "bootstrap",
+            [
+                change("google_service_account.n8n_compute", "create"),
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/logging.configWriter"]',
+                    "create",
+                ),
+                change(
+                    "google_service_account_iam_member.github_deployer_compute_service_account_user",
+                    "create",
+                ),
+                change(
+                    "google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user",
+                    "create",
+                ),
+            ],
+        )
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        rejected = self.run_plan(
+            "bootstrap", [change("google_compute_instance.n8n", "create")]
+        )
+        self.assertNotEqual(rejected.returncode, 0)
+
     def test_prepare_rejects_any_update_or_delete(self) -> None:
         result = self.run_plan(
             "prepare",
