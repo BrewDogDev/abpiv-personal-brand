@@ -7,6 +7,10 @@ rsync --archive --delete --exclude tests/ --exclude nginx/current.conf "$RELEASE
 find /opt/abpiv-plausible/scripts -type f -name '*.sh' -exec chmod 0755 {} +
 docker compose --project-directory /opt/abpiv-plausible --file /opt/abpiv-plausible/docker-compose.yml config --quiet
 docker compose --project-directory /opt/abpiv-plausible --file /opt/abpiv-plausible/docker-compose.yml pull --quiet
+for unit in /opt/abpiv-plausible/systemd/*; do
+  install -m 0644 "$unit" "/etc/systemd/system/$(basename "$unit")"
+done
+systemctl daemon-reload
 
 case "$current_mode" in
   active|maintenance)
