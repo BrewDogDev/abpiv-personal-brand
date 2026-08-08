@@ -166,6 +166,7 @@ locals {
     "roles/compute.instanceAdmin.v1",
     "roles/compute.networkAdmin",
     "roles/compute.osAdminLogin",
+    "roles/compute.securityAdmin",
     "roles/iam.serviceAccountAdmin",
     "roles/iap.tunnelResourceAccessor",
     "roles/logging.configWriter",

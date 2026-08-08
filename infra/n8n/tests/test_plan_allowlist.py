@@ -81,6 +81,10 @@ class PlanAllowlistTests(unittest.TestCase):
                     "google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user",
                     "create",
                 ),
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/compute.securityAdmin"]',
+                    "create",
+                ),
                 change("google_cloud_run_v2_service.n8n[0]", "no-op"),
             ],
         )
@@ -100,6 +104,10 @@ class PlanAllowlistTests(unittest.TestCase):
                 ],
                 change(
                     'google_project_iam_member.github_deployer_project_roles["roles/logging.configWriter"]',
+                    "create",
+                ),
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/compute.securityAdmin"]',
                     "create",
                 ),
                 change(
