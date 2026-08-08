@@ -24,7 +24,7 @@ PREPARE_CREATE = [
     r"^google_project_iam_member\.compute_observability_roles\[.+\]$",
     r"^google_service_account_iam_member\.github_deployer_compute_service_account_user$",
     r"^google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user$",
-    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
+    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|compute\.securityAdmin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
     r"^google_monitoring_alert_policy\.compute_(capacity\[.+\]|runtime_fault)$",
     r"^google_logging_metric\.compute_runtime_fault$",
     r"^cloudflare_zero_trust_tunnel_cloudflared(_config)?\.n8n\[0\]$",
@@ -36,7 +36,7 @@ BOOTSTRAP_CREATE = [
     r"^google_service_account_iam_member\.github_deployer_compute_service_account_user$",
     r"^google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user$",
     r"^google_service_account_iam_member\.github_oidc_(workload_identity_user|service_account_token_creator)\[0\]$",
-    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
+    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|compute\.securityAdmin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
 ]
 
 CUTOVER_UPDATE = [

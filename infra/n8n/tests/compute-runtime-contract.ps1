@@ -40,6 +40,7 @@ function Assert-NotMatch {
 }
 
 $variables = Read-RepositoryFile "infra/n8n/opentofu/variables.tf"
+$locals = Read-RepositoryFile "infra/n8n/opentofu/locals.tf"
 $gcp = Read-RepositoryFile "infra/n8n/opentofu/gcp.tf"
 $compute = Read-RepositoryFile "infra/n8n/opentofu/compute.tf"
 $cloudflare = Read-RepositoryFile "infra/n8n/opentofu/cloudflare.tf"
@@ -180,6 +181,7 @@ Assert-Match $bootstrapWorkflow '--phase bootstrap' "IAM bootstrap must use its 
 Assert-Match $bootstrapWorkflow 'previous_address[\s\S]*bootstrap-moves\.txt[\s\S]*bootstrap-moves\.sha256[\s\S]*REVIEWED_MOVES_SHA256' "IAM bootstrap must extract, hash, and match the exact state-address moves."
 Assert-Match $bootstrapWorkflow 'assert-bootstrap-evidence\.py bootstrap-actions\.txt bootstrap-moves\.txt' "IAM bootstrap recovery must validate the joint action/move evidence before hashing or applying."
 Assert-Match $bootstrapWorkflow 'serviceusage\.services\.enable' "IAM bootstrap must prove the deployer can enable its four required API dependencies before planning or applying."
+Assert-Match $locals '"roles/compute\.securityAdmin"' "The dedicated deployer must have the least-privilege role that permits creation of the IAP-only VM firewall rule."
 $expectedBootstrapTargets = @(
     "google_project_iam_member.github_deployer_project_roles"
     "google_service_account.n8n_compute"
@@ -202,6 +204,7 @@ Assert-Match $prepareWorkflow 'resourcemanager\.projects\.setIamPolicy' "Prepara
 Assert-Match $prepareWorkflow 'iam\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current service-account permissions before planning or applying."
 Assert-Match $prepareWorkflow 'n8n-compute-runtime@\$\{\{ vars\.N8N_GCP_PROJECT_ID \}\}\.iam\.gserviceaccount\.com' "Preparation must test permissions on the bootstrapped Compute runtime identity."
 Assert-Match $prepareWorkflow 'iam\.serviceAccounts\.actAs' "Preparation must prove the deployer can already act as the existing runtime identity."
+Assert-Match $prepareWorkflow 'missing=0[\s\S]*required_project_permissions[\s\S]*missing=1[\s\S]*required_service_account_permissions[\s\S]*missing=1[\s\S]*test "\$missing" -eq 0' "Preparation preflight must report every missing project and service-account permission in one fail-closed run."
 foreach ($permission in @(
     "compute.subnetworks.use",
     "compute.instances.setMetadata",
