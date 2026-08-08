@@ -32,6 +32,10 @@ on:
         description: In apply mode, enter the action-manifest SHA-256 from the reviewed plan dispatch.
         required: false
         type: string
+      reviewed_moves_sha256:
+        description: In apply mode, enter the state-move manifest SHA-256 from the reviewed plan dispatch.
+        required: false
+        type: string
       reviewed_plan_values_sha256:
         description: In apply mode, enter the non-sensitive plan-values SHA-256 from the reviewed plan dispatch.
         required: false
@@ -79,6 +83,7 @@ jobs:
           inputs.reviewer_identity != '' &&
           inputs.reviewed_commit_sha != '' &&
           inputs.reviewed_actions_sha256 != '' &&
+          inputs.reviewed_moves_sha256 != '' &&
           inputs.reviewed_plan_values_sha256 != ''
         )
       )
@@ -184,6 +189,25 @@ jobs:
             '-target=google_service_account.n8n_compute'
             '-target=google_service_account_iam_member.github_deployer_compute_service_account_user'
             '-target=google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user'
+            '-target=google_compute_global_address.private_services'
+            '-target=google_service_networking_connection.private_services'
+            '-target=google_vpc_access_connector.n8n'
+            '-target=google_sql_database_instance.n8n'
+            '-target=google_sql_database.n8n'
+            '-target=google_storage_bucket.binary_data'
+            '-target=google_cloud_run_v2_service.n8n'
+            '-target=google_compute_region_network_endpoint_group.n8n'
+            '-target=google_compute_backend_service.n8n'
+            '-target=google_compute_url_map.n8n'
+            '-target=google_certificate_manager_certificate.n8n'
+            '-target=google_certificate_manager_certificate_map.n8n'
+            '-target=google_compute_target_https_proxy.n8n'
+            '-target=google_compute_global_address.n8n_lb'
+            '-target=google_compute_global_forwarding_rule.https'
+            '-target=google_service_account.n8n_runtime'
+            '-target=google_project_iam_member.runtime_cloudsql_client'
+            '-target=google_storage_bucket_iam_member.runtime_binary_data_object_user'
+            '-target=google_service_account_iam_member.github_deployer_runtime_service_account_user'
           )
           tofu -chdir="$TOFU_DIR" init -input=false
           tofu -chdir="$TOFU_DIR" plan -input=false -out=bootstrap.tfplan "${targets[@]}"
@@ -191,20 +215,28 @@ jobs:
           python infra/n8n/tools/assert-plan-allowlist.py bootstrap-plan.json --phase bootstrap
           jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' bootstrap-plan.json \
             | LC_ALL=C sort > bootstrap-actions.txt
-          test -s bootstrap-actions.txt
+          jq --raw-output '.resource_changes[] | select(.previous_address != null) | "\(.previous_address) -> \(.address)"' bootstrap-plan.json \
+            | LC_ALL=C sort > bootstrap-moves.txt
+          python infra/n8n/tools/assert-bootstrap-evidence.py bootstrap-actions.txt bootstrap-moves.txt
           sha256sum bootstrap-actions.txt | tee bootstrap-actions.sha256
+          sha256sum bootstrap-moves.txt | tee bootstrap-moves.sha256
           values_sha="$(python infra/n8n/tools/canonical-plan-values.py bootstrap-plan.json bootstrap-plan-values.json)"
           printf '%s  bootstrap-plan-values.json\n' "$values_sha" | tee bootstrap-plan-values.sha256
           tofu -chdir="$TOFU_DIR" show -no-color bootstrap.tfplan > bootstrap-plan.txt
           manifest_sha="$(cut -d' ' -f1 bootstrap-actions.sha256)"
+          moves_sha="$(cut -d' ' -f1 bootstrap-moves.sha256)"
           {
             printf '### Targeted shared-runtime IAM bootstrap plan\n\n'
             printf -- '- Commit: %s\n' "$GITHUB_SHA"
             printf -- '- Action-manifest SHA-256: %s\n' "$manifest_sha"
+            printf -- '- State-move manifest SHA-256: %s\n' "$moves_sha"
             printf -- '- Non-sensitive plan-values SHA-256: %s\n' "$values_sha"
             printf -- '- Mode: %s\n\n' "$DISPATCH_MODE"
             printf '```text\n'
             cat bootstrap-actions.txt
+            printf '```\n'
+            printf '\nState-address moves:\n\n```text\n'
+            cat bootstrap-moves.txt
             printf '```\n'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -217,6 +249,8 @@ jobs:
             bootstrap-plan.txt
             bootstrap-actions.txt
             bootstrap-actions.sha256
+            bootstrap-moves.txt
+            bootstrap-moves.sha256
             bootstrap-plan-values.json
             bootstrap-plan-values.sha256
             bootstrap-permission-preflight.txt
@@ -227,17 +261,21 @@ jobs:
         if: inputs.mode == 'apply'
         env:
           REVIEWED_ACTIONS_SHA256: ${{ inputs.reviewed_actions_sha256 }}
+          REVIEWED_MOVES_SHA256: ${{ inputs.reviewed_moves_sha256 }}
           REVIEWED_PLAN_VALUES_SHA256: ${{ inputs.reviewed_plan_values_sha256 }}
           REVIEWER_IDENTITY: ${{ inputs.reviewer_identity }}
         run: |
           set -euo pipefail
           [[ "$REVIEWED_ACTIONS_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$REVIEWED_MOVES_SHA256" =~ ^[0-9a-f]{64}$ ]]
           [[ "$REVIEWED_PLAN_VALUES_SHA256" =~ ^[0-9a-f]{64}$ ]]
           actual_actions_sha="$(cut -d' ' -f1 bootstrap-actions.sha256)"
+          actual_moves_sha="$(cut -d' ' -f1 bootstrap-moves.sha256)"
           actual_values_sha="$(cut -d' ' -f1 bootstrap-plan-values.sha256)"
           test "$actual_actions_sha" = "$REVIEWED_ACTIONS_SHA256"
+          test "$actual_moves_sha" = "$REVIEWED_MOVES_SHA256"
           test "$actual_values_sha" = "$REVIEWED_PLAN_VALUES_SHA256"
-          printf 'Reviewed action and non-sensitive value manifests matched for reviewer %s.\n' "$REVIEWER_IDENTITY" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Reviewed action, state-move, and non-sensitive value manifests matched for reviewer %s.\n' "$REVIEWER_IDENTITY" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Apply only the freshly regenerated reviewed bootstrap plan
         if: inputs.mode == 'apply'
@@ -245,4 +283,4 @@ jobs:
 
       - name: Remove plan material from the runner
         if: always()
-        run: rm -f bootstrap.tfplan bootstrap-plan.json bootstrap-plan.txt bootstrap-actions.txt bootstrap-actions.sha256 bootstrap-plan-values.json bootstrap-plan-values.sha256 bootstrap-permission-preflight.txt
+        run: rm -f bootstrap.tfplan bootstrap-plan.json bootstrap-plan.txt bootstrap-actions.txt bootstrap-actions.sha256 bootstrap-moves.txt bootstrap-moves.sha256 bootstrap-plan-values.json bootstrap-plan-values.sha256 bootstrap-permission-preflight.txt
