@@ -30,6 +30,13 @@ PREPARE_CREATE = [
     r"^cloudflare_zero_trust_tunnel_cloudflared(_config)?\.n8n\[0\]$",
 ]
 
+BOOTSTRAP_CREATE = [
+    r"^google_service_account\.n8n_compute$",
+    r"^google_service_account_iam_member\.github_deployer_compute_service_account_user$",
+    r"^google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user$",
+    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
+]
+
 CUTOVER_UPDATE = [
     r"^cloudflare_dns_record\.(forms|editor)\[0\]$",
 ]
@@ -211,7 +218,7 @@ def main() -> int:
     parser.add_argument("plan_json", type=Path)
     parser.add_argument(
         "--phase",
-        choices=("prepare", "cutover", "rollback", "arm", "protect", "destroy"),
+        choices=("bootstrap", "prepare", "cutover", "rollback", "arm", "protect", "destroy"),
         required=True,
     )
     args = parser.parse_args()
@@ -228,7 +235,9 @@ def main() -> int:
         observed.append((address, actions))
 
         allowed = False
-        if args.phase == "prepare":
+        if args.phase == "bootstrap":
+            allowed = actions == ("create",) and matches(address, BOOTSTRAP_CREATE)
+        elif args.phase == "prepare":
             allowed = actions == ("create",) and matches(address, PREPARE_CREATE)
         elif args.phase == "cutover":
             allowed = actions == ("update",) and matches(address, CUTOVER_UPDATE)

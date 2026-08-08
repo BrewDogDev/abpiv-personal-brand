@@ -1,4 +1,4 @@
-name: Plan or apply private shared Compute preparation
+name: Plan or apply shared-runtime IAM bootstrap
 
 on:
   workflow_dispatch:
@@ -9,11 +9,11 @@ on:
         type: choice
         options: [plan, apply]
       confirm_plan:
-        description: In plan mode, type plan-private-shared-vm.
+        description: In plan mode, type plan-preparation-iam-bootstrap.
         required: false
         type: string
       confirm_apply:
-        description: In apply mode, type prepare-private-shared-vm.
+        description: In apply mode, type apply-preparation-iam-bootstrap.
         required: false
         type: string
       review_decision:
@@ -67,14 +67,14 @@ env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
 jobs:
-  prepare:
+  bootstrap:
     if: >-
       github.ref == 'refs/heads/main' &&
       (
-        (inputs.mode == 'plan' && inputs.confirm_plan == 'plan-private-shared-vm') ||
+        (inputs.mode == 'plan' && inputs.confirm_plan == 'plan-preparation-iam-bootstrap') ||
         (
           inputs.mode == 'apply' &&
-          inputs.confirm_apply == 'prepare-private-shared-vm' &&
+          inputs.confirm_apply == 'apply-preparation-iam-bootstrap' &&
           inputs.review_decision == 'COMPLIANT / APPROVED / READY' &&
           inputs.reviewer_identity != '' &&
           inputs.reviewed_commit_sha != '' &&
@@ -82,7 +82,7 @@ jobs:
           inputs.reviewed_plan_values_sha256 != ''
         )
       )
-    name: ${{ inputs.mode == 'apply' && 'Apply reviewed additive preparation' || 'Plan additive preparation' }}
+    name: ${{ inputs.mode == 'apply' && 'Apply reviewed IAM bootstrap' || 'Plan IAM bootstrap' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.mode == 'apply' && 'production' || 'production-plan' }}
     steps:
@@ -119,35 +119,19 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v3
       - uses: opentofu/setup-opentofu@v1
 
-      - name: Verify current deployer permissions before planning or applying
+      - name: Verify current bootstrap permissions before planning or applying
         env:
           GCP_PROJECT_ID: ${{ vars.N8N_GCP_PROJECT_ID }}
-          N8N_COMPUTE_RUNTIME_SERVICE_ACCOUNT: n8n-compute-runtime@${{ vars.N8N_GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          PLAUSIBLE_RUNTIME_SERVICE_ACCOUNT: plausible-analytics-vm@${{ vars.N8N_GCP_PROJECT_ID }}.iam.gserviceaccount.com
         run: |
           set -euo pipefail
           access_token="$(gcloud auth print-access-token)"
+          missing=0
 
           required_project_permissions=(
-            compute.disks.create
-            compute.disks.use
-            compute.firewalls.create
-            compute.instances.create
-            compute.instances.setLabels
-            compute.instances.setMetadata
-            compute.instances.setServiceAccount
-            compute.instances.setTags
-            compute.networks.updatePolicy
-            compute.routers.create
-            compute.routers.update
-            compute.subnetworks.use
             iam.serviceAccounts.create
-            logging.logMetrics.create
-            monitoring.alertPolicies.create
             resourcemanager.projects.getIamPolicy
             resourcemanager.projects.setIamPolicy
-            secretmanager.secrets.create
-            serviceusage.services.enable
-            storage.buckets.create
           )
           project_request="$({ printf '%s\n' "${required_project_permissions[@]}"; } | jq --raw-input --slurp 'split("\n") | map(select(length > 0)) | {permissions: .}')"
           project_response="$(curl --fail --silent --show-error \
@@ -158,13 +142,13 @@ jobs:
           for permission in "${required_project_permissions[@]}"; do
             jq --exit-status --arg permission "$permission" '.permissions | index($permission) != null' \
               <<<"$project_response" >/dev/null || {
-                echo "::error::The deployer does not already hold required permission $permission on project $GCP_PROJECT_ID."
-                exit 1
+                echo "::error::The deployer does not already hold bootstrap permission $permission on project $GCP_PROJECT_ID."
+                missing=1
               }
           done
 
           required_service_account_permissions=(
-            iam.serviceAccounts.actAs
+            iam.serviceAccounts.getIamPolicy
             iam.serviceAccounts.setIamPolicy
           )
           service_account_request="$({ printf '%s\n' "${required_service_account_permissions[@]}"; } | jq --raw-input --slurp 'split("\n") | map(select(length > 0)) | {permissions: .}')"
@@ -172,48 +156,55 @@ jobs:
             --header "Authorization: Bearer ${access_token}" \
             --header 'Content-Type: application/json' \
             --data "$service_account_request" \
-            "https://iam.googleapis.com/v1/projects/${GCP_PROJECT_ID}/serviceAccounts/${N8N_COMPUTE_RUNTIME_SERVICE_ACCOUNT}:testIamPermissions")"
+            "https://iam.googleapis.com/v1/projects/${GCP_PROJECT_ID}/serviceAccounts/${PLAUSIBLE_RUNTIME_SERVICE_ACCOUNT}:testIamPermissions")"
           unset access_token
           for permission in "${required_service_account_permissions[@]}"; do
             jq --exit-status --arg permission "$permission" '.permissions | index($permission) != null' \
               <<<"$service_account_response" >/dev/null || {
-                echo "::error::The deployer does not already hold required permission $permission on the bootstrapped n8n Compute runtime service account."
-                exit 1
+                echo "::error::The deployer does not already hold bootstrap permission $permission on the existing Plausible runtime service account."
+                missing=1
               }
           done
+          test "$missing" -eq 0
           {
             printf 'project=%s\n' "$GCP_PROJECT_ID"
             printf 'project_permission=%s\n' "${required_project_permissions[@]}"
-            printf 'service_account=%s\n' "$N8N_COMPUTE_RUNTIME_SERVICE_ACCOUNT"
+            printf 'service_account=%s\n' "$PLAUSIBLE_RUNTIME_SERVICE_ACCOUNT"
             printf 'service_account_permission=%s\n' "${required_service_account_permissions[@]}"
-          } > preparation-permission-preflight.txt
-          printf 'Current deployer permission preflight passed.\n' >> "$GITHUB_STEP_SUMMARY"
+          } > bootstrap-permission-preflight.txt
+          printf 'Current IAM bootstrap permission preflight passed.\n' >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Generate the additive plan and exact action manifest
+      - name: Generate the targeted bootstrap plan and exact action manifest
         env:
           DISPATCH_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
+          targets=(
+            '-target=google_project_iam_member.github_deployer_project_roles'
+            '-target=google_service_account.n8n_compute'
+            '-target=google_service_account_iam_member.github_deployer_compute_service_account_user'
+            '-target=google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user'
+          )
           tofu -chdir="$TOFU_DIR" init -input=false
-          tofu -chdir="$TOFU_DIR" plan -input=false -out=prepare.tfplan
-          tofu -chdir="$TOFU_DIR" show -json prepare.tfplan > prepare-plan.json
-          python infra/n8n/tools/assert-plan-allowlist.py prepare-plan.json --phase prepare
-          jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' prepare-plan.json \
-            | LC_ALL=C sort > preparation-actions.txt
-          test -s preparation-actions.txt
-          sha256sum preparation-actions.txt | tee preparation-actions.sha256
-          values_sha="$(python infra/n8n/tools/canonical-plan-values.py prepare-plan.json preparation-plan-values.json)"
-          printf '%s  preparation-plan-values.json\n' "$values_sha" | tee preparation-plan-values.sha256
-          tofu -chdir="$TOFU_DIR" show -no-color prepare.tfplan > preparation-plan.txt
-          manifest_sha="$(cut -d' ' -f1 preparation-actions.sha256)"
+          tofu -chdir="$TOFU_DIR" plan -input=false -out=bootstrap.tfplan "${targets[@]}"
+          tofu -chdir="$TOFU_DIR" show -json bootstrap.tfplan > bootstrap-plan.json
+          python infra/n8n/tools/assert-plan-allowlist.py bootstrap-plan.json --phase bootstrap
+          jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' bootstrap-plan.json \
+            | LC_ALL=C sort > bootstrap-actions.txt
+          test -s bootstrap-actions.txt
+          sha256sum bootstrap-actions.txt | tee bootstrap-actions.sha256
+          values_sha="$(python infra/n8n/tools/canonical-plan-values.py bootstrap-plan.json bootstrap-plan-values.json)"
+          printf '%s  bootstrap-plan-values.json\n' "$values_sha" | tee bootstrap-plan-values.sha256
+          tofu -chdir="$TOFU_DIR" show -no-color bootstrap.tfplan > bootstrap-plan.txt
+          manifest_sha="$(cut -d' ' -f1 bootstrap-actions.sha256)"
           {
-            printf '### Additive shared-runtime preparation plan\n\n'
+            printf '### Targeted shared-runtime IAM bootstrap plan\n\n'
             printf -- '- Commit: %s\n' "$GITHUB_SHA"
             printf -- '- Action-manifest SHA-256: %s\n' "$manifest_sha"
             printf -- '- Non-sensitive plan-values SHA-256: %s\n' "$values_sha"
             printf -- '- Mode: %s\n\n' "$DISPATCH_MODE"
             printf '```text\n'
-            cat preparation-actions.txt
+            cat bootstrap-actions.txt
             printf '```\n'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -221,14 +212,14 @@ jobs:
         if: inputs.mode == 'plan'
         uses: actions/upload-artifact@v4
         with:
-          name: shared-runtime-preparation-plan-${{ github.sha }}
+          name: shared-runtime-iam-bootstrap-plan-${{ github.sha }}
           path: |
-            preparation-plan.txt
-            preparation-actions.txt
-            preparation-actions.sha256
-            preparation-plan-values.json
-            preparation-plan-values.sha256
-            preparation-permission-preflight.txt
+            bootstrap-plan.txt
+            bootstrap-actions.txt
+            bootstrap-actions.sha256
+            bootstrap-plan-values.json
+            bootstrap-plan-values.sha256
+            bootstrap-permission-preflight.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -242,25 +233,16 @@ jobs:
           set -euo pipefail
           [[ "$REVIEWED_ACTIONS_SHA256" =~ ^[0-9a-f]{64}$ ]]
           [[ "$REVIEWED_PLAN_VALUES_SHA256" =~ ^[0-9a-f]{64}$ ]]
-          actual_actions_sha="$(cut -d' ' -f1 preparation-actions.sha256)"
-          actual_values_sha="$(cut -d' ' -f1 preparation-plan-values.sha256)"
+          actual_actions_sha="$(cut -d' ' -f1 bootstrap-actions.sha256)"
+          actual_values_sha="$(cut -d' ' -f1 bootstrap-plan-values.sha256)"
           test "$actual_actions_sha" = "$REVIEWED_ACTIONS_SHA256"
           test "$actual_values_sha" = "$REVIEWED_PLAN_VALUES_SHA256"
           printf 'Reviewed action and non-sensitive value manifests matched for reviewer %s.\n' "$REVIEWER_IDENTITY" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Apply only the freshly regenerated reviewed plan
+      - name: Apply only the freshly regenerated reviewed bootstrap plan
         if: inputs.mode == 'apply'
-        run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve prepare.tfplan
-
-      - name: Show non-sensitive preparation outputs
-        if: inputs.mode == 'apply'
-        run: |
-          tofu -chdir="$TOFU_DIR" output compute_instance_name
-          tofu -chdir="$TOFU_DIR" output compute_instance_zone
-          tofu -chdir="$TOFU_DIR" output backup_bucket_name
-          tofu -chdir="$TOFU_DIR" output plausible_data_disk_name
-          tofu -chdir="$TOFU_DIR" output cloudflare_tunnel_id
+        run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve bootstrap.tfplan
 
       - name: Remove plan material from the runner
         if: always()
-        run: rm -f prepare.tfplan prepare-plan.json preparation-plan.txt preparation-actions.txt preparation-actions.sha256 preparation-plan-values.json preparation-plan-values.sha256 preparation-permission-preflight.txt
+        run: rm -f bootstrap.tfplan bootstrap-plan.json bootstrap-plan.txt bootstrap-actions.txt bootstrap-actions.sha256 bootstrap-plan-values.json bootstrap-plan-values.sha256 bootstrap-permission-preflight.txt
