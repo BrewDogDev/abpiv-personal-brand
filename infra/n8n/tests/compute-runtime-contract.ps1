@@ -178,6 +178,7 @@ Assert-Match $bootstrapWorkflow 'plan-preparation-iam-bootstrap[\s\S]*apply-prep
 Assert-Match $bootstrapWorkflow 'reviewed_commit_sha[\s\S]*reviewed_actions_sha256[\s\S]*reviewed_moves_sha256[\s\S]*reviewed_plan_values_sha256' "IAM bootstrap apply must bind the reviewed commit, actions, state moves, and non-sensitive values."
 Assert-Match $bootstrapWorkflow '--phase bootstrap' "IAM bootstrap must use its own strict plan allowlist."
 Assert-Match $bootstrapWorkflow 'previous_address[\s\S]*bootstrap-moves\.txt[\s\S]*bootstrap-moves\.sha256[\s\S]*REVIEWED_MOVES_SHA256' "IAM bootstrap must extract, hash, and match the exact state-address moves."
+Assert-Match $bootstrapWorkflow 'assert-bootstrap-evidence\.py bootstrap-actions\.txt bootstrap-moves\.txt' "IAM bootstrap recovery must validate the joint action/move evidence before hashing or applying."
 $expectedBootstrapTargets = @(
     "google_project_iam_member.github_deployer_project_roles"
     "google_service_account.n8n_compute"

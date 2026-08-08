@@ -215,11 +215,10 @@ jobs:
           python infra/n8n/tools/assert-plan-allowlist.py bootstrap-plan.json --phase bootstrap
           jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' bootstrap-plan.json \
             | LC_ALL=C sort > bootstrap-actions.txt
-          test -s bootstrap-actions.txt
-          sha256sum bootstrap-actions.txt | tee bootstrap-actions.sha256
           jq --raw-output '.resource_changes[] | select(.previous_address != null) | "\(.previous_address) -> \(.address)"' bootstrap-plan.json \
             | LC_ALL=C sort > bootstrap-moves.txt
-          test -s bootstrap-moves.txt
+          python infra/n8n/tools/assert-bootstrap-evidence.py bootstrap-actions.txt bootstrap-moves.txt
+          sha256sum bootstrap-actions.txt | tee bootstrap-actions.sha256
           sha256sum bootstrap-moves.txt | tee bootstrap-moves.sha256
           values_sha="$(python infra/n8n/tools/canonical-plan-values.py bootstrap-plan.json bootstrap-plan-values.json)"
           printf '%s  bootstrap-plan-values.json\n' "$values_sha" | tee bootstrap-plan-values.sha256
