@@ -99,9 +99,19 @@ Assert-Match $compose 'postgres@sha256:16bc17c64a573ef34162af9298258d1aec5482329
 Assert-Match $cutover "postgres\) target_ref='docker\.io/library/postgres@sha256:16bc17c64a573ef34162af9298258d1aec548232985b33ed7b1eac33ba35c229'" "Plausible cutover must compare the target to the same exact legacy PostgreSQL image."
 Assert-Match $compose 'clickhouse-server@sha256:f226fe41f0578968b7f68a54b902d203ff4decfddfccb97c89fe5bfc36a51b66' "ClickHouse must use the deployed pinned digest."
 Assert-Match $compose 'nginx@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de' "Plausible ingress must use the pinned Nginx digest."
-Assert-Match $compose '127\.0\.0\.1:8000:8000' "Only Plausible Nginx may bind the loopback origin port."
-Assert-NotMatch $compose '(?m)^\s*-\s*"?(8000|5432|8123):' "Plausible and its databases must not publish host ports."
+if ([regex]::Matches($compose, '(?m)^    ports:\s*$').Count -ne 1) {
+    $failures.Add("Plausible Compose must declare exactly one service-level host-port block.")
+}
+Assert-Match $compose '(?ms)^  nginx:\r?\n(?:(?!^  \S).)*?^    ports:\r?\n      - "127\.0\.0\.1:8000:8000"\r?\n    volumes:' "Only Plausible Nginx may publish the sole exact loopback origin mapping."
+if ([regex]::Matches($compose, '(?m)^      - "127\.0\.0\.1:8000:8000"\s*$').Count -ne 1) {
+    $failures.Add("Plausible Compose must contain exactly one published mapping, bound to loopback port 8000.")
+}
 Assert-Match $compose '(?m)^\s*internal:\s*true\s*$' "The Plausible backend network must be internal."
+Assert-Match $compose 'nginx:[\s\S]*?networks:\s*\r?\n\s*-\s*backend\s*\r?\n\s*-\s*ingress' "Plausible Nginx must join both the internal backend and the dedicated host-ingress bridge."
+Assert-Match $compose '(?m)^  ingress:\r?\n    driver: bridge\r?\n    driver_opts:\r?\n      com\.docker\.network\.bridge\.enable_icc: "false"\r?\n      com\.docker\.network\.bridge\.enable_ip_masquerade: "false"\s*$' "The Plausible ingress bridge must publish loopback traffic without inter-container communication or outbound masquerading."
+if ([regex]::Matches($compose, '(?m)^\s*-\s*ingress\s*$').Count -ne 1) {
+    $failures.Add("Only Plausible Nginx may join the dedicated host-ingress bridge.")
+}
 Assert-Match $compose '/srv/plausible/' "All Plausible durable data must live on its attached disk."
 Assert-Match $activeNginx 'resolver\s+127\.0\.0\.11[\s\S]*server\s+plausible:8000\s+resolve;' "Active Plausible ingress must defer backend lookup to Docker DNS so Nginx can start before the app."
 Assert-Match $compose 'CONFIG_DIR:\s*/run/secrets' "Plausible must use its supported file-based secret loader."
