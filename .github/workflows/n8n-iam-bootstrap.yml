@@ -137,6 +137,7 @@ jobs:
             iam.serviceAccounts.create
             resourcemanager.projects.getIamPolicy
             resourcemanager.projects.setIamPolicy
+            serviceusage.services.enable
           )
           project_request="$({ printf '%s\n' "${required_project_permissions[@]}"; } | jq --raw-input --slurp 'split("\n") | map(select(length > 0)) | {permissions: .}')"
           project_response="$(curl --fail --silent --show-error \

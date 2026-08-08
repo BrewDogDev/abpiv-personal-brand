@@ -31,6 +31,7 @@ PREPARE_CREATE = [
 ]
 
 BOOTSTRAP_CREATE = [
+    r"^google_project_service\.required\[\"(iap|logging|monitoring|oslogin)\.googleapis\.com\"\]$",
     r"^google_service_account\.n8n_compute$",
     r"^google_service_account_iam_member\.github_deployer_compute_service_account_user$",
     r"^google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user$",
