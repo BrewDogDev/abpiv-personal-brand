@@ -80,8 +80,19 @@ jobs:
       inputs.reviewer_identity != ''
     runs-on: ubuntu-latest
     environment: production-cutover
-    timeout-minutes: 90
+    # The first step starts the hard-timeout clock. A route transition may
+    # begin only before job minute 30. From that marker, the explicit step
+    # caps allow at most 142 minutes through the latest normal step plus the
+    # 20-minute postcommit recovery, so 215 minutes retains 23 minutes of
+    # reserve. The write boundary separately closes after job minute 90,
+    # leaving 28 minutes beyond its 97-minute worst-case recovery path.
+    timeout-minutes: 215
     steps:
+      - id: job_budget
+        name: Start the bounded cutover job budget
+        timeout-minutes: 1
+        run: echo "start_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
       - uses: google-github-actions/auth@v3
         with:
@@ -92,6 +103,7 @@ jobs:
 
       - id: target_size
         name: Bind this attempt to the accepted live VM size
+        timeout-minutes: 5
         run: |
           set -euo pipefail
           machine_type="$(gcloud compute instances describe "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --format='value(machineType.basename())')"
@@ -104,6 +116,7 @@ jobs:
 
       - id: window
         name: Start 60-minute window
+        timeout-minutes: 1
         run: echo "start_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
 
       - name: Prove source and target n8n image digests match
@@ -170,6 +183,20 @@ jobs:
         run: |
           gcloud sql backups create --project "$GCP_PROJECT_ID" --instance "$CLOUD_SQL_INSTANCE" --description "pre-compute-cutover-${GITHUB_RUN_ID}" --quiet
 
+      - name: Preserve the reviewed recovery budget before starting the route transition
+        timeout-minutes: 1
+        run: |
+          elapsed="$(( $(date +%s) - ${{ steps.job_budget.outputs.start_epoch }} ))"
+          if ! test "$elapsed" -lt 1800; then
+            echo "Pre-transition work exhausted the reviewed n8n cutover job budget." >&2
+            exit 1
+          fi
+
+      - id: transition
+        name: Mark the route transition attempted before starting the private origin
+        timeout-minutes: 1
+        run: echo "attempted=true" >> "$GITHUB_OUTPUT"
+
       - name: Start private origin in maintenance mode
         timeout-minutes: 5
         run: |
@@ -217,6 +244,7 @@ jobs:
             "set -euo pipefail; migration_dir=\$(sudo env CLOUD_SQL_HOST='$cloud_sql_host' LEGACY_BINARY_BUCKET='${GCP_PROJECT_ID}-n8n-binary-data' CONFIRM_EXPORT=export-abpiv-n8n /opt/abpiv-n8n/scripts/export-cloud-sql.sh | tail -n1); sudo env MIGRATION_DIR=\"\$migration_dir\" CONFIRM_RESTORE=restore-abpiv-n8n /opt/abpiv-n8n/scripts/migrate-from-cloud-sql.sh"
 
       - name: Enforce minute-45 migration deadline
+        timeout-minutes: 1
         run: |
           elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
           if [ "$elapsed" -ge 2700 ]; then
@@ -237,6 +265,7 @@ jobs:
             "sudo /opt/abpiv-n8n/scripts/prepare-cutover-runtime.sh"
 
       - name: Verify precommit public routing without opening any write path
+        timeout-minutes: 5
         env:
           ACCEPTANCE_FORM_PATH: ${{ inputs.acceptance_form_path }}
         run: |
@@ -257,13 +286,21 @@ jobs:
           grep -Eqi '^location: .*\/cdn-cgi\/access\/' "$headers"
 
       - name: Enforce the minute-45 rollback boundary before write exposure
+        timeout-minutes: 1
         run: |
           elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
           test "$elapsed" -lt 2700
 
       - id: commit
         name: Make the restored target canonical before exposing write paths
-        run: echo "committed=true" >> "$GITHUB_OUTPUT"
+        timeout-minutes: 1
+        run: |
+          elapsed="$(( $(date +%s) - ${{ steps.job_budget.outputs.start_epoch }} ))"
+          if ! test "$elapsed" -lt 5400; then
+            echo "Precommit work exhausted the reviewed n8n postcommit recovery budget." >&2
+            exit 1
+          fi
+          echo "committed=true" >> "$GITHUB_OUTPUT"
 
       - name: Open write paths only on the canonical private runtime
         timeout-minutes: 5
@@ -272,6 +309,7 @@ jobs:
             "sudo /opt/abpiv-n8n/scripts/runtime-mode.sh active && sudo /opt/abpiv-n8n/scripts/verify-runtime.sh"
 
       - name: Verify active public routing and Access enforcement without submission
+        timeout-minutes: 5
         env:
           ACCEPTANCE_FORM_PATH: ${{ inputs.acceptance_form_path }}
         run: |
@@ -306,6 +344,7 @@ jobs:
       - id: resize_modes
         name: Capture the other runtime mode before resizing the shared host
         if: steps.observe.outcome == 'failure' && steps.target_size.outputs.machine_type == 'e2-custom-medium-6144'
+        timeout-minutes: 5
         run: |
           set -euo pipefail
           plausible_mode="$(gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
@@ -315,7 +354,7 @@ jobs:
 
       - name: Resize in place if the smaller VM misses a threshold
         if: steps.observe.outcome == 'failure' && steps.target_size.outputs.machine_type == 'e2-custom-medium-6144'
-        timeout-minutes: 25
+        timeout-minutes: 30
         run: |
           gcloud compute ssh "$VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
             "sudo /opt/abpiv-n8n/scripts/runtime-mode.sh stopped"
@@ -330,6 +369,7 @@ jobs:
 
       - name: Fail closed if the approved fallback itself misses an observation threshold
         if: steps.observe.outcome == 'failure' && steps.target_size.outputs.machine_type == 'e2-standard-2'
+        timeout-minutes: 1
         run: |
           echo "The approved e2-standard-2 fallback missed a shared-host threshold." >&2
           exit 1
@@ -341,13 +381,14 @@ jobs:
             "sudo /opt/abpiv-n8n/scripts/backup.sh"
 
       - name: Record automated migration state with manual acceptance still closed
+        timeout-minutes: 1
         run: |
           elapsed="$(( $(date +%s) - ${{ steps.window.outputs.start_epoch }} ))"
           test "$elapsed" -lt 3600
           echo "Automated migration checks passed in ${elapsed} seconds after review by ${REVIEWER_IDENTITY}. Manual n8n login and read-only MCP acceptance remain mandatory before the separately gated legacy destruction." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Roll back before destruction on any cutover failure
-        if: failure() && steps.dns.outputs.attempted == 'true' && steps.commit.outputs.committed != 'true'
+        if: failure() && steps.transition.outputs.attempted == 'true' && steps.commit.outputs.committed != 'true'
         timeout-minutes: 15
         run: |
           set -euo pipefail
