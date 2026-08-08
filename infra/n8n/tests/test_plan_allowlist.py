@@ -110,6 +110,14 @@ class PlanAllowlistTests(unittest.TestCase):
                     "google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user",
                     "create",
                 ),
+                change(
+                    "google_service_account_iam_member.github_oidc_workload_identity_user[0]",
+                    "create",
+                ),
+                change(
+                    "google_service_account_iam_member.github_oidc_service_account_token_creator[0]",
+                    "create",
+                ),
             ],
         )
         self.assertEqual(accepted.returncode, 0, accepted.stderr)
