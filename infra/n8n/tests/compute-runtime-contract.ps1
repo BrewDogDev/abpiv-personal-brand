@@ -61,6 +61,7 @@ $prepareCutover = Read-RepositoryFile "infra/n8n/compute/scripts/prepare-cutover
 $precommitNginx = Read-RepositoryFile "infra/n8n/compute/nginx/precommit.conf"
 $backupTimer = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-n8n-backup.timer"
 $prepareWorkflow = Read-RepositoryFile ".github/workflows/n8n-apply.yml"
+$bootstrapWorkflow = Read-RepositoryFile ".github/workflows/n8n-iam-bootstrap.yml"
 $canonicalPlanValues = Read-RepositoryFile "infra/n8n/tools/canonical-plan-values.py"
 $decommission = Read-RepositoryFile ".github/workflows/n8n-decommission.yml"
 $cutover = (Read-RepositoryFile ".github/workflows/n8n-cutover.yml") + $decommission
@@ -171,9 +172,16 @@ Assert-Match $prepareWorkflow "environment:\s*\$\{\{ inputs\.mode == 'apply' && 
 Assert-Match $prepareWorkflow 'reviewed_commit_sha[\s\S]*GITHUB_SHA[\s\S]*REVIEWED_COMMIT_SHA' "Apply must be bound to the exact independently reviewed commit."
 Assert-Match $prepareWorkflow 'reviewed_actions_sha256[\s\S]*preparation-actions\.sha256[\s\S]*REVIEWED_ACTIONS_SHA256' "Apply must regenerate and match the independently reviewed preparation action manifest."
 Assert-Match $prepareWorkflow 'reviewed_plan_values_sha256[\s\S]*preparation-plan-values\.sha256[\s\S]*REVIEWED_PLAN_VALUES_SHA256' "Apply must regenerate and match the independently reviewed non-sensitive plan values."
+Assert-Match $bootstrapWorkflow 'mode:[\s\S]*options:\s*\[plan, apply\]' "IAM bootstrap must separate planning from applying."
+Assert-Match $bootstrapWorkflow 'plan-preparation-iam-bootstrap[\s\S]*apply-preparation-iam-bootstrap' "IAM bootstrap must require separate typed plan and apply confirmations."
+Assert-Match $bootstrapWorkflow 'reviewed_commit_sha[\s\S]*reviewed_actions_sha256[\s\S]*reviewed_plan_values_sha256' "IAM bootstrap apply must bind the reviewed commit, actions, and non-sensitive values."
+Assert-Match $bootstrapWorkflow '--phase bootstrap' "IAM bootstrap must use its own strict plan allowlist."
+Assert-Match $bootstrapWorkflow '-target=google_project_iam_member\.github_deployer_project_roles[\s\S]*-target=google_service_account\.n8n_compute[\s\S]*-target=google_service_account_iam_member\.github_deployer_compute_service_account_user[\s\S]*-target=google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user' "IAM bootstrap must target only the approved identity and deployer bindings."
+Assert-Match $bootstrapWorkflow "environment:\s*\$\{\{ inputs\.mode == 'apply' && 'production' \|\| 'production-plan' \}\}" "IAM bootstrap plan and apply must use separately protected environments."
 Assert-Match $prepareWorkflow 'cloudresourcemanager\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current project permissions before planning or applying."
 Assert-Match $prepareWorkflow 'resourcemanager\.projects\.setIamPolicy' "Preparation must prove the deployer can apply the planned project IAM bindings."
 Assert-Match $prepareWorkflow 'iam\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current service-account permissions before planning or applying."
+Assert-Match $prepareWorkflow 'n8n-compute-runtime@\$\{\{ vars\.N8N_GCP_PROJECT_ID \}\}\.iam\.gserviceaccount\.com' "Preparation must test permissions on the bootstrapped Compute runtime identity."
 Assert-Match $prepareWorkflow 'iam\.serviceAccounts\.actAs' "Preparation must prove the deployer can already act as the existing runtime identity."
 foreach ($permission in @(
     "compute.subnetworks.use",
@@ -189,6 +197,7 @@ Assert-Match $canonicalPlanValues 'after_sensitive[\s\S]*after_unknown[\s\S]*sor
 Assert-Match $prepareWorkflow "if:\s*inputs\.mode == 'apply'[\s\S]*tofu[\s\S]*apply" "Only the separately approved apply dispatch may execute the saved preparation plan."
 
 foreach ($workflowPath in @(
+    ".github/workflows/n8n-iam-bootstrap.yml",
     ".github/workflows/n8n-apply.yml",
     ".github/workflows/n8n-redeploy.yml",
     ".github/workflows/n8n-cutover.yml",

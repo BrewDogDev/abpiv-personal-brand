@@ -52,6 +52,7 @@ That combination is additive. `runtime_origin=compute` changes only the two Clou
 ## Workflows
 
 - `n8n-validate.yml`: both runtime contracts, shell/static validation, Compose validation, OpenTofu tests, plan-allowlist tests, and the pinned Plausible restore rehearsal.
+- `n8n-iam-bootstrap.yml`: two-dispatch, target-only bootstrap for the new Compute runtime identity, the exact missing deployer project roles, and two service-account-user bindings. Plan evidence and apply are bound to the exact commit, action manifest, and canonical non-sensitive plan values.
 - `n8n-apply.yml`: two-dispatch additive preparation. `plan` first proves the deployer already has the required effective permissions, then publishes redacted evidence plus action and non-sensitive plan-value hashes; a later `apply` must use the same reviewed commit and match both regenerated hashes.
 - `n8n-redeploy.yml`: separately gated Tunnel-token storage and stopped-host provisioning, or an in-place release deployment that preserves runtime mode.
 - `plausible-redeploy.yml`: additive stopped-host Plausible provisioning or an in-place mode-preserving release deployment.
@@ -84,8 +85,8 @@ The live workflows also require these pre-created GitHub environments. Every env
 
 | Environment | Workflows |
 | --- | --- |
-| `production` | Reviewed additive apply and n8n/Plausible provisioning or release deployment |
-| `production-plan` | Live additive-plan evidence and legacy-decommission planning |
+| `production` | Reviewed IAM bootstrap, additive apply, and n8n/Plausible provisioning or release deployment |
+| `production-plan` | IAM-bootstrap and additive-plan evidence plus legacy-decommission planning |
 | `production-cutover` | Plausible and n8n maintenance-window cutovers |
 | `production-destruction` | Exact hash-matched legacy n8n destruction only |
 
