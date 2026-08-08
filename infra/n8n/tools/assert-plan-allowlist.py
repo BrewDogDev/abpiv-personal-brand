@@ -295,7 +295,7 @@ def main() -> int:
             print(f"Cloud SQL deletion protection already satisfies phase {args.phase}.")
             return 0
 
-    if not observed and args.phase not in {"rollback", "arm", "protect"}:
+    if not observed and args.phase not in {"bootstrap", "rollback", "arm", "protect"}:
         print(f"No actionable changes found for phase {args.phase}.", file=sys.stderr)
         return 1
 

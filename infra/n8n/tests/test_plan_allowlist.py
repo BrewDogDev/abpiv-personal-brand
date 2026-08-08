@@ -112,6 +112,16 @@ class PlanAllowlistTests(unittest.TestCase):
         )
         self.assertNotEqual(rejected.returncode, 0)
 
+        rejected_legacy_action = self.run_plan(
+            "bootstrap",
+            [change("google_sql_database_instance.n8n[0]", "update")],
+        )
+        self.assertNotEqual(rejected_legacy_action.returncode, 0)
+
+    def test_bootstrap_allows_move_only_recovery_without_actions(self) -> None:
+        result = self.run_plan("bootstrap", [])
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_prepare_rejects_any_update_or_delete(self) -> None:
         result = self.run_plan(
             "prepare",
