@@ -388,7 +388,7 @@ jobs:
           echo "Automated migration checks passed in ${elapsed} seconds after review by ${REVIEWER_IDENTITY}. Manual n8n login and read-only MCP acceptance remain mandatory before the separately gated legacy destruction." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Roll back before destruction on any cutover failure
-        if: failure() && steps.transition.outputs.attempted == 'true' && steps.commit.outputs.committed != 'true'
+        if: (failure() || cancelled()) && steps.transition.outputs.attempted == 'true' && steps.commit.outputs.committed != 'true'
         timeout-minutes: 15
         run: |
           set -euo pipefail
@@ -406,7 +406,7 @@ jobs:
           exit 1
 
       - name: Recover the canonical target without reversing post-activation data
-        if: failure() && steps.commit.outputs.committed == 'true'
+        if: (failure() || cancelled()) && steps.commit.outputs.committed == 'true'
         timeout-minutes: 20
         run: |
           set -euo pipefail

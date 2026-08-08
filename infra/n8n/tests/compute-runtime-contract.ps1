@@ -162,6 +162,8 @@ Assert-Match $cutoverWorkflow 'steps:\s*\r?\n\s*- id:\s*job_budget[\s\S]*?start_
 Assert-Match $cutoverWorkflow 'steps\.job_budget\.outputs\.start_epoch[\s\S]*-lt 1800[\s\S]*id:\s*transition[\s\S]*name:\s*Start private origin in maintenance mode' "n8n cutover must preserve the recomputed recovery reserve before starting the route transition."
 Assert-Match $cutoverWorkflow 'id:\s*commit[\s\S]*steps\.job_budget\.outputs\.start_epoch[\s\S]*-lt 5400[\s\S]*committed=true[\s\S]*runtime-mode\.sh active' "n8n cutover must preserve the recomputed postcommit recovery reserve before write exposure."
 Assert-Match $cutoverWorkflow "steps\.transition\.outputs\.attempted == 'true'[\s\S]*--phase rollback" "Every attempted n8n route transition must enter the precommit rollback path on failure."
+Assert-Match $cutoverWorkflow "if:\s*\(failure\(\) \|\| cancelled\(\)\) && steps\.transition\.outputs\.attempted == 'true' && steps\.commit\.outputs\.committed != 'true'" "An interrupted precommit n8n route transition must run rollback on both failure and cancellation."
+Assert-Match $cutoverWorkflow "if:\s*\(failure\(\) \|\| cancelled\(\)\) && steps\.commit\.outputs\.committed == 'true'" "An interrupted postcommit n8n cutover must preserve the canonical target on both failure and cancellation."
 $boundedCutoverSteps = @(
     "Start private origin in maintenance mode"
     "Plan and apply only the two Tunnel DNS updates"
