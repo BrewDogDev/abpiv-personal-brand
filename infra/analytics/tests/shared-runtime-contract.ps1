@@ -122,6 +122,13 @@ Assert-Match $firewall '169\.254\.169\.254/32' "The shared firewall must target 
 Assert-Match $firewall 'DOCKER-USER[\s\S]*--jump DROP' "Plausible containers must be blocked from the shared VM metadata identity."
 Assert-Match $runtimeMode 'maintenance[\s\S]*abpiv-container-firewall --check[\s\S]*systemctl enable abpiv-plausible\.service abpiv-plausible-cloudflared\.service' "Plausible maintenance must enforce metadata isolation and persist fail-closed reboot recovery."
 Assert-Match $waitForLocalRuntime 'maintenance-ready\|precommit-ready\|active-ready[\s\S]*seq 1 30[\s\S]*--max-time 2[\s\S]*healthz/readiness[\s\S]*sleep 1' "Local Plausible ingress readiness must use a bounded host-port retry."
+Assert-Match $waitForLocalRuntime 'done\s+echo "Plausible local ingress did not reach[\s\S]*docker port abpiv-plausible-nginx-1 8000/tcp >&2 \|\| true[\s\S]*exit 1\s*$' "Safe host-port diagnostics must run only after retry exhaustion and preserve terminal failure."
+Assert-Match $waitForLocalRuntime "docker inspect --format 'ports=\{\{json \.NetworkSettings\.Ports\}\} networks=\{\{json \.NetworkSettings\.Networks\}\}'[\s\S]{0,100}abpiv-plausible-nginx-1 >&2 \|\| true" "Host-port diagnostics must inspect only the fixed Nginx container's safe port and network fields."
+Assert-Match $waitForLocalRuntime "ss --listening --tcp --numeric \| grep -E '\(\^State\|:8000\[\[:space:\]\]\)' >&2 \|\| true" "Host listener diagnostics must remain numeric, port-8000-only, and non-blocking."
+Assert-Match $waitForLocalRuntime "iptables --wait 5 --table nat --list-rules DOCKER \| grep -F -- '--dport 8000' >&2 \|\| true" "Docker NAT diagnostics must remain restricted to port 8000 and non-blocking."
+if ([regex]::Matches($waitForLocalRuntime, 'docker inspect').Count -ne 1) {
+    $failures.Add("The host-port helper must contain exactly one narrowly formatted Docker inspect command.")
+}
 Assert-Match $runtimeMode 'wait-for-local-runtime\.sh maintenance-ready false[\s\S]*wait-for-local-runtime\.sh active-ready true' "Plausible maintenance and active transitions must tolerate bounded host-port publication delay."
 Assert-Match $prepareCutover 'wait-for-local-runtime\.sh precommit-ready true' "Plausible precommit transition must wait for host ingress and application readiness."
 Assert-Match $verifyRestored 'wait-for-local-runtime\.sh maintenance-ready false' "Sealed restore verification must tolerate bounded host-port publication delay."
