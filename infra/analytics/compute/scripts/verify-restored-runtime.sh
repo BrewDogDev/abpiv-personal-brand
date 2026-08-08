@@ -17,6 +17,6 @@ cleanup() {
 trap cleanup EXIT
 
 "${compose[@]}" up --detach --wait plausible
-test "$(curl --fail --silent --show-error --header 'Host: analytics.lobst3rs.com' http://127.0.0.1:8000/healthz)" = maintenance-ready
+/opt/abpiv-plausible/scripts/wait-for-local-runtime.sh maintenance-ready false
 
 echo "Restored Plausible data and unchanged secrets passed a sealed pre-activation check."

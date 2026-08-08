@@ -55,6 +55,8 @@ $backupPackage = Read-RepositoryFile "infra/analytics/compute/scripts/create-bac
 $verify = Read-RepositoryFile "infra/analytics/compute/scripts/verify-migration.sh"
 $runtimeMode = Read-RepositoryFile "infra/analytics/compute/scripts/runtime-mode.sh"
 $prepareCutover = Read-RepositoryFile "infra/analytics/compute/scripts/prepare-cutover-runtime.sh"
+$verifyRestored = Read-RepositoryFile "infra/analytics/compute/scripts/verify-restored-runtime.sh"
+$waitForLocalRuntime = Read-RepositoryFile "infra/analytics/compute/scripts/wait-for-local-runtime.sh"
 $activeNginx = Read-RepositoryFile "infra/analytics/compute/nginx/active.conf"
 $precommitNginx = Read-RepositoryFile "infra/analytics/compute/nginx/precommit.conf"
 $firewall = Read-RepositoryFile "infra/n8n/compute/scripts/configure-container-firewall.sh"
@@ -119,6 +121,10 @@ Assert-Match $secretLoader '/run/plausible/DATABASE_URL' "The database URL conta
 Assert-Match $firewall '169\.254\.169\.254/32' "The shared firewall must target the GCE metadata endpoint."
 Assert-Match $firewall 'DOCKER-USER[\s\S]*--jump DROP' "Plausible containers must be blocked from the shared VM metadata identity."
 Assert-Match $runtimeMode 'maintenance[\s\S]*abpiv-container-firewall --check[\s\S]*systemctl enable abpiv-plausible\.service abpiv-plausible-cloudflared\.service' "Plausible maintenance must enforce metadata isolation and persist fail-closed reboot recovery."
+Assert-Match $waitForLocalRuntime 'maintenance-ready\|precommit-ready\|active-ready[\s\S]*seq 1 30[\s\S]*--max-time 2[\s\S]*healthz/readiness[\s\S]*sleep 1' "Local Plausible ingress readiness must use a bounded host-port retry."
+Assert-Match $runtimeMode 'wait-for-local-runtime\.sh maintenance-ready false[\s\S]*wait-for-local-runtime\.sh active-ready true' "Plausible maintenance and active transitions must tolerate bounded host-port publication delay."
+Assert-Match $prepareCutover 'wait-for-local-runtime\.sh precommit-ready true' "Plausible precommit transition must wait for host ingress and application readiness."
+Assert-Match $verifyRestored 'wait-for-local-runtime\.sh maintenance-ready false' "Sealed restore verification must tolerate bounded host-port publication delay."
 
 # Export proves all existing relational, analytics, and application data entered the encrypted package.
 Assert-Match $export 'pg_dump[\s\S]*--format=custom' "The old Plausible PostgreSQL database must be exported in custom format."
@@ -161,7 +167,7 @@ Assert-Match $cutover 'steps:\s*\r?\n\s*- id:\s*job_budget[\s\S]*?start_epoch=\$
 Assert-Match $cutover 'steps\.job_budget\.outputs\.start_epoch[\s\S]*-lt 1800[\s\S]*id:\s*transition' "Plausible cutover must preserve the reviewed hard-timeout reserve before attempting the connector transition."
 Assert-Match $cutover 'id:\s*resize_modes[\s\S]{0,400}timeout-minutes:\s*5' "The post-commit fallback-mode capture must have a bounded timeout inside the recovery budget."
 Assert-Match $precommitNginx 'limit_except GET[\s\S]*deny all' "Plausible precommit ingress must deny analytics event writes."
-Assert-Match $prepareCutover 'precommit\.conf[\s\S]*precommit-ready[\s\S]*/healthz/readiness' "The restored Plausible app must be proven behind read-only ingress before commit."
+Assert-Match $prepareCutover 'precommit\.conf[\s\S]*wait-for-local-runtime\.sh precommit-ready true' "The restored Plausible app must be proven behind read-only ingress before commit."
 Assert-Match $cutover 'prepare-cutover-runtime\.sh[\s\S]*id: commit[\s\S]*runtime-mode\.sh active' "The Plausible canonical boundary must follow read-only readiness and precede event exposure."
 Assert-Match $cutover 'target_isolated=false[\s\S]*abpiv-plausible-cloudflared\.service[\s\S]*refusing to start the old connector' "Rollback must prove the target connector inactive before starting the old connector."
 Assert-Match $cutover 'target_image_id" != "\$source_image_id[\s\S]*source_repo_digests[\s\S]*target_repo_digests[\s\S]*Image identity mismatch' "A pinned-image preflight failure must report safe source and target image evidence before any transition."
