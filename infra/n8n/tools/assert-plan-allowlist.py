@@ -35,6 +35,7 @@ BOOTSTRAP_CREATE = [
     r"^google_service_account\.n8n_compute$",
     r"^google_service_account_iam_member\.github_deployer_compute_service_account_user$",
     r"^google_service_account_iam_member\.github_deployer_plausible_runtime_service_account_user$",
+    r"^google_service_account_iam_member\.github_oidc_(workload_identity_user|service_account_token_creator)\[0\]$",
     r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
 ]
 

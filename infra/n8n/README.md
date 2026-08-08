@@ -52,7 +52,7 @@ That combination is additive. `runtime_origin=compute` changes only the two Clou
 ## Workflows
 
 - `n8n-validate.yml`: both runtime contracts, shell/static validation, Compose validation, OpenTofu tests, plan-allowlist tests, and the pinned Plausible restore rehearsal.
-- `n8n-iam-bootstrap.yml`: two-dispatch, target-only bootstrap for four required Google APIs, the new Compute runtime identity, the exact missing deployer project roles, two service-account-user bindings, and the 19 declared legacy singleton state-address moves that OpenTofu requires in every targeted plan until they are recorded. Plan evidence and apply are bound to the exact commit, action manifest, state-move manifest, and canonical non-sensitive plan values; the move targets may not change the live legacy resources.
+- `n8n-iam-bootstrap.yml`: two-dispatch, target-only bootstrap for four required Google APIs, the new Compute runtime identity, the exact missing deployer project roles, two service-account-user bindings, the two repository-scoped Workload Identity bindings on the dedicated n8n deployer, and the 19 declared legacy singleton state-address moves that OpenTofu requires in every targeted plan until they are recorded. Plan evidence and apply are bound to the exact commit, action manifest, state-move manifest, and canonical non-sensitive plan values; the move targets may not change the live legacy resources.
 - `n8n-apply.yml`: two-dispatch additive preparation. `plan` first proves the deployer already has the required effective permissions, then publishes redacted evidence plus action and non-sensitive plan-value hashes; a later `apply` must use the same reviewed commit and match both regenerated hashes.
 - `n8n-redeploy.yml`: separately gated Tunnel-token storage and stopped-host provisioning, or an in-place release deployment that preserves runtime mode.
 - `plausible-redeploy.yml`: additive stopped-host Plausible provisioning or an in-place mode-preserving release deployment.
@@ -69,8 +69,9 @@ GitHub Actions authenticates to Google through OIDC. No service-account key belo
 | `N8N_GCP_PROJECT_ID` | variable | `abpiv-personal-brand` |
 | `N8N_GCP_REGION` | variable | `us-east1` |
 | `N8N_GCP_ZONE` | optional variable | `us-east1-c`; workflows use this exact fallback when absent |
-| `N8N_GCP_SERVICE_ACCOUNT` | variable | GitHub OIDC deployer service account |
+| `N8N_GCP_SERVICE_ACCOUNT` | variable | Dedicated GitHub OIDC deployer: `n8n-github-deployer@abpiv-personal-brand.iam.gserviceaccount.com` after its reviewed Workload Identity bootstrap |
 | `N8N_GCP_WORKLOAD_IDENTITY_PROVIDER` | variable | Workload Identity provider resource name |
+| `N8N_GITHUB_OIDC_PRINCIPAL_SET` | variable | Exact repository-scoped principalSet derived from the provider and `BrewDogDev/abpiv-personal-brand` |
 | `CLOUDFLARE_ACCOUNT_ID` | variable | Account that owns Tunnel and Access |
 | `CLOUDFLARE_ZONE_ID_ALLANBPEDINIV` | variable | Forms-hostname zone |
 | `CLOUDFLARE_ZONE_ID_LOBST3RS` | variable | Editor-hostname zone |
@@ -79,7 +80,7 @@ GitHub Actions authenticates to Google through OIDC. No service-account key belo
 | `N8N_EDITOR_ACCESS_ALLOWED_EMAILS` | variable | Reviewed JSON allowlist |
 | `CLOUDFLARE_API_TOKEN` | secret | Cloudflare resource-management credential |
 
-Optional Access organization, group, hostname-zone-name, and GitHub OIDC principal-set variables remain documented in `opentofu/variables.tf`.
+Optional Access organization, group, and hostname-zone-name variables remain documented in `opentofu/variables.tf`. The GitHub OIDC principal set is required by the bootstrap workflow so it cannot prepare an unusable dedicated deployer.
 
 The live workflows also require these pre-created GitHub environments. Every environment must allow deployments only from `main` and require Allan's explicit approval; the workflows independently refuse non-`main` dispatches.
 

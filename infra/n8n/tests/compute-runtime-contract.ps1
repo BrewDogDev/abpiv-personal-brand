@@ -185,12 +185,17 @@ $expectedBootstrapTargets = @(
     "google_service_account.n8n_compute"
     "google_service_account_iam_member.github_deployer_compute_service_account_user"
     "google_service_account_iam_member.github_deployer_plausible_runtime_service_account_user"
+    "google_service_account_iam_member.github_oidc_workload_identity_user"
+    "google_service_account_iam_member.github_oidc_service_account_token_creator"
 )
 $expectedBootstrapTargets += [regex]::Matches($migrations, '(?m)^\s*from\s*=\s*([^\r\n]+)$') | ForEach-Object { $_.Groups[1].Value.Trim() }
 $actualBootstrapTargets = [regex]::Matches($bootstrapWorkflow, "'-target=([^']+)'") | ForEach-Object { $_.Groups[1].Value }
 if (Compare-Object -ReferenceObject $expectedBootstrapTargets -DifferenceObject $actualBootstrapTargets -SyncWindow 0) {
-    $failures.Add("IAM bootstrap targets must equal the four approved IAM/identity resources followed by every exact migrations.tf source address.")
+    $failures.Add("IAM bootstrap targets must equal the six approved IAM/identity resources followed by every exact migrations.tf source address.")
 }
+Assert-Match $bootstrapWorkflow 'OIDC_PRINCIPAL_SET:\s*\$\{\{ vars\.N8N_GITHUB_OIDC_PRINCIPAL_SET \}\}[\s\S]*for name[\s\S]*OIDC_PRINCIPAL_SET' "IAM bootstrap must reject dispatches that cannot bind the dedicated deployer to the repository-scoped Workload Identity principal."
+Assert-Match $bootstrapWorkflow 'pool_resource="\$\{WORKLOAD_IDENTITY_PROVIDER%/providers/\*\}"' "IAM bootstrap must derive the Workload Identity pool from the exact configured provider."
+Assert-Match $bootstrapWorkflow 'expected_principal_set="principalSet://iam\.googleapis\.com/\$\{pool_resource\}/attribute\.repository/\$\{GITHUB_REPOSITORY\}"[\s\S]*test "\$OIDC_PRINCIPAL_SET" = "\$expected_principal_set"' "IAM bootstrap must accept only the exact configured-provider and current-repository principalSet."
 Assert-Match $bootstrapWorkflow "environment:\s*\$\{\{ inputs\.mode == 'apply' && 'production' \|\| 'production-plan' \}\}" "IAM bootstrap plan and apply must use separately protected environments."
 Assert-Match $prepareWorkflow 'cloudresourcemanager\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current project permissions before planning or applying."
 Assert-Match $prepareWorkflow 'resourcemanager\.projects\.setIamPolicy' "Preparation must prove the deployer can apply the planned project IAM bindings."
