@@ -175,6 +175,16 @@ Assert-Match $prepareWorkflow 'cloudresourcemanager\.googleapis\.com[\s\S]*testI
 Assert-Match $prepareWorkflow 'resourcemanager\.projects\.setIamPolicy' "Preparation must prove the deployer can apply the planned project IAM bindings."
 Assert-Match $prepareWorkflow 'iam\.googleapis\.com[\s\S]*testIamPermissions' "Preparation must test current service-account permissions before planning or applying."
 Assert-Match $prepareWorkflow 'iam\.serviceAccounts\.actAs' "Preparation must prove the deployer can already act as the existing runtime identity."
+foreach ($permission in @(
+    "compute.subnetworks.use",
+    "compute.instances.setMetadata",
+    "compute.instances.setTags",
+    "compute.instances.setLabels",
+    "compute.disks.use"
+)) {
+    Assert-Match $prepareWorkflow ([regex]::Escape($permission)) "Preparation must preflight required permission $permission."
+}
+Assert-Match $compute 'resource\s+"google_compute_instance"\s+"n8n"[\s\S]*?depends_on\s*=\s*\[[\s\S]*?google_service_account_iam_member\.github_deployer_compute_service_account_user' "The VM must wait for the deployer's new-runtime serviceAccountUser binding."
 Assert-Match $canonicalPlanValues 'after_sensitive[\s\S]*after_unknown[\s\S]*sort_keys=True' "Canonical plan evidence must redact sensitive values while binding resolved values and unknown structure deterministically."
 Assert-Match $prepareWorkflow "if:\s*inputs\.mode == 'apply'[\s\S]*tofu[\s\S]*apply" "Only the separately approved apply dispatch may execute the saved preparation plan."
 

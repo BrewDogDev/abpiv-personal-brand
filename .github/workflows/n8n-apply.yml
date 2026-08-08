@@ -129,12 +129,17 @@ jobs:
 
           required_project_permissions=(
             compute.disks.create
+            compute.disks.use
             compute.firewalls.create
             compute.instances.create
+            compute.instances.setLabels
+            compute.instances.setMetadata
             compute.instances.setServiceAccount
+            compute.instances.setTags
             compute.networks.updatePolicy
             compute.routers.create
             compute.routers.update
+            compute.subnetworks.use
             iam.serviceAccounts.create
             logging.logMetrics.create
             monitoring.alertPolicies.create
