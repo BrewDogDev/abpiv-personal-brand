@@ -111,6 +111,7 @@ resource "google_compute_instance" "n8n" {
   depends_on = [
     google_compute_router_nat.n8n,
     google_project_service.required["compute.googleapis.com"],
+    google_service_account_iam_member.github_deployer_compute_service_account_user,
   ]
 }
 
