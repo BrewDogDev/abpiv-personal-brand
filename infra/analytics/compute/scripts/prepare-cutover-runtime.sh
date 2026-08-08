@@ -26,9 +26,7 @@ trap cleanup EXIT
 cp /opt/abpiv-plausible/nginx/precommit.conf /opt/abpiv-plausible/nginx/current.conf
 "${compose[@]}" up --detach --wait --force-recreate nginx
 systemctl restart abpiv-plausible-cloudflared.service
-test "$(curl --fail --silent --show-error --header 'Host: analytics.lobst3rs.com' http://127.0.0.1:8000/healthz)" = precommit-ready
-curl --fail --silent --show-error --header 'Host: analytics.lobst3rs.com' \
-  http://127.0.0.1:8000/healthz/readiness >/dev/null
+/opt/abpiv-plausible/scripts/wait-for-local-runtime.sh precommit-ready true
 
 complete=true
 echo "Plausible is healthy behind a read-only precommit ingress; event writes remain closed."
