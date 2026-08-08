@@ -52,7 +52,7 @@ That combination is additive. `runtime_origin=compute` changes only the two Clou
 ## Workflows
 
 - `n8n-validate.yml`: both runtime contracts, shell/static validation, Compose validation, OpenTofu tests, plan-allowlist tests, and the pinned Plausible restore rehearsal.
-- `n8n-apply.yml`: two-dispatch additive preparation. `plan` publishes redacted evidence plus an action-manifest hash; a later `apply` must use the same reviewed commit and regenerated manifest hash.
+- `n8n-apply.yml`: two-dispatch additive preparation. `plan` first proves the deployer already has the required effective permissions, then publishes redacted evidence plus action and non-sensitive plan-value hashes; a later `apply` must use the same reviewed commit and match both regenerated hashes.
 - `n8n-redeploy.yml`: separately gated Tunnel-token storage and stopped-host provisioning, or an in-place release deployment that preserves runtime mode.
 - `plausible-redeploy.yml`: additive stopped-host Plausible provisioning or an in-place mode-preserving release deployment.
 - `plausible-cutover.yml`: imports the unchanged old runtime secrets without printing them, moves the existing Tunnel connector, encrypts and transfers the complete old dataset, compares PostgreSQL and ClickHouse counts plus application-state checksums, observes the shared host, and stops—but never deletes—the intact old VM only after acceptance.
