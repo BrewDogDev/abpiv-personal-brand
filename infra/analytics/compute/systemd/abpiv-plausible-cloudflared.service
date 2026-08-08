@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --token-file /run/plausible/TUNNEL_TOKEN run
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate run --token-file /run/plausible/TUNNEL_TOKEN
 Restart=always
 RestartSec=5s
 NoNewPrivileges=true
