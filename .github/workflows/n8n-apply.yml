@@ -126,6 +126,7 @@ jobs:
         run: |
           set -euo pipefail
           access_token="$(gcloud auth print-access-token)"
+          missing=0
 
           required_project_permissions=(
             compute.disks.create
@@ -159,7 +160,7 @@ jobs:
             jq --exit-status --arg permission "$permission" '.permissions | index($permission) != null' \
               <<<"$project_response" >/dev/null || {
                 echo "::error::The deployer does not already hold required permission $permission on project $GCP_PROJECT_ID."
-                exit 1
+                missing=1
               }
           done
 
@@ -178,9 +179,10 @@ jobs:
             jq --exit-status --arg permission "$permission" '.permissions | index($permission) != null' \
               <<<"$service_account_response" >/dev/null || {
                 echo "::error::The deployer does not already hold required permission $permission on the bootstrapped n8n Compute runtime service account."
-                exit 1
+                missing=1
               }
           done
+          test "$missing" -eq 0
           {
             printf 'project=%s\n' "$GCP_PROJECT_ID"
             printf 'project_permission=%s\n' "${required_project_permissions[@]}"
