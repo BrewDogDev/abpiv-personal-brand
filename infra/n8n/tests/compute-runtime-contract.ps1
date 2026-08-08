@@ -179,6 +179,7 @@ Assert-Match $bootstrapWorkflow 'reviewed_commit_sha[\s\S]*reviewed_actions_sha2
 Assert-Match $bootstrapWorkflow '--phase bootstrap' "IAM bootstrap must use its own strict plan allowlist."
 Assert-Match $bootstrapWorkflow 'previous_address[\s\S]*bootstrap-moves\.txt[\s\S]*bootstrap-moves\.sha256[\s\S]*REVIEWED_MOVES_SHA256' "IAM bootstrap must extract, hash, and match the exact state-address moves."
 Assert-Match $bootstrapWorkflow 'assert-bootstrap-evidence\.py bootstrap-actions\.txt bootstrap-moves\.txt' "IAM bootstrap recovery must validate the joint action/move evidence before hashing or applying."
+Assert-Match $bootstrapWorkflow 'serviceusage\.services\.enable' "IAM bootstrap must prove the deployer can enable its four required API dependencies before planning or applying."
 $expectedBootstrapTargets = @(
     "google_project_iam_member.github_deployer_project_roles"
     "google_service_account.n8n_compute"

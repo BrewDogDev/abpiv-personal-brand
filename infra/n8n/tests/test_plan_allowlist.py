@@ -91,6 +91,13 @@ class PlanAllowlistTests(unittest.TestCase):
             "bootstrap",
             [
                 change("google_service_account.n8n_compute", "create"),
+                *[
+                    change(
+                        f'google_project_service.required["{service}.googleapis.com"]',
+                        "create",
+                    )
+                    for service in ("iap", "logging", "monitoring", "oslogin")
+                ],
                 change(
                     'google_project_iam_member.github_deployer_project_roles["roles/logging.configWriter"]',
                     "create",
@@ -117,6 +124,12 @@ class PlanAllowlistTests(unittest.TestCase):
             [change("google_sql_database_instance.n8n[0]", "update")],
         )
         self.assertNotEqual(rejected_legacy_action.returncode, 0)
+
+        rejected_unlisted_service = self.run_plan(
+            "bootstrap",
+            [change('google_project_service.required["run.googleapis.com"]', "create")],
+        )
+        self.assertNotEqual(rejected_unlisted_service.returncode, 0)
 
     def test_bootstrap_allows_move_only_recovery_without_actions(self) -> None:
         result = self.run_plan("bootstrap", [])
