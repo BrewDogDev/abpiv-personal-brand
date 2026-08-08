@@ -16,7 +16,7 @@ case "$mode" in
     "${compose[@]}" up --detach --wait postgres clickhouse
     "${compose[@]}" up --detach --wait --force-recreate nginx
     systemctl restart abpiv-plausible-cloudflared.service
-    test "$(curl --fail --silent --show-error --header 'Host: analytics.lobst3rs.com' http://127.0.0.1:8000/healthz)" = "maintenance-ready"
+    /opt/abpiv-plausible/scripts/wait-for-local-runtime.sh maintenance-ready false
     ;;
   active)
     /usr/local/sbin/abpiv-container-firewall --check
@@ -32,9 +32,7 @@ case "$mode" in
     systemctl enable abpiv-plausible.service abpiv-plausible-cloudflared.service abpiv-plausible-backup.timer abpiv-plausible-health.timer
     systemctl start abpiv-plausible-backup.timer abpiv-plausible-health.timer
     printf '%s\n' active > /etc/abpiv-plausible/mode
-    test "$(curl --fail --silent --show-error --header 'Host: analytics.lobst3rs.com' http://127.0.0.1:8000/healthz)" = "active-ready"
-    curl --fail --silent --show-error --max-time 5 \
-      --header 'Host: analytics.lobst3rs.com' http://127.0.0.1:8000/healthz/readiness >/dev/null
+    /opt/abpiv-plausible/scripts/wait-for-local-runtime.sh active-ready true
     ;;
   stopped)
     printf '%s\n' stopped > /etc/abpiv-plausible/mode
