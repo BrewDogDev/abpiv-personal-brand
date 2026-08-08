@@ -71,6 +71,7 @@ env:
 jobs:
   cutover:
     if: >-
+      always() &&
       github.ref == 'refs/heads/main' &&
       inputs.confirm_cutover == 'cutover-abpiv-n8n' &&
       inputs.confirm_runtime_secret_access == 'access-n8n-runtime-secrets' &&

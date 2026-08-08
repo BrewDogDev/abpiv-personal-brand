@@ -158,6 +158,7 @@ Assert-Match $cutover 'attempted=true' "Partial DNS applies must still trigger r
 Assert-Match $bootstrap 'bootstrap_marker[\s\S]*exit 0' "The metadata bootstrap must be one-shot after successful installation."
 Assert-Match $cutover '45' "The cutover workflow must enforce the minute-45 rollback deadline."
 Assert-Match $cutoverWorkflow 'jobs:[\s\S]*cutover:[\s\S]*timeout-minutes:\s*215' "The n8n cutover job must retain the recomputed 215-minute hard-timeout budget."
+Assert-Match $cutoverWorkflow 'jobs:[\s\S]*cutover:[\s\S]*if:\s*>-\s*\r?\n\s*always\(\) &&\s*\r?\n\s*github\.ref == ''refs/heads/main''' "The n8n cutover job must survive workflow cancellation long enough to run its bounded recovery handler while preserving the main-branch gate."
 Assert-Match $cutoverWorkflow 'steps:\s*\r?\n\s*- id:\s*job_budget[\s\S]*?start_epoch=\$\(date \+%s\)[\s\S]*?\r?\n\s*- uses:\s*actions/checkout@v4' "The n8n hard-timeout budget clock must be the first declared cutover step, before checkout."
 Assert-Match $cutoverWorkflow 'steps\.job_budget\.outputs\.start_epoch[\s\S]*-lt 1800[\s\S]*id:\s*transition[\s\S]*name:\s*Start private origin in maintenance mode' "n8n cutover must preserve the recomputed recovery reserve before starting the route transition."
 Assert-Match $cutoverWorkflow 'id:\s*commit[\s\S]*steps\.job_budget\.outputs\.start_epoch[\s\S]*-lt 5400[\s\S]*committed=true[\s\S]*runtime-mode\.sh active' "n8n cutover must preserve the recomputed postcommit recovery reserve before write exposure."
