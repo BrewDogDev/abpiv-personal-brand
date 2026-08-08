@@ -111,7 +111,17 @@ jobs:
               "container_id=\$(sudo docker compose --project-directory /opt/plausible --file /opt/plausible/docker-compose.yml ps --quiet '$service'); sudo docker inspect --format '{{.Image}}' \"\$container_id\"")"
             target_image_id="$(gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
               "sudo docker image inspect --format '{{.Id}}' '$target_ref'")"
-            test "$target_image_id" = "$source_image_id"
+            [[ "$source_image_id" =~ ^sha256:[0-9a-f]{64}$ ]]
+            [[ "$target_image_id" =~ ^sha256:[0-9a-f]{64}$ ]]
+            if [ "$target_image_id" != "$source_image_id" ]; then
+              source_repo_digests="$(gcloud compute ssh "$SOURCE_VM" --project "$GCP_PROJECT_ID" --zone "$SOURCE_ZONE" --tunnel-through-iap --quiet --command \
+                "sudo docker image inspect --format '{{json .RepoDigests}}' '$source_image_id'")"
+              target_repo_digests="$(gcloud compute ssh "$TARGET_VM" --project "$GCP_PROJECT_ID" --zone "$TARGET_ZONE" --tunnel-through-iap --quiet --command \
+                "sudo docker image inspect --format '{{json .RepoDigests}}' '$target_image_id'")"
+              printf 'Image identity mismatch for %s.\nsource_image_id=%s\nsource_repo_digests=%s\ntarget_ref=%s\ntarget_image_id=%s\ntarget_repo_digests=%s\n' \
+                "$service" "$source_image_id" "$source_repo_digests" "$target_ref" "$target_image_id" "$target_repo_digests" >&2
+              exit 1
+            fi
           done
           curl --fail --silent --show-error --max-time 15 "$PUBLIC_SCRIPT_URL" >/dev/null
 
