@@ -307,6 +307,7 @@ foreach ($workflowPath in @(
     ".github/workflows/n8n-fresh-cutover.yml",
     ".github/workflows/n8n-decommission.yml",
     ".github/workflows/n8n-fresh-decommission.yml",
+    ".github/workflows/n8n-fresh-residual-cleanup.yml",
     ".github/workflows/plausible-redeploy.yml",
     ".github/workflows/plausible-cutover.yml"
 )) {

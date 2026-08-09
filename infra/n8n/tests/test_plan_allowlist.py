@@ -490,6 +490,74 @@ class PlanAllowlistTests(unittest.TestCase):
         )
         self.assertNotEqual(wrong_action.returncode, 0)
 
+    def test_prune_obsolete_legacy_permissions_excludes_service_networking(self) -> None:
+        accepted = self.run_plan(
+            "prune-obsolete-legacy-permissions",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/run.admin"]',
+                    "delete",
+                ),
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/cloudsql.admin"]',
+                    "delete",
+                ),
+            ],
+        )
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        service_networking = self.run_plan(
+            "prune-obsolete-legacy-permissions",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/servicenetworking.networksAdmin"]',
+                    "delete",
+                )
+            ],
+        )
+        self.assertNotEqual(service_networking.returncode, 0)
+
+    def test_finalize_legacy_private_network_resources_accepts_only_two_deletes(self) -> None:
+        accepted = self.run_plan(
+            "finalize-legacy-private-network-resources",
+            [
+                change(
+                    "google_service_networking_connection.private_services[0]", "delete"
+                ),
+                change("google_compute_global_address.private_services[0]", "delete"),
+            ],
+        )
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        unrelated = self.run_plan(
+            "finalize-legacy-private-network-resources",
+            [change("google_compute_instance.n8n", "delete")],
+        )
+        self.assertNotEqual(unrelated.returncode, 0)
+
+    def test_finalize_legacy_private_network_permission_accepts_only_service_role(self) -> None:
+        accepted = self.run_plan(
+            "finalize-legacy-private-network-permission",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/servicenetworking.networksAdmin"]',
+                    "delete",
+                )
+            ],
+        )
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        retired_role = self.run_plan(
+            "finalize-legacy-private-network-permission",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/run.admin"]',
+                    "delete",
+                )
+            ],
+        )
+        self.assertNotEqual(retired_role.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
