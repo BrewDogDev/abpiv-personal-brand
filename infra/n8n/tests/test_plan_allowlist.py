@@ -29,16 +29,26 @@ def change(
     return {"address": address, "change": payload}
 
 
-def dns_update(name: str, before_type: str, after_type: str) -> dict[str, object]:
+def dns_change(
+    name: str, before_type: str, after_type: str, *actions: str
+) -> dict[str, object]:
     before_content = "203.0.113.10" if before_type == "A" else "tunnel-id.cfargotunnel.com"
     after_content = "203.0.113.10" if after_type == "A" else "tunnel-id.cfargotunnel.com"
     common = {"zone_id": "zone", "name": name, "ttl": 1, "proxied": True}
     return change(
         f"cloudflare_dns_record.{name}[0]",
-        "update",
+        *actions,
         before={**common, "type": before_type, "content": before_content},
         after={**common, "type": after_type, "content": after_content},
     )
+
+
+def dns_update(name: str, before_type: str, after_type: str) -> dict[str, object]:
+    return dns_change(name, before_type, after_type, "update")
+
+
+def dns_replacement(name: str, before_type: str, after_type: str) -> dict[str, object]:
+    return dns_change(name, before_type, after_type, "delete", "create")
 
 
 def cloud_run_min_update() -> dict[str, object]:
@@ -159,7 +169,7 @@ class PlanAllowlistTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Unlisted plan actions", result.stderr)
 
-    def test_cutover_requires_exactly_two_dns_updates(self) -> None:
+    def test_cutover_requires_exactly_two_dns_transitions(self) -> None:
         accepted = self.run_plan(
             "cutover",
             [
@@ -168,6 +178,19 @@ class PlanAllowlistTests(unittest.TestCase):
             ],
         )
         self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        accepted_replacements = self.run_plan(
+            "cutover",
+            [
+                dns_replacement("forms", "A", "CNAME"),
+                dns_replacement("editor", "A", "CNAME"),
+            ],
+        )
+        self.assertEqual(
+            accepted_replacements.returncode,
+            0,
+            accepted_replacements.stderr,
+        )
 
         rejected = self.run_plan(
             "cutover",
@@ -184,7 +207,8 @@ class PlanAllowlistTests(unittest.TestCase):
             [
                 change(
                     "cloudflare_dns_record.forms[0]",
-                    "update",
+                    "delete",
+                    "create",
                     before={
                         "zone_id": "zone",
                         "name": "forms",
@@ -207,7 +231,7 @@ class PlanAllowlistTests(unittest.TestCase):
         )
         self.assertNotEqual(broad_dns_update.returncode, 0)
 
-    def test_rollback_requires_dns_and_cloud_run_updates_only(self) -> None:
+    def test_rollback_requires_dns_transitions_and_cloud_run_update_only(self) -> None:
         accepted = self.run_plan(
             "rollback",
             [
@@ -216,6 +240,19 @@ class PlanAllowlistTests(unittest.TestCase):
             ],
         )
         self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        accepted_replacements = self.run_plan(
+            "rollback",
+            [
+                dns_replacement("forms", "CNAME", "A"),
+                dns_replacement("editor", "CNAME", "A"),
+            ],
+        )
+        self.assertEqual(
+            accepted_replacements.returncode,
+            0,
+            accepted_replacements.stderr,
+        )
 
         accepted_after_quiescence = self.run_plan(
             "rollback",
@@ -252,6 +289,15 @@ class PlanAllowlistTests(unittest.TestCase):
             one_partial_dns_change.returncode,
             0,
             one_partial_dns_change.stderr,
+        )
+
+        one_partial_dns_replacement = self.run_plan(
+            "rollback", [dns_replacement("forms", "CNAME", "A")]
+        )
+        self.assertEqual(
+            one_partial_dns_replacement.returncode,
+            0,
+            one_partial_dns_replacement.stderr,
         )
 
     def test_arm_is_idempotent_and_narrow(self) -> None:
