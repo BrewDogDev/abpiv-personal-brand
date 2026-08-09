@@ -154,6 +154,95 @@ class FreshDecommissionContractTests(unittest.TestCase):
         self.assertIn("steps.arm.outcome != 'skipped'", workflow)
         self.assertNotIn("steps.arm.outcome == 'success'", workflow)
 
+    def test_partial_retry_arms_only_an_existing_sql_instance(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("LEGACY_SQL_EXISTS", workflow)
+        self.assertNotIn("if gcloud sql instances describe", workflow)
+        self.assertGreaterEqual(workflow.count("gcloud sql instances list"), 3)
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r"gcloud sql instances list[^\r\n]*--format=json[\s\S]*?"
+                r"legacy_sql_count[\s\S]*?"
+                r"case \"\$legacy_sql_count\" in[\s\S]*?"
+                r"0\)[\s\S]*?LEGACY_SQL_EXISTS=false[\s\S]*?"
+                r"1\)[\s\S]*?LEGACY_SQL_EXISTS=true"
+            ),
+        )
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r"Re-enable Cloud SQL deletion protection[\s\S]*?"
+                r"gcloud sql instances list[^\r\n]*--format=json[\s\S]*?"
+                r"case \"\$legacy_sql_count\" in[\s\S]*?"
+                r"0\)[\s\S]*?already absent[\s\S]*?"
+                r"1\) ;;"
+            ),
+            "Recovery must distinguish a successful absence result from an API or auth failure.",
+        )
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r'if test "\$LEGACY_SQL_EXISTS" = true; then[\s\S]*?'
+                r"-target='google_sql_database_instance\.n8n\[0\]'[\s\S]*?"
+                r"--phase arm"
+            ),
+        )
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r'if test "\$LEGACY_SQL_EXISTS" = true; then\s*'
+                r'echo "arm google_sql_database_instance\.n8n\[0\] deletion_protection=false"'
+            ),
+        )
+
+    def test_temporary_certificate_owner_grant_is_hash_bound_and_always_revoked(
+        self,
+    ) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("roles/certificatemanager.owner", workflow)
+        self.assertIn("grant-temporary-certificate-map-delete", workflow)
+        self.assertIn("revoke-temporary-certificate-map-delete", workflow)
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r"Grant the reviewed temporary Certificate Manager owner permission[\s\S]*?"
+                r"gcloud projects add-iam-policy-binding[\s\S]*?"
+                r'--role="roles/certificatemanager\.owner"'
+            ),
+        )
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r"Revoke the temporary Certificate Manager owner permission[\s\S]*?"
+                r"if: always\(\) && inputs\.mode == 'apply'[\s\S]*?"
+                r"gcloud projects remove-iam-policy-binding[\s\S]*?"
+                r'--role="roles/certificatemanager\.owner"'
+            ),
+        )
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r'if test "\$temp_cert_permission_required" = true; then[\s\S]*?'
+                r'grant-temporary-certificate-map-delete[^\r\n]*\s*fi\s*'
+                r'echo "revoke-temporary-certificate-map-delete'
+            ),
+            "Owner revocation must remain in the reviewed manifest even after cert-map resources are gone.",
+        )
+        cleanup = workflow.split(
+            "- name: Revoke the temporary Certificate Manager owner permission", 1
+        )[1].split("- name: Verify legacy GCP resources are absent", 1)[0]
+        self.assertNotIn("steps.temp_cert_permission.outcome", cleanup)
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r"google_certificate_manager_certificate_map(_entry)?[\s\S]*?"
+                r"TEMP_CERT_PERMISSION_REQUIRED"
+            ),
+        )
+
     def test_fresh_decommission_restores_partially_removed_deployer_grants(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
