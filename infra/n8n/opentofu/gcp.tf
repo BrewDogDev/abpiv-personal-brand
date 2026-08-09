@@ -24,7 +24,7 @@ resource "google_compute_subnetwork" "n8n" {
 }
 
 resource "google_compute_global_address" "private_services" {
-  count = var.legacy_stack_enabled ? 1 : 0
+  count = var.legacy_stack_enabled || var.legacy_private_service_connection_enabled ? 1 : 0
 
   name          = "${local.name_prefix}-private-services"
   purpose       = "VPC_PEERING"
@@ -38,7 +38,7 @@ resource "google_compute_global_address" "private_services" {
 }
 
 resource "google_service_networking_connection" "private_services" {
-  count = var.legacy_stack_enabled ? 1 : 0
+  count = var.legacy_stack_enabled || var.legacy_private_service_connection_enabled ? 1 : 0
 
   network                 = google_compute_network.n8n.id
   service                 = "servicenetworking.googleapis.com"

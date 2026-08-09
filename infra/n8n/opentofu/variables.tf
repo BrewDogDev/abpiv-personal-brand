@@ -34,9 +34,21 @@ variable "legacy_stack_enabled" {
 }
 
 variable "legacy_deployer_permissions_enabled" {
-  description = "Retains the six deployer roles needed to delete and externally verify the legacy stack. Disable only after every legacy GCP resource is proven absent."
+  description = "Retains the five broad deployer roles needed by the legacy Cloud Run, SQL, load-balancer, certificate, and VPC-access stack. Disable only after those resources are proven absent."
   type        = bool
   default     = true
+}
+
+variable "legacy_private_service_connection_enabled" {
+  description = "Temporarily retains only the legacy private-services connection and its reserved range while Google finishes deleting Cloud SQL producer resources. Keep false outside the reviewed residual-cleanup workflow."
+  type        = bool
+  default     = false
+}
+
+variable "legacy_service_networking_permission_enabled" {
+  description = "Temporarily retains the service-networking deployer role until the residual private-services connection and reserved range are externally proven absent. Keep false outside the reviewed residual-cleanup workflow."
+  type        = bool
+  default     = false
 }
 
 variable "legacy_destruction_armed" {
