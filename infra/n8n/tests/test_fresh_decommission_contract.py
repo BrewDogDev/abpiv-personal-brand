@@ -140,6 +140,25 @@ class FreshDecommissionContractTests(unittest.TestCase):
         self.assertIn("steps.arm.outcome != 'skipped'", workflow)
         self.assertNotIn("steps.arm.outcome == 'success'", workflow)
 
+    def test_fresh_decommission_restores_partially_removed_deployer_grants(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("id: permissions", workflow)
+        self.assertIn("steps.permissions.outcome != 'skipped'", workflow)
+        self.assertIn("--phase restore-legacy-permissions", workflow)
+        self.assertIn("restore-legacy-permissions.tfplan", workflow)
+        self.assertRegex(
+            workflow,
+            re.compile(
+                r"failure\(\) \|\| cancelled\(\)[\s\S]*?"
+                r"steps\.permissions\.outcome != 'skipped'[\s\S]*?"
+                r"legacy_deployer_permissions_enabled=true[\s\S]*?"
+                r"--phase restore-legacy-permissions[\s\S]*?"
+                r"apply[^\r\n]*restore-legacy-permissions\.tfplan[\s\S]*?"
+                r"detailed-exitcode"
+            ),
+        )
+
     def test_legacy_gcp_resources_keep_deployer_grants_until_destroyed(self) -> None:
         gcp = GCP.read_text(encoding="utf-8")
         legacy_resources = (

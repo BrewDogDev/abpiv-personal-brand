@@ -266,6 +266,7 @@ jobs:
           cmp --silent destroy-permission-actions-expected.txt destroy-permission-actions-final.txt
 
       - name: Apply only the freshly regenerated obsolete-permission plan
+        id: permissions
         if: inputs.mode == 'apply'
         run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve destroy-permissions.tfplan
 
@@ -287,6 +288,27 @@ jobs:
             403|404) ;;
             *) echo "Unexpected forms API status after destruction: $forms_status" >&2; exit 1 ;;
           esac
+
+      - name: Restore legacy deployer permissions after a failed or cancelled permission phase
+        if: (failure() || cancelled()) && inputs.mode == 'apply' && steps.permissions.outcome != 'skipped'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          tofu -chdir="$TOFU_DIR" plan -input=false \
+            -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=true' \
+            -var='legacy_destruction_armed=false' \
+            -target='google_project_iam_member.github_deployer_project_roles' \
+            -out=restore-legacy-permissions.tfplan
+          tofu -chdir="$TOFU_DIR" show -json restore-legacy-permissions.tfplan > restore-legacy-permissions-plan.json
+          python infra/n8n/tools/assert-plan-allowlist.py restore-legacy-permissions-plan.json --phase restore-legacy-permissions
+          tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve restore-legacy-permissions.tfplan
+          tofu -chdir="$TOFU_DIR" plan -input=false -detailed-exitcode \
+            -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=true' \
+            -var='legacy_destruction_armed=false' \
+            -target='google_project_iam_member.github_deployer_project_roles' \
+            -out=restore-legacy-permissions-verify.tfplan
 
       - name: Re-enable Cloud SQL deletion protection after a failed or cancelled decommission
         if: (failure() || cancelled()) && inputs.mode == 'apply' && steps.arm.outcome != 'skipped'
@@ -315,4 +337,4 @@ jobs:
 
       - name: Remove runtime artifacts from the runner
         if: always()
-        run: rm -f "$TOFU_DIR/arm.tfplan" "$TOFU_DIR/protect.tfplan" "$TOFU_DIR/protect-verify.tfplan" "$TOFU_DIR/destroy-preview.tfplan" "$TOFU_DIR/destroy-resources.tfplan" "$TOFU_DIR/destroy-resources-verify.tfplan" "$TOFU_DIR/destroy-permissions.tfplan" "$TOFU_DIR/destroy-verify.tfplan" arm-plan.json protect-plan.json destroy-preview-plan.json destroy-resources-plan.json destroy-permissions-plan.json destroy-actions-only.txt destroy-resource-actions-expected.txt destroy-resource-actions-final.txt destroy-permission-actions-expected.txt destroy-permission-actions-final.txt destruction-actions.txt destruction-actions.sha256
+        run: rm -f "$TOFU_DIR/arm.tfplan" "$TOFU_DIR/protect.tfplan" "$TOFU_DIR/protect-verify.tfplan" "$TOFU_DIR/destroy-preview.tfplan" "$TOFU_DIR/destroy-resources.tfplan" "$TOFU_DIR/destroy-resources-verify.tfplan" "$TOFU_DIR/destroy-permissions.tfplan" "$TOFU_DIR/destroy-verify.tfplan" "$TOFU_DIR/restore-legacy-permissions.tfplan" "$TOFU_DIR/restore-legacy-permissions-verify.tfplan" arm-plan.json protect-plan.json destroy-preview-plan.json destroy-resources-plan.json destroy-permissions-plan.json restore-legacy-permissions-plan.json destroy-actions-only.txt destroy-resource-actions-expected.txt destroy-resource-actions-final.txt destroy-permission-actions-expected.txt destroy-permission-actions-final.txt destruction-actions.txt destruction-actions.sha256

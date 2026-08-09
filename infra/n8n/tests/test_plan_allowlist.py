@@ -449,6 +449,47 @@ class PlanAllowlistTests(unittest.TestCase):
         )
         self.assertNotEqual(rejected.returncode, 0)
 
+    def test_restore_legacy_permissions_accepts_only_missing_legacy_grants(self) -> None:
+        accepted = self.run_plan(
+            "restore-legacy-permissions",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/run.admin"]',
+                    "create",
+                ),
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/cloudsql.admin"]',
+                    "create",
+                ),
+            ],
+        )
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+        already_restored = self.run_plan("restore-legacy-permissions", [])
+        self.assertEqual(already_restored.returncode, 0, already_restored.stderr)
+
+        retained_grant = self.run_plan(
+            "restore-legacy-permissions",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/compute.securityAdmin"]',
+                    "create",
+                )
+            ],
+        )
+        self.assertNotEqual(retained_grant.returncode, 0)
+
+        wrong_action = self.run_plan(
+            "restore-legacy-permissions",
+            [
+                change(
+                    'google_project_iam_member.github_deployer_project_roles["roles/run.admin"]',
+                    "delete",
+                )
+            ],
+        )
+        self.assertNotEqual(wrong_action.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
