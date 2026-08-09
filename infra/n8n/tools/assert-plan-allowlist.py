@@ -39,14 +39,15 @@ BOOTSTRAP_CREATE = [
     r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(compute\.instanceAdmin\.v1|compute\.osAdminLogin|compute\.securityAdmin|iap\.tunnelResourceAccessor|logging\.configWriter|monitoring\.editor)\"\]$",
 ]
 
-CUTOVER_UPDATE = [
+DNS_RECORDS = [
     r"^cloudflare_dns_record\.(forms|editor)\[0\]$",
 ]
 
 ROLLBACK_UPDATE = [
-    r"^cloudflare_dns_record\.(forms|editor)\[0\]$",
     r"^google_cloud_run_v2_service\.n8n\[0\]$",
 ]
+
+DNS_TRANSITION_ACTIONS = {("update",), ("delete", "create")}
 
 DNS_COMPUTED_ROOTS = {
     "comment_modified_on",
@@ -242,9 +243,11 @@ def main() -> int:
         elif args.phase == "prepare":
             allowed = actions == ("create",) and matches(address, PREPARE_CREATE)
         elif args.phase == "cutover":
-            allowed = actions == ("update",) and matches(address, CUTOVER_UPDATE)
+            allowed = actions in DNS_TRANSITION_ACTIONS and matches(address, DNS_RECORDS)
         elif args.phase == "rollback":
-            allowed = actions == ("update",) and matches(address, ROLLBACK_UPDATE)
+            allowed = (
+                actions in DNS_TRANSITION_ACTIONS and matches(address, DNS_RECORDS)
+            ) or (actions == ("update",) and matches(address, ROLLBACK_UPDATE))
         elif args.phase in {"arm", "protect"}:
             allowed = actions == ("update",) and matches(address, ARM_UPDATE)
         else:
@@ -252,7 +255,9 @@ def main() -> int:
 
         if not allowed:
             violations.append(f"{address}: {','.join(actions)}")
-        elif args.phase in {"cutover", "rollback", "arm", "protect"} and actions == ("update",):
+        elif args.phase in {"cutover", "rollback", "arm", "protect"} and (
+            actions == ("update",) or matches(address, DNS_RECORDS)
+        ):
             detail_error = exact_update_error(args.phase, address, change["change"])
             if detail_error:
                 violations.append(detail_error)
@@ -267,22 +272,41 @@ def main() -> int:
         return 1
 
     if args.phase == "cutover":
-        updates = [item for item in observed if item[1] == ("update",)]
-        if len(updates) != 2:
-            print(f"Cutover requires exactly two DNS updates; found {len(updates)}.", file=sys.stderr)
+        transitions = [
+            item
+            for item in observed
+            if item[1] in DNS_TRANSITION_ACTIONS and matches(item[0], DNS_RECORDS)
+        ]
+        expected_addresses = {
+            "cloudflare_dns_record.forms[0]",
+            "cloudflare_dns_record.editor[0]",
+        }
+        if (
+            len(transitions) != 2
+            or {item[0] for item in transitions} != expected_addresses
+        ):
+            print(
+                f"Cutover requires exactly the two DNS transitions; found {len(transitions)}.",
+                file=sys.stderr,
+            )
             return 1
 
     if args.phase == "rollback":
-        updates = [item for item in observed if item[1] == ("update",)]
-        observed_addresses = {item[0] for item in updates}
-        permitted = {
+        dns_transitions = [
+            item
+            for item in observed
+            if item[1] in DNS_TRANSITION_ACTIONS and matches(item[0], DNS_RECORDS)
+        ]
+        permitted_dns = {
             "cloudflare_dns_record.forms[0]",
             "cloudflare_dns_record.editor[0]",
-            "google_cloud_run_v2_service.n8n[0]",
         }
-        if not observed_addresses.issubset(permitted):
+        observed_dns = {item[0] for item in dns_transitions}
+        if len(dns_transitions) != len(observed_dns) or not observed_dns.issubset(
+            permitted_dns
+        ):
             print(
-                "Rollback permits only zero to two DNS corrections and the optional Cloud Run minimum-instance update.",
+                "Rollback permits only zero to two distinct DNS corrections and the optional Cloud Run minimum-instance update.",
                 file=sys.stderr,
             )
             return 1
