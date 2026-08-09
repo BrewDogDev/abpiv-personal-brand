@@ -108,6 +108,7 @@ Assert-Match $compose '(?m)^\s*internal:\s*true\s*$' "The application Docker net
 Assert-Match $compose '(?ms)^  nginx:\s*$.*?^    networks:\s*\r?\n      - backend\s*\r?\n      - ingress\s*$' "Nginx must join a dedicated non-internal ingress bridge so Docker activates its loopback port publication."
 Assert-Match $compose '(?ms)^networks:\s*$.*?^  ingress:\s*\r?\n    driver:\s*bridge\s*$' "The Nginx ingress network must be a standard bridge, not the internal application network."
 Assert-Match $compose '(?m)^\s*healthcheck:\s*$' "Every runtime service must define a health check."
+Assert-Match $compose 'wget --quiet --spider --header=Host:workflows\.lobst3rs\.com http://127\.0\.0\.1:8080/healthz' "The Nginx health check must use the editor Host header required by the active virtual host."
 Assert-Match $compose '/srv/n8n/' "Runtime data must live on the attached disk."
 Assert-Match $compose 'N8N_ENCRYPTION_KEY_FILE' "n8n must consume its encryption key by ephemeral file path."
 Assert-Match $compose 'DB_POSTGRESDB_PASSWORD_FILE' "n8n must consume its database password by ephemeral file path."

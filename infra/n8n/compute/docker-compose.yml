@@ -131,7 +131,7 @@ services:
       - backend
       - ingress
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:8080/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget --quiet --spider --header=Host:workflows.lobst3rs.com http://127.0.0.1:8080/healthz || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 12
