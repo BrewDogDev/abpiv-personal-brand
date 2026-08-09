@@ -55,6 +55,7 @@ $runtimeBoot = Read-RepositoryFile "infra/n8n/compute/scripts/start-on-boot.sh"
 $observation = Read-RepositoryFile "infra/n8n/compute/scripts/observe-runtime.sh"
 $monitor = Read-RepositoryFile "infra/n8n/compute/scripts/monitor-runtime.sh"
 $runtimeService = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-n8n.service"
+$tunnelService = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-cloudflared.service"
 $bootstrap = Read-RepositoryFile "infra/n8n/compute/scripts/bootstrap-host.sh"
 $firewall = Read-RepositoryFile "infra/n8n/compute/scripts/configure-container-firewall.sh"
 $runtimeMode = Read-RepositoryFile "infra/n8n/compute/scripts/runtime-mode.sh"
@@ -123,6 +124,7 @@ Assert-Match $firewall 'DOCKER-USER[\s\S]*--jump DROP' "All containers must be b
 Assert-Match $provision 'docker\.service\.d/abpiv-container-firewall\.conf[\s\S]*ExecStartPost=/usr/local/sbin/abpiv-container-firewall --enforce' "Docker startup must durably restore the metadata firewall rule."
 Assert-Match $runtimeMode 'maintenance[\s\S]*abpiv-container-firewall --check[\s\S]*systemctl enable abpiv-n8n\.service abpiv-cloudflared\.service' "Maintenance mode must enforce metadata isolation and persist fail-closed reboot recovery."
 Assert-Match $runtimeMode 'wait_for_mode\(\)[\s\S]*seq 1 30[\s\S]*curl --fail --silent --max-time 2[\s\S]*sleep 1[\s\S]*wait_for_mode maintenance-ready[\s\S]*wait_for_mode active-ready' "Runtime mode changes must tolerate the bounded host-port publication delay after Compose reports healthy."
+Assert-Match $tunnelService 'ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate run --token-file /run/cloudflared/token' "The pinned cloudflared CLI requires run-command options, including token-file, after the run subcommand."
 
 # Automation must preserve the explicit gates and verifiable recovery path.
 Assert-Match $provision 'findmnt[\s\S]*UUID' "Provisioning must mount the data disk by UUID."
