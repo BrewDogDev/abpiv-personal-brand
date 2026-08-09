@@ -175,7 +175,7 @@ locals {
     "roles/serviceusage.serviceUsageAdmin",
     "roles/resourcemanager.projectIamAdmin",
     "roles/storage.admin",
-    ], var.legacy_stack_enabled ? [
+    ], var.legacy_deployer_permissions_enabled ? [
     "roles/certificatemanager.editor",
     "roles/cloudsql.admin",
     "roles/compute.loadBalancerAdmin",
@@ -208,5 +208,12 @@ check "destruction_arming_is_narrow" {
   assert {
     condition     = !var.legacy_destruction_armed || (var.runtime_origin == "compute" && var.legacy_stack_enabled)
     error_message = "legacy_destruction_armed is valid only after the Compute origin is active while the legacy stack is still retained."
+  }
+}
+
+check "legacy_stack_has_deployer_permissions" {
+  assert {
+    condition     = !var.legacy_stack_enabled || var.legacy_deployer_permissions_enabled
+    error_message = "The legacy stack cannot remain enabled after its required deployer permissions are removed."
   }
 }

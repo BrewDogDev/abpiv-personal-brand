@@ -60,6 +60,7 @@ That combination is additive. `runtime_origin=compute` changes only the two Clou
 - `plausible-cutover.yml`: imports the unchanged old runtime secrets without printing them, moves the existing Tunnel connector, encrypts and transfers the complete old dataset, compares PostgreSQL and ClickHouse counts plus application-state checksums, observes the shared host, and stops—but never deletes—the intact old VM only after acceptance.
 - `n8n-cutover.yml`: independently reviewed 60-minute maintenance-window migration that first requires the sole traffic-serving Cloud Run revision and prepared target to use the same immutable n8n digest, with minute-45 rollback, combined-host observation, and `e2-standard-2` fallback.
 - `n8n-decommission.yml`: two-dispatch review/apply flow that round-trip verifies the complete retained migration package and binds its prefix/digest, the reviewed commit, exact legacy destruction allowlist, and legacy binary-object removal into one reviewed manifest.
+- `n8n-fresh-decommission.yml`: separate two-dispatch review/apply flow for an explicitly accepted fresh-start cutover. It proves Cloud Run is manually disabled at zero or already absent during a partial-decommission retry, never reads or preserves the intentionally abandoned Cloud SQL or legacy bucket data, and binds the reviewed commit plus exact legacy destruction allowlist. Apply retains the six deletion roles through external resource-absence checks, then removes only those obsolete grants and proves full convergence. A failed or cancelled permission phase strictly restores only missing members of those six grants so a reviewed retry remains possible.
 
 GitHub Actions authenticates to Google through OIDC. No service-account key belongs in GitHub or this repository.
 
@@ -110,7 +111,7 @@ Use `n8n-fresh-cutover.yml` only when the owner has explicitly accepted an empty
 
 The cutover preserves the old Cloud Run, Cloud SQL, load-balancer, and storage resources. After the workflow succeeds, the owner must sign in through `workflows.lobst3rs.com`, complete first-user setup, recreate or import workflows and credentials, activate the intended workflows, and test the exact production form and webhook URLs. Generated URLs, internal ids, API tokens, and the n8n MCP bearer token may differ on the fresh instance.
 
-Only after that manual acceptance should Cloud Run be scaled to zero. Destruction of the retained legacy resources remains a separate explicitly approved action.
+Only after that manual acceptance should Cloud Run be manually disabled with zero instances. If Allan then explicitly authorizes destruction of the intentionally abandoned data and the complete legacy stack, use `n8n-fresh-decommission.yml` in `plan` mode, obtain `COMPLIANT / APPROVED / READY` for its exact commit and manifest digest, and use a later hash-bound `apply` dispatch. Do not use migration-oriented `n8n-decommission.yml` for a fresh start because it would inspect and require a retained migration package that intentionally does not exist.
 
 ## Local verification
 
