@@ -48,7 +48,17 @@ def dns_update(name: str, before_type: str, after_type: str) -> dict[str, object
 
 
 def dns_replacement(name: str, before_type: str, after_type: str) -> dict[str, object]:
-    return dns_change(name, before_type, after_type, "delete", "create")
+    replacement = dns_change(name, before_type, after_type, "delete", "create")
+    payload = replacement["change"]
+    assert isinstance(payload, dict)
+    before = payload["before"]
+    after = payload["after"]
+    assert isinstance(before, dict)
+    assert isinstance(after, dict)
+    before.update({"settings": {}, "tags": []})
+    after.update({"settings": None, "tags": None})
+    payload["after_unknown"] = {"settings": True, "tags": True}
+    return replacement
 
 
 def cloud_run_min_update() -> dict[str, object]:
@@ -191,6 +201,89 @@ class PlanAllowlistTests(unittest.TestCase):
             0,
             accepted_replacements.stderr,
         )
+
+        for field, configured_value in (
+            ("settings", {"flatten_cname": True}),
+            ("tags", ["unexpected"]),
+        ):
+            with self.subTest(field=field):
+                configured_replacement = dns_replacement("forms", "A", "CNAME")
+                payload = configured_replacement["change"]
+                assert isinstance(payload, dict)
+                after = payload["after"]
+                after_unknown = payload["after_unknown"]
+                assert isinstance(after, dict)
+                assert isinstance(after_unknown, dict)
+                after[field] = configured_value
+                del after_unknown[field]
+                rejected_configured_field = self.run_plan(
+                    "cutover",
+                    [
+                        configured_replacement,
+                        dns_replacement("editor", "A", "CNAME"),
+                    ],
+                )
+                self.assertNotEqual(rejected_configured_field.returncode, 0)
+
+                configured_before_replacement = dns_replacement(
+                    "forms", "A", "CNAME"
+                )
+                before_payload = configured_before_replacement["change"]
+                assert isinstance(before_payload, dict)
+                before = before_payload["before"]
+                assert isinstance(before, dict)
+                before[field] = configured_value
+                rejected_existing_field = self.run_plan(
+                    "cutover",
+                    [
+                        configured_before_replacement,
+                        dns_replacement("editor", "A", "CNAME"),
+                    ],
+                )
+                self.assertNotEqual(rejected_existing_field.returncode, 0)
+
+                equal_known_replacement = dns_replacement("forms", "A", "CNAME")
+                equal_known_payload = equal_known_replacement["change"]
+                assert isinstance(equal_known_payload, dict)
+                equal_known_before = equal_known_payload["before"]
+                equal_known_after = equal_known_payload["after"]
+                equal_known_unknown = equal_known_payload["after_unknown"]
+                assert isinstance(equal_known_before, dict)
+                assert isinstance(equal_known_after, dict)
+                assert isinstance(equal_known_unknown, dict)
+                equal_known_before[field] = configured_value
+                equal_known_after[field] = configured_value
+                del equal_known_unknown[field]
+                rejected_equal_known = self.run_plan(
+                    "cutover",
+                    [
+                        equal_known_replacement,
+                        dns_replacement("editor", "A", "CNAME"),
+                    ],
+                )
+                self.assertNotEqual(rejected_equal_known.returncode, 0)
+
+                empty_value: object = {} if field == "settings" else []
+                equal_empty_replacement = dns_replacement("forms", "A", "CNAME")
+                equal_empty_payload = equal_empty_replacement["change"]
+                assert isinstance(equal_empty_payload, dict)
+                equal_empty_before = equal_empty_payload["before"]
+                equal_empty_after = equal_empty_payload["after"]
+                equal_empty_unknown = equal_empty_payload["after_unknown"]
+                assert isinstance(equal_empty_before, dict)
+                assert isinstance(equal_empty_after, dict)
+                assert isinstance(equal_empty_unknown, dict)
+                equal_empty_before[field] = empty_value
+                equal_empty_after[field] = empty_value
+                del equal_empty_unknown[field]
+                rejected_equal_empty = self.run_plan(
+                    "cutover",
+                    [
+                        equal_empty_replacement,
+                        dns_replacement("editor", "A", "CNAME"),
+                    ],
+                )
+                self.assertNotEqual(rejected_equal_empty.returncode, 0)
 
         rejected = self.run_plan(
             "cutover",
