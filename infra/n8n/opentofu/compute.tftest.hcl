@@ -140,3 +140,67 @@ run "legacy_stack_requires_deployer_permissions" {
     check.legacy_stack_has_deployer_permissions,
   ]
 }
+
+run "deferred_private_network_state_is_narrow_and_valid" {
+  command = plan
+
+  variables {
+    runtime_origin                               = "compute"
+    legacy_stack_enabled                         = false
+    legacy_deployer_permissions_enabled          = false
+    legacy_private_service_connection_enabled    = true
+    legacy_service_networking_permission_enabled = true
+    enable_cloudflare_edge                       = true
+    editor_hostname                              = "workflows.lobst3rs.com"
+    cloudflare_account_id                        = "mock-account"
+    allanbpediniv_zone_id                        = "00000000000000000000000000000001"
+    editor_zone_id                               = "00000000000000000000000000000002"
+    editor_access_allowed_emails                 = ["allan@example.com"]
+    github_oidc_principal_set                    = ""
+    manage_cloudflare_access_organization        = false
+  }
+
+  assert {
+    condition     = length(google_compute_global_address.private_services) == 1
+    error_message = "The Google-retained private range must remain declared in the deferred state."
+  }
+
+  assert {
+    condition     = length(google_service_networking_connection.private_services) == 1
+    error_message = "The Google-retained private connection must remain declared in the deferred state."
+  }
+
+  assert {
+    condition     = contains(local.github_deployer_project_roles, "roles/servicenetworking.networksAdmin")
+    error_message = "The deferred state must retain its exact deletion permission."
+  }
+
+  assert {
+    condition     = !contains(local.github_deployer_project_roles, "roles/run.admin")
+    error_message = "The deferred state must not retain unrelated legacy deletion roles."
+  }
+}
+
+run "deferred_connection_requires_its_exact_permission" {
+  command = plan
+
+  variables {
+    runtime_origin                               = "compute"
+    legacy_stack_enabled                         = false
+    legacy_deployer_permissions_enabled          = false
+    legacy_private_service_connection_enabled    = true
+    legacy_service_networking_permission_enabled = false
+    enable_cloudflare_edge                       = true
+    editor_hostname                              = "workflows.lobst3rs.com"
+    cloudflare_account_id                        = "mock-account"
+    allanbpediniv_zone_id                        = "00000000000000000000000000000001"
+    editor_zone_id                               = "00000000000000000000000000000002"
+    editor_access_allowed_emails                 = ["allan@example.com"]
+    github_oidc_principal_set                    = ""
+    manage_cloudflare_access_organization        = false
+  }
+
+  expect_failures = [
+    check.deferred_private_service_connection_is_narrow,
+  ]
+}

@@ -180,8 +180,9 @@ locals {
     "roles/cloudsql.admin",
     "roles/compute.loadBalancerAdmin",
     "roles/run.admin",
-    "roles/servicenetworking.networksAdmin",
     "roles/vpcaccess.admin",
+    ] : [], (var.legacy_deployer_permissions_enabled || var.legacy_service_networking_permission_enabled) ? [
+    "roles/servicenetworking.networksAdmin",
     ] : []
   ))
 }
@@ -215,5 +216,34 @@ check "legacy_stack_has_deployer_permissions" {
   assert {
     condition     = !var.legacy_stack_enabled || var.legacy_deployer_permissions_enabled
     error_message = "The legacy stack cannot remain enabled after its required deployer permissions are removed."
+  }
+}
+
+check "deferred_private_service_connection_is_narrow" {
+  assert {
+    condition = (
+      !var.legacy_private_service_connection_enabled ||
+      (
+        var.runtime_origin == "compute" &&
+        !var.legacy_stack_enabled &&
+        !var.legacy_deployer_permissions_enabled &&
+        var.legacy_service_networking_permission_enabled
+      )
+    )
+    error_message = "The deferred private-services connection is valid only as the isolated post-cutover residual with its exact deletion permission retained."
+  }
+}
+
+check "deferred_service_networking_permission_is_narrow" {
+  assert {
+    condition = (
+      !var.legacy_service_networking_permission_enabled ||
+      (
+        var.runtime_origin == "compute" &&
+        !var.legacy_stack_enabled &&
+        !var.legacy_deployer_permissions_enabled
+      )
+    )
+    error_message = "The standalone service-networking deletion permission is valid only for the isolated post-cutover residual cleanup."
   }
 }

@@ -116,6 +116,19 @@ RESTORE_LEGACY_PERMISSION_CREATE = [
     r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(certificatemanager\.editor|cloudsql\.admin|compute\.loadBalancerAdmin|run\.admin|servicenetworking\.networksAdmin|vpcaccess\.admin)\"\]$",
 ]
 
+PRUNE_OBSOLETE_LEGACY_PERMISSION_DELETE = [
+    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(certificatemanager\.editor|cloudsql\.admin|compute\.loadBalancerAdmin|run\.admin|vpcaccess\.admin)\"\]$",
+]
+
+FINALIZE_LEGACY_PRIVATE_NETWORK_RESOURCE_DELETE = [
+    r"^google_compute_global_address\.private_services\[0\]$",
+    r"^google_service_networking_connection\.private_services\[0\]$",
+]
+
+FINALIZE_LEGACY_PRIVATE_NETWORK_PERMISSION_DELETE = [
+    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/servicenetworking\.networksAdmin\"\]$",
+]
+
 
 def matches(address: str, patterns: list[str]) -> bool:
     return any(re.fullmatch(pattern, address) for pattern in patterns)
@@ -249,7 +262,19 @@ def main() -> int:
     parser.add_argument("plan_json", type=Path)
     parser.add_argument(
         "--phase",
-        choices=("bootstrap", "prepare", "cutover", "rollback", "arm", "protect", "destroy", "restore-legacy-permissions"),
+        choices=(
+            "bootstrap",
+            "prepare",
+            "cutover",
+            "rollback",
+            "arm",
+            "protect",
+            "destroy",
+            "restore-legacy-permissions",
+            "prune-obsolete-legacy-permissions",
+            "finalize-legacy-private-network-resources",
+            "finalize-legacy-private-network-permission",
+        ),
         required=True,
     )
     args = parser.parse_args()
@@ -280,6 +305,18 @@ def main() -> int:
             allowed = actions == ("update",) and matches(address, ARM_UPDATE)
         elif args.phase == "restore-legacy-permissions":
             allowed = actions == ("create",) and matches(address, RESTORE_LEGACY_PERMISSION_CREATE)
+        elif args.phase == "prune-obsolete-legacy-permissions":
+            allowed = actions == ("delete",) and matches(
+                address, PRUNE_OBSOLETE_LEGACY_PERMISSION_DELETE
+            )
+        elif args.phase == "finalize-legacy-private-network-resources":
+            allowed = actions == ("delete",) and matches(
+                address, FINALIZE_LEGACY_PRIVATE_NETWORK_RESOURCE_DELETE
+            )
+        elif args.phase == "finalize-legacy-private-network-permission":
+            allowed = actions == ("delete",) and matches(
+                address, FINALIZE_LEGACY_PRIVATE_NETWORK_PERMISSION_DELETE
+            )
         else:
             allowed = actions == ("delete",) and matches(address, DESTROY_DELETE)
 
@@ -351,7 +388,16 @@ def main() -> int:
             print(f"Cloud SQL deletion protection already satisfies phase {args.phase}.")
             return 0
 
-    if not observed and args.phase not in {"bootstrap", "rollback", "arm", "protect", "restore-legacy-permissions"}:
+    if not observed and args.phase not in {
+        "bootstrap",
+        "rollback",
+        "arm",
+        "protect",
+        "restore-legacy-permissions",
+        "prune-obsolete-legacy-permissions",
+        "finalize-legacy-private-network-resources",
+        "finalize-legacy-private-network-permission",
+    }:
         print(f"No actionable changes found for phase {args.phase}.", file=sys.stderr)
         return 1
 
