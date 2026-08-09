@@ -31,6 +31,10 @@ resource "google_compute_global_address" "private_services" {
   address_type  = "INTERNAL"
   prefix_length = 16
   network       = google_compute_network.n8n.id
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }
 
 resource "google_service_networking_connection" "private_services" {
@@ -41,6 +45,7 @@ resource "google_service_networking_connection" "private_services" {
   reserved_peering_ranges = [google_compute_global_address.private_services[0].name]
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["servicenetworking.googleapis.com"],
   ]
 }
@@ -57,6 +62,7 @@ resource "google_vpc_access_connector" "n8n" {
   max_instances = 3
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["vpcaccess.googleapis.com"],
   ]
 }
@@ -98,6 +104,7 @@ resource "google_sql_database_instance" "n8n" {
   }
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["sqladmin.googleapis.com"],
     google_service_networking_connection.private_services[0],
   ]
@@ -108,6 +115,10 @@ resource "google_sql_database" "n8n" {
 
   name     = var.postgres_database
   instance = google_sql_database_instance.n8n[0].name
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }
 
 resource "google_storage_bucket" "binary_data" {
@@ -123,6 +134,7 @@ resource "google_storage_bucket" "binary_data" {
   force_destroy               = false
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["storage.googleapis.com"],
   ]
 }
@@ -242,6 +254,7 @@ resource "google_cloud_run_v2_service" "n8n" {
   }
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["run.googleapis.com"],
     google_project_service.required["secretmanager.googleapis.com"],
     google_secret_manager_secret_iam_member.runtime_secret_accessor,
@@ -261,6 +274,7 @@ resource "google_compute_region_network_endpoint_group" "n8n" {
   }
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["compute.googleapis.com"],
   ]
 }
@@ -281,6 +295,10 @@ resource "google_compute_backend_service" "n8n" {
     enable      = true
     sample_rate = 1.0
   }
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }
 
 resource "google_compute_url_map" "n8n" {
@@ -289,6 +307,10 @@ resource "google_compute_url_map" "n8n" {
   name            = "${local.name_prefix}-url-map"
   description     = "Routes n8n HTTPS load balancer traffic to Cloud Run."
   default_service = google_compute_backend_service.n8n[0].id
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }
 
 resource "google_certificate_manager_dns_authorization" "n8n" {
@@ -300,6 +322,7 @@ resource "google_certificate_manager_dns_authorization" "n8n" {
   labels      = local.labels
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["certificatemanager.googleapis.com"],
   ]
 }
@@ -317,6 +340,7 @@ resource "google_certificate_manager_certificate" "n8n" {
   }
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["certificatemanager.googleapis.com"],
   ]
 }
@@ -334,6 +358,7 @@ resource "google_certificate_manager_certificate" "editor" {
   }
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["certificatemanager.googleapis.com"],
   ]
 }
@@ -346,6 +371,7 @@ resource "google_certificate_manager_certificate_map" "n8n" {
   labels      = local.labels
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["certificatemanager.googleapis.com"],
   ]
 }
@@ -359,6 +385,10 @@ resource "google_certificate_manager_certificate_map_entry" "n8n" {
   labels       = local.labels
   certificates = [each.key == "forms" ? google_certificate_manager_certificate.n8n[0].id : google_certificate_manager_certificate.editor[0].id]
   hostname     = each.value
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }
 
 resource "google_compute_target_https_proxy" "n8n" {
@@ -367,6 +397,10 @@ resource "google_compute_target_https_proxy" "n8n" {
   name            = "${local.name_prefix}-https-proxy"
   url_map         = google_compute_url_map.n8n[0].id
   certificate_map = "//certificatemanager.googleapis.com/${google_certificate_manager_certificate_map.n8n[0].id}"
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }
 
 resource "google_compute_global_address" "n8n_lb" {
@@ -377,6 +411,7 @@ resource "google_compute_global_address" "n8n_lb" {
   ip_version   = "IPV4"
 
   depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["compute.googleapis.com"],
   ]
 }
@@ -390,4 +425,8 @@ resource "google_compute_global_forwarding_rule" "https" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
   port_range            = "443"
   target                = google_compute_target_https_proxy.n8n[0].id
+
+  depends_on = [
+    google_project_iam_member.github_deployer_project_roles,
+  ]
 }

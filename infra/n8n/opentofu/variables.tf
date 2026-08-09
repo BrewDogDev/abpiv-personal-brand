@@ -33,6 +33,12 @@ variable "legacy_stack_enabled" {
   default     = true
 }
 
+variable "legacy_deployer_permissions_enabled" {
+  description = "Retains the six deployer roles needed to delete and externally verify the legacy stack. Disable only after every legacy GCP resource is proven absent."
+  type        = bool
+  default     = true
+}
+
 variable "legacy_destruction_armed" {
   description = "Writes Cloud SQL deletion_protection=false into state before the separately planned legacy deletion. Keep false outside an explicitly approved decommission."
   type        = bool

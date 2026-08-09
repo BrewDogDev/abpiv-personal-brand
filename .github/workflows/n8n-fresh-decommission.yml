@@ -121,9 +121,23 @@ jobs:
           gcloud compute ssh "$VM_NAME" --project "$TF_VAR_gcp_project_id" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
             "set -euo pipefail; test \"\$(sudo cat /etc/abpiv-n8n/mode)\" = active; test \"\$(sudo systemctl is-active abpiv-cloudflared.service)\" = active; test \"\$(sudo docker inspect --format '{{.State.Health.Status}}' abpiv-n8n-postgres-1)\" = healthy; test \"\$(sudo docker inspect --format '{{.State.Health.Status}}' abpiv-n8n-n8n-1)\" = healthy; test \"\$(sudo docker inspect --format '{{.State.Health.Status}}' abpiv-n8n-nginx-1)\" = healthy; test \"\$(sudo curl --fail --silent --show-error --header 'Host: workflows.lobst3rs.com' http://127.0.0.1:8080/healthz)\" = active-ready"
 
-          cloud_run_json="$(gcloud run services describe "$CLOUD_RUN_SERVICE" --project "$TF_VAR_gcp_project_id" --region "$GCP_REGION" --format=json)"
-          test "$(jq --raw-output '.metadata.annotations["run.googleapis.com/scalingMode"] // ""' <<<"$cloud_run_json")" = manual
-          test "$(jq --raw-output '.metadata.annotations["run.googleapis.com/manualInstanceCount"] // ""' <<<"$cloud_run_json")" = 0
+          cloud_run_services_json="$(gcloud run services list --project "$TF_VAR_gcp_project_id" --region "$GCP_REGION" --format=json)"
+          cloud_run_matches_json="$(jq --arg name "$CLOUD_RUN_SERVICE" '[.[] | select(.metadata.name == $name)]' <<<"$cloud_run_services_json")"
+          cloud_run_count="$(jq --raw-output 'length' <<<"$cloud_run_matches_json")"
+          case "$cloud_run_count" in
+            0)
+              echo "Cloud Run is already absent after a partial decommission; continuing the reviewed recovery path."
+              ;;
+            1)
+              cloud_run_json="$(jq '.[0]' <<<"$cloud_run_matches_json")"
+              test "$(jq --raw-output '.metadata.annotations["run.googleapis.com/scalingMode"] // ""' <<<"$cloud_run_json")" = manual
+              test "$(jq --raw-output '.metadata.annotations["run.googleapis.com/manualInstanceCount"] // ""' <<<"$cloud_run_json")" = 0
+              ;;
+            *)
+              echo "Found multiple Cloud Run services matching ${CLOUD_RUN_SERVICE}." >&2
+              exit 1
+              ;;
+          esac
 
           editor_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 "https://${TF_VAR_editor_hostname}/")"
           test "$editor_status" = 302
@@ -140,6 +154,7 @@ jobs:
 
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=true' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=true' \
             -out=arm.tfplan
           tofu -chdir="$TOFU_DIR" show -json arm.tfplan > arm-plan.json
@@ -147,12 +162,15 @@ jobs:
 
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=false' \
             -var='legacy_destruction_armed=false' \
             -out=destroy-preview.tfplan
           tofu -chdir="$TOFU_DIR" show -json destroy-preview.tfplan > destroy-preview-plan.json
           python infra/n8n/tools/assert-plan-allowlist.py destroy-preview-plan.json --phase destroy
           jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' destroy-preview-plan.json \
             | LC_ALL=C sort > destroy-actions-only.txt
+          grep -v '^delete google_project_iam_member\.github_deployer_project_roles\[' destroy-actions-only.txt > destroy-resource-actions-expected.txt || true
+          grep '^delete google_project_iam_member\.github_deployer_project_roles\[' destroy-actions-only.txt > destroy-permission-actions-expected.txt || true
           {
             echo "arm google_sql_database_instance.n8n[0] deletion_protection=false"
             cat destroy-actions-only.txt
@@ -179,53 +197,85 @@ jobs:
         if: inputs.mode == 'apply'
         run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve arm.tfplan
 
-      - name: Regenerate and match the post-arming destruction plan
+      - name: Regenerate and match the post-arming resource-destruction plan
         if: inputs.mode == 'apply'
         run: |
           set -euo pipefail
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=false' \
-            -out=destroy.tfplan
-          tofu -chdir="$TOFU_DIR" show -json destroy.tfplan > destroy-plan.json
-          python infra/n8n/tools/assert-plan-allowlist.py destroy-plan.json --phase destroy
-          jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' destroy-plan.json \
-            | LC_ALL=C sort > destroy-actions-final.txt
-          cmp --silent destroy-actions-only.txt destroy-actions-final.txt
+            -out=destroy-resources.tfplan
+          tofu -chdir="$TOFU_DIR" show -json destroy-resources.tfplan > destroy-resources-plan.json
+          jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' destroy-resources-plan.json \
+            | LC_ALL=C sort > destroy-resource-actions-final.txt
+          if test -s destroy-resource-actions-final.txt; then
+            python infra/n8n/tools/assert-plan-allowlist.py destroy-resources-plan.json --phase destroy
+          fi
+          cmp --silent destroy-resource-actions-expected.txt destroy-resource-actions-final.txt
 
       - name: Remove objects from the exact abandoned legacy binary bucket
         if: inputs.mode == 'apply'
         run: |
           set -euo pipefail
           legacy_bucket="gs://${TF_VAR_gcp_project_id}-n8n-binary-data"
-          if gcloud storage ls "${legacy_bucket}/**" >/dev/null 2>&1; then
-            gcloud storage rm --recursive "${legacy_bucket}/**"
-          fi
+          # Do not pre-list or emit abandoned object metadata. The reviewed
+          # force_destroy=false bucket deletion fails if any object survives.
+          gcloud storage rm --recursive "${legacy_bucket}/**" --all-versions >/dev/null 2>&1 || true
 
-      - name: Apply only the freshly regenerated and hash-matched plan
+      - name: Apply only the freshly regenerated and hash-matched resource plan
         id: destroy
         if: inputs.mode == 'apply'
-        run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve destroy.tfplan
+        run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve destroy-resources.tfplan
 
-      - name: Verify destruction convergence and retained production runtime
+      - name: Verify legacy GCP resources are absent while deletion permissions remain
         if: inputs.mode == 'apply'
         run: |
           set -euo pipefail
-          if gcloud run services describe "$CLOUD_RUN_SERVICE" --project "$TF_VAR_gcp_project_id" --region "$GCP_REGION" >/dev/null 2>&1; then
-            echo "Deprecated Cloud Run service still exists." >&2
-            exit 1
-          fi
-          if gcloud sql instances describe abpiv-n8n-postgres --project "$TF_VAR_gcp_project_id" >/dev/null 2>&1; then
-            echo "Deprecated Cloud SQL instance still exists." >&2
-            exit 1
-          fi
-          if gcloud storage buckets describe "gs://${TF_VAR_gcp_project_id}-n8n-binary-data" >/dev/null 2>&1; then
+          cloud_run_services_json="$(gcloud run services list --project "$TF_VAR_gcp_project_id" --region "$GCP_REGION" --format=json)"
+          test "$(jq --arg name "$CLOUD_RUN_SERVICE" '[.[] | select(.metadata.name == $name)] | length' <<<"$cloud_run_services_json")" -eq 0
+          sql_instances_json="$(gcloud sql instances list --project "$TF_VAR_gcp_project_id" --format=json)"
+          test "$(jq '[.[] | select(.name == "abpiv-n8n-postgres")] | length' <<<"$sql_instances_json")" -eq 0
+          bucket_names="$(gcloud storage buckets list --project "$TF_VAR_gcp_project_id" --format='value(name)')"
+          if grep -Fxq "${TF_VAR_gcp_project_id}-n8n-binary-data" <<<"$bucket_names"; then
             echo "Deprecated binary-data bucket still exists." >&2
             exit 1
           fi
 
           tofu -chdir="$TOFU_DIR" plan -input=false -detailed-exitcode \
             -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=true' \
+            -var='legacy_destruction_armed=false' \
+            -out=destroy-resources-verify.tfplan
+
+      - name: Regenerate and match the obsolete-permission removal plan
+        if: inputs.mode == 'apply'
+        run: |
+          set -euo pipefail
+          tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
+            -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=false' \
+            -var='legacy_destruction_armed=false' \
+            -out=destroy-permissions.tfplan
+          tofu -chdir="$TOFU_DIR" show -json destroy-permissions.tfplan > destroy-permissions-plan.json
+          jq --raw-output '.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["read"]) | "\(.change.actions | join(",")) \(.address)"' destroy-permissions-plan.json \
+            | LC_ALL=C sort > destroy-permission-actions-final.txt
+          if test -s destroy-permission-actions-final.txt; then
+            python infra/n8n/tools/assert-plan-allowlist.py destroy-permissions-plan.json --phase destroy
+          fi
+          cmp --silent destroy-permission-actions-expected.txt destroy-permission-actions-final.txt
+
+      - name: Apply only the freshly regenerated obsolete-permission plan
+        if: inputs.mode == 'apply'
+        run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve destroy-permissions.tfplan
+
+      - name: Verify full convergence and retained production runtime
+        if: inputs.mode == 'apply'
+        run: |
+          set -euo pipefail
+          tofu -chdir="$TOFU_DIR" plan -input=false -detailed-exitcode \
+            -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=false' \
             -var='legacy_destruction_armed=false' \
             -out=destroy-verify.tfplan
 
@@ -238,8 +288,8 @@ jobs:
             *) echo "Unexpected forms API status after destruction: $forms_status" >&2; exit 1 ;;
           esac
 
-      - name: Re-enable Cloud SQL deletion protection after a failed decommission
-        if: failure() && inputs.mode == 'apply' && steps.arm.outcome == 'success'
+      - name: Re-enable Cloud SQL deletion protection after a failed or cancelled decommission
+        if: (failure() || cancelled()) && inputs.mode == 'apply' && steps.arm.outcome != 'skipped'
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -249,6 +299,7 @@ jobs:
           fi
           tofu -chdir="$TOFU_DIR" plan -input=false \
             -var='legacy_stack_enabled=true' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=false' \
             -target='google_sql_database_instance.n8n[0]' \
             -out=protect.tfplan
@@ -257,10 +308,11 @@ jobs:
           tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve protect.tfplan
           tofu -chdir="$TOFU_DIR" plan -input=false -detailed-exitcode \
             -var='legacy_stack_enabled=true' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=false' \
             -target='google_sql_database_instance.n8n[0]' \
             -out=protect-verify.tfplan
 
       - name: Remove runtime artifacts from the runner
         if: always()
-        run: rm -f "$TOFU_DIR/arm.tfplan" "$TOFU_DIR/protect.tfplan" "$TOFU_DIR/protect-verify.tfplan" "$TOFU_DIR/destroy-preview.tfplan" "$TOFU_DIR/destroy.tfplan" "$TOFU_DIR/destroy-verify.tfplan" arm-plan.json protect-plan.json destroy-preview-plan.json destroy-plan.json destroy-actions-only.txt destroy-actions-final.txt destruction-actions.txt destruction-actions.sha256
+        run: rm -f "$TOFU_DIR/arm.tfplan" "$TOFU_DIR/protect.tfplan" "$TOFU_DIR/protect-verify.tfplan" "$TOFU_DIR/destroy-preview.tfplan" "$TOFU_DIR/destroy-resources.tfplan" "$TOFU_DIR/destroy-resources-verify.tfplan" "$TOFU_DIR/destroy-permissions.tfplan" "$TOFU_DIR/destroy-verify.tfplan" arm-plan.json protect-plan.json destroy-preview-plan.json destroy-resources-plan.json destroy-permissions-plan.json destroy-actions-only.txt destroy-resource-actions-expected.txt destroy-resource-actions-final.txt destroy-permission-actions-expected.txt destroy-permission-actions-final.txt destruction-actions.txt destruction-actions.sha256

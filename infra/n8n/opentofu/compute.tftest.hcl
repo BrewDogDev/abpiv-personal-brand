@@ -39,6 +39,11 @@ run "additive_defaults_are_rollback_safe" {
   }
 
   assert {
+    condition     = var.legacy_deployer_permissions_enabled
+    error_message = "Legacy deletion permissions must remain enabled by default."
+  }
+
+  assert {
     condition     = !var.legacy_destruction_armed
     error_message = "Cloud SQL destruction arming must remain disabled by default."
   }
@@ -111,5 +116,27 @@ run "cloud_run_origin_requires_one_minimum_instance" {
 
   expect_failures = [
     check.rollback_origin_available,
+  ]
+}
+
+run "legacy_stack_requires_deployer_permissions" {
+  command = plan
+
+  variables {
+    runtime_origin                        = "compute"
+    legacy_stack_enabled                  = true
+    legacy_deployer_permissions_enabled   = false
+    enable_cloudflare_edge                = true
+    editor_hostname                       = "workflows.lobst3rs.com"
+    cloudflare_account_id                 = "mock-account"
+    allanbpediniv_zone_id                 = "00000000000000000000000000000001"
+    editor_zone_id                        = "00000000000000000000000000000002"
+    editor_access_allowed_emails          = ["allan@example.com"]
+    github_oidc_principal_set             = ""
+    manage_cloudflare_access_organization = false
+  }
+
+  expect_failures = [
+    check.legacy_stack_has_deployer_permissions,
   ]
 }

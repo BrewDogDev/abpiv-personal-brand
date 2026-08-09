@@ -79,6 +79,7 @@ $cutover = $cutoverWorkflow + $decommission
 # OpenTofu defaults must remain additive and rollback-safe.
 Assert-Match $variables 'variable\s+"runtime_origin"[\s\S]*?default\s*=\s*"cloud_run"' "runtime_origin must default to cloud_run."
 Assert-Match $variables 'variable\s+"legacy_stack_enabled"[\s\S]*?default\s*=\s*true' "legacy_stack_enabled must default to true."
+Assert-Match $variables 'variable\s+"legacy_deployer_permissions_enabled"[\s\S]*?default\s*=\s*true' "Legacy deployer permissions must remain enabled until resource absence is proven."
 Assert-Match $variables 'variable\s+"legacy_destruction_armed"[\s\S]*?default\s*=\s*false' "Legacy destruction arming must default to false."
 Assert-Match $variables 'variable\s+"compute_machine_type"[\s\S]*?default\s*=\s*"e2-custom-medium-6144"' "The shared VM must default to e2-custom-medium-6144."
 Assert-Match $variables 'variable\s+"compute_data_disk_size_gb"[\s\S]*?default\s*=\s*30' "The data disk must default to 30 GiB."
@@ -232,6 +233,7 @@ Assert-Match $freshDecommission 'run\.googleapis\.com/scalingMode[\s\S]*manual[\
 Assert-Match $freshDecommission 'reviewed_commit_sha[\s\S]*GITHUB_SHA[\s\S]*REVIEWED_COMMIT_SHA' "Fresh-start destruction apply must be bound to the exact independently reviewed commit."
 Assert-Match $freshDecommission 'reviewed_allowlist_sha256[\s\S]*destruction-actions\.sha256[\s\S]*REVIEWED_ALLOWLIST_SHA256' "Fresh-start destruction apply must regenerate and match the reviewed destruction manifest."
 Assert-Match $freshDecommission "-var='legacy_stack_enabled=true'[\s\S]*--phase arm[\s\S]*-var='legacy_stack_enabled=false'[\s\S]*--phase destroy" "Fresh-start destruction must separately arm Cloud SQL and validate the full deletion plan."
+Assert-Match $freshDecommission 'destroy-resources\.tfplan[\s\S]*Verify legacy GCP resources are absent[\s\S]*destroy-permissions\.tfplan' "Fresh-start destruction must prove resource absence before removing obsolete deployer permissions."
 Assert-Match $freshDecommission 'n8n-binary-data[\s\S]*gcloud storage rm --recursive' "Fresh-start destruction must empty only the exact abandoned legacy binary bucket before applying its deletion plan."
 Assert-NotMatch $freshDecommission 'gcloud storage cp|gcloud sql export|pg_dump|database\.dump|binary-data\.tar|source-counts\.tsv|retained_migration|migration-backup' "Fresh-start destruction must not inspect, export, back up, or preserve abandoned legacy data."
 Assert-Match $observation 'metadata\.google\.internal[\s\S]*e2-custom-medium-6144[\s\S]*reserved_millicores' "The initial CPU gate must normalize guest usage against the live shared-core entitlement."

@@ -141,6 +141,7 @@ jobs:
 
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=true' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=true' \
             -out=arm.tfplan
           tofu -chdir="$TOFU_DIR" show -json arm.tfplan > arm-plan.json
@@ -148,6 +149,7 @@ jobs:
 
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=false' \
             -var='legacy_destruction_armed=false' \
             -out=destroy-preview.tfplan
           tofu -chdir="$TOFU_DIR" show -json destroy-preview.tfplan > destroy-preview-plan.json
@@ -185,6 +187,7 @@ jobs:
           set -euo pipefail
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=false' \
+            -var='legacy_deployer_permissions_enabled=false' \
             -var='legacy_destruction_armed=false' \
             -out=destroy.tfplan
           tofu -chdir="$TOFU_DIR" show -json destroy.tfplan > destroy-plan.json
@@ -218,6 +221,7 @@ jobs:
           fi
           tofu -chdir="$TOFU_DIR" plan -input=false \
             -var='legacy_stack_enabled=true' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=false' \
             -target='google_sql_database_instance.n8n[0]' \
             -out=protect.tfplan
@@ -226,6 +230,7 @@ jobs:
           tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve protect.tfplan
           tofu -chdir="$TOFU_DIR" plan -input=false -detailed-exitcode \
             -var='legacy_stack_enabled=true' \
+            -var='legacy_deployer_permissions_enabled=true' \
             -var='legacy_destruction_armed=false' \
             -target='google_sql_database_instance.n8n[0]' \
             -out=protect-verify.tfplan
