@@ -34,6 +34,12 @@ Never collapse these gates:
 
 Repository publication, IAM bootstrap, preparation, runtime secret access, source data movement, DNS cutover, and destruction remain separate approvals.
 
+### Fresh-start destruction
+
+The migration-package gates above do not apply when Allan explicitly chose a fresh empty runtime and authorized abandonment without inspection, export, or backup of the legacy Cloud SQL and binary data. After Allan completes owner, credential, workflow, and endpoint acceptance, manually disable the retained Cloud Run service at zero instances and use `n8n-fresh-decommission.yml` instead of the migration-oriented decommission workflow.
+
+Dispatch `plan` first with `fresh-runtime-manual-acceptance-passed`, `fresh-start-abandoned-data-authorized`, and the independent reviewer identity. The plan must prove the private runtime is active, all three containers are healthy, Cloud Run is manually disabled at zero or already absent during an explicit partial-decommission retry, public Access/WAF behavior is unchanged, Cloud SQL arming is narrow, and the full deletion plan matches the strict legacy allowlist without any old-data read or backup. Give the exact commit, destruction manifest, and SHA-256 to an independent rigorous reviewer. Only after `COMPLIANT / APPROVED / READY` and a separate `production-destruction` approval may a later exact-commit/hash-bound `apply` dispatch use `destroy-abandoned-fresh-start-legacy-n8n`. Apply deletes and externally verifies the legacy resources while the six required deployer grants remain, then removes exactly those obsolete grants and verifies full convergence.
+
 ## Runtime operations
 
 The data disk mounts by UUID at `/srv/n8n` and holds:

@@ -112,6 +112,10 @@ DESTROY_DELETE = [
     r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(certificatemanager\.editor|cloudsql\.admin|compute\.loadBalancerAdmin|run\.admin|servicenetworking\.networksAdmin|vpcaccess\.admin)\"\]$",
 ]
 
+RESTORE_LEGACY_PERMISSION_CREATE = [
+    r"^google_project_iam_member\.github_deployer_project_roles\[\"roles/(certificatemanager\.editor|cloudsql\.admin|compute\.loadBalancerAdmin|run\.admin|servicenetworking\.networksAdmin|vpcaccess\.admin)\"\]$",
+]
+
 
 def matches(address: str, patterns: list[str]) -> bool:
     return any(re.fullmatch(pattern, address) for pattern in patterns)
@@ -245,7 +249,7 @@ def main() -> int:
     parser.add_argument("plan_json", type=Path)
     parser.add_argument(
         "--phase",
-        choices=("bootstrap", "prepare", "cutover", "rollback", "arm", "protect", "destroy"),
+        choices=("bootstrap", "prepare", "cutover", "rollback", "arm", "protect", "destroy", "restore-legacy-permissions"),
         required=True,
     )
     args = parser.parse_args()
@@ -274,6 +278,8 @@ def main() -> int:
             ) or (actions == ("update",) and matches(address, ROLLBACK_UPDATE))
         elif args.phase in {"arm", "protect"}:
             allowed = actions == ("update",) and matches(address, ARM_UPDATE)
+        elif args.phase == "restore-legacy-permissions":
+            allowed = actions == ("create",) and matches(address, RESTORE_LEGACY_PERMISSION_CREATE)
         else:
             allowed = actions == ("delete",) and matches(address, DESTROY_DELETE)
 
@@ -345,7 +351,7 @@ def main() -> int:
             print(f"Cloud SQL deletion protection already satisfies phase {args.phase}.")
             return 0
 
-    if not observed and args.phase not in {"bootstrap", "rollback", "arm", "protect"}:
+    if not observed and args.phase not in {"bootstrap", "rollback", "arm", "protect", "restore-legacy-permissions"}:
         print(f"No actionable changes found for phase {args.phase}.", file=sys.stderr)
         return 1
 
