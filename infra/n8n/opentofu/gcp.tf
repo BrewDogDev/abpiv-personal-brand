@@ -253,6 +253,13 @@ resource "google_cloud_run_v2_service" "n8n" {
     percent = 100
   }
 
+  lifecycle {
+    ignore_changes = [
+      client,
+      client_version,
+    ]
+  }
+
   depends_on = [
     google_project_iam_member.github_deployer_project_roles,
     google_project_service.required["run.googleapis.com"],

@@ -48,6 +48,20 @@ class FreshDecommissionContractTests(unittest.TestCase):
             ),
         )
 
+        self.assertRegex(
+            gcp,
+            re.compile(
+                r'resource\s+"google_cloud_run_v2_service"\s+"n8n"[\s\S]*?'
+                r'lifecycle\s*\{\s*'
+                r'ignore_changes\s*=\s*\[\s*'
+                r'client,\s*'
+                r'client_version,?\s*'
+                r'\]\s*'
+                r'\}',
+            ),
+            "The abandoned service must ignore gcloud client metadata so SQL arming stays single-resource.",
+        )
+
     def test_fresh_decommission_is_separately_planned_and_hash_bound(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
