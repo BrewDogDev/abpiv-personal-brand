@@ -114,7 +114,7 @@ jobs:
           runtime_mode="$(gcloud compute ssh "$VM_NAME" \
             --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" \
             --tunnel-through-iap --quiet \
-            --command 'sudo cat /etc/abpiv-n8n/mode')"
+            --command 'sudo cat /etc/abpiv-n8n/mode' | tail -n1)"
           if [ "$runtime_mode" != stopped ]; then
             echo "Fresh cutover requires the prepared n8n target to be stopped; found ${runtime_mode}." >&2
             exit 1
