@@ -51,6 +51,7 @@ env:
   GCP_ZONE: ${{ vars.N8N_GCP_ZONE || 'us-east1-c' }}
   VM_NAME: abpiv-runtime-vm
   CLOUD_RUN_SERVICE: abpiv-n8n
+  DEPLOYER_SERVICE_ACCOUNT: ${{ vars.N8N_GCP_SERVICE_ACCOUNT }}
   REVIEWER_IDENTITY: ${{ inputs.reviewer_identity }}
   REVIEWED_COMMIT_SHA: ${{ inputs.reviewed_commit_sha }}
   ABANDONED_DATA_CONFIRMATION: ${{ inputs.confirm_abandoned_data }}
@@ -139,6 +140,22 @@ jobs:
               ;;
           esac
 
+          sql_instances_json="$(gcloud sql instances list --project "$TF_VAR_gcp_project_id" --format=json)"
+          legacy_sql_count="$(jq '[.[] | select(.name == "abpiv-n8n-postgres")] | length' <<<"$sql_instances_json")"
+          case "$legacy_sql_count" in
+            0)
+              echo "LEGACY_SQL_EXISTS=false" >> "$GITHUB_ENV"
+              echo "Cloud SQL is already absent after a partial decommission; no arming plan is required."
+              ;;
+            1)
+              echo "LEGACY_SQL_EXISTS=true" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "Found an unexpected number of matching Cloud SQL instances: ${legacy_sql_count}." >&2
+              exit 1
+              ;;
+          esac
+
           editor_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 "https://${TF_VAR_editor_hostname}/")"
           test "$editor_status" = 302
           forms_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 'https://forms.allanbpediniv.com/rest/settings')"
@@ -152,13 +169,16 @@ jobs:
           set -euo pipefail
           tofu -chdir="$TOFU_DIR" init -input=false
 
-          tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
-            -var='legacy_stack_enabled=true' \
-            -var='legacy_deployer_permissions_enabled=true' \
-            -var='legacy_destruction_armed=true' \
-            -out=arm.tfplan
-          tofu -chdir="$TOFU_DIR" show -json arm.tfplan > arm-plan.json
-          python infra/n8n/tools/assert-plan-allowlist.py arm-plan.json --phase arm
+          if test "$LEGACY_SQL_EXISTS" = true; then
+            tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
+              -var='legacy_stack_enabled=true' \
+              -var='legacy_deployer_permissions_enabled=true' \
+              -var='legacy_destruction_armed=true' \
+              -target='google_sql_database_instance.n8n[0]' \
+              -out=arm.tfplan
+            tofu -chdir="$TOFU_DIR" show -json arm.tfplan > arm-plan.json
+            python infra/n8n/tools/assert-plan-allowlist.py arm-plan.json --phase arm
+          fi
 
           tofu -chdir="$TOFU_DIR" plan -input=false -lock=false \
             -var='legacy_stack_enabled=false' \
@@ -171,8 +191,21 @@ jobs:
             | LC_ALL=C sort > destroy-actions-only.txt
           grep -v '^delete google_project_iam_member\.github_deployer_project_roles\[' destroy-actions-only.txt > destroy-resource-actions-expected.txt || true
           grep '^delete google_project_iam_member\.github_deployer_project_roles\[' destroy-actions-only.txt > destroy-permission-actions-expected.txt || true
+
+          temp_cert_permission_required=false
+          if grep -Eq '^delete google_certificate_manager_certificate_map(_entry)?\.' destroy-actions-only.txt; then
+            temp_cert_permission_required=true
+          fi
+          echo "TEMP_CERT_PERMISSION_REQUIRED=${temp_cert_permission_required}" >> "$GITHUB_ENV"
+
           {
-            echo "arm google_sql_database_instance.n8n[0] deletion_protection=false"
+            if test "$LEGACY_SQL_EXISTS" = true; then
+              echo "arm google_sql_database_instance.n8n[0] deletion_protection=false"
+            fi
+            if test "$temp_cert_permission_required" = true; then
+              echo "grant-temporary-certificate-map-delete roles/certificatemanager.owner serviceAccount:${DEPLOYER_SERVICE_ACCOUNT}"
+            fi
+            echo "revoke-temporary-certificate-map-delete roles/certificatemanager.owner serviceAccount:${DEPLOYER_SERVICE_ACCOUNT}"
             cat destroy-actions-only.txt
             echo "delete-objects gs://${TF_VAR_gcp_project_id}-n8n-binary-data/**"
             echo "commit ${GITHUB_SHA}"
@@ -192,10 +225,35 @@ jobs:
           actual="$(cut -d' ' -f1 destruction-actions.sha256)"
           test "$actual" = "$REVIEWED_ALLOWLIST_SHA256"
 
+      - name: Grant the reviewed temporary Certificate Manager owner permission
+        id: temp_cert_permission
+        if: inputs.mode == 'apply' && env.TEMP_CERT_PERMISSION_REQUIRED == 'true'
+        run: |
+          set -euo pipefail
+          member="serviceAccount:${DEPLOYER_SERVICE_ACCOUNT}"
+          gcloud projects add-iam-policy-binding "$TF_VAR_gcp_project_id" \
+            --member="$member" \
+            --role="roles/certificatemanager.owner" \
+            --condition=None \
+            --quiet >/dev/null
+          bindings="$(gcloud projects get-iam-policy "$TF_VAR_gcp_project_id" \
+            --flatten='bindings[].members' \
+            --filter='bindings.role=roles/certificatemanager.owner' \
+            --format='value(bindings.members)')"
+          grep -Fxq "$member" <<<"$bindings"
+          sleep 30
+
       - name: Write Cloud SQL deletion protection false into state
         id: arm
         if: inputs.mode == 'apply'
-        run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve arm.tfplan
+        run: |
+          set -euo pipefail
+          if test "$LEGACY_SQL_EXISTS" != true; then
+            echo "Cloud SQL is already absent; skipping the arming apply."
+            exit 0
+          fi
+          test -f "$TOFU_DIR/arm.tfplan"
+          tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve arm.tfplan
 
       - name: Regenerate and match the post-arming resource-destruction plan
         if: inputs.mode == 'apply'
@@ -227,6 +285,36 @@ jobs:
         id: destroy
         if: inputs.mode == 'apply'
         run: tofu -chdir="$TOFU_DIR" apply -input=false -auto-approve destroy-resources.tfplan
+
+      - name: Revoke the temporary Certificate Manager owner permission
+        id: temp_cert_permission_cleanup
+        if: always() && inputs.mode == 'apply'
+        run: |
+          set -euo pipefail
+          member="serviceAccount:${DEPLOYER_SERVICE_ACCOUNT}"
+          for _ in 1 2 3; do
+            bindings="$(gcloud projects get-iam-policy "$TF_VAR_gcp_project_id" \
+              --flatten='bindings[].members' \
+              --filter='bindings.role=roles/certificatemanager.owner' \
+              --format='value(bindings.members)')"
+            if ! grep -Fxq "$member" <<<"$bindings"; then
+              exit 0
+            fi
+            gcloud projects remove-iam-policy-binding "$TF_VAR_gcp_project_id" \
+              --member="$member" \
+              --role="roles/certificatemanager.owner" \
+              --condition=None \
+              --quiet >/dev/null || true
+            sleep 5
+          done
+          bindings="$(gcloud projects get-iam-policy "$TF_VAR_gcp_project_id" \
+            --flatten='bindings[].members' \
+            --filter='bindings.role=roles/certificatemanager.owner' \
+            --format='value(bindings.members)')"
+          if grep -Fxq "$member" <<<"$bindings"; then
+            echo "Temporary Certificate Manager owner permission still exists." >&2
+            exit 1
+          fi
 
       - name: Verify legacy GCP resources are absent while deletion permissions remain
         if: inputs.mode == 'apply'
@@ -315,10 +403,19 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          if ! gcloud sql instances describe abpiv-n8n-postgres --project "$TF_VAR_gcp_project_id" >/dev/null 2>&1; then
-            echo "Cloud SQL is already absent; state-only deletion protection cannot be restored." >&2
-            exit 0
-          fi
+          sql_instances_json="$(gcloud sql instances list --project "$TF_VAR_gcp_project_id" --format=json)"
+          legacy_sql_count="$(jq '[.[] | select(.name == "abpiv-n8n-postgres")] | length' <<<"$sql_instances_json")"
+          case "$legacy_sql_count" in
+            0)
+              echo "Cloud SQL is already absent; state-only deletion protection cannot be restored." >&2
+              exit 0
+              ;;
+            1) ;;
+            *)
+              echo "Found an unexpected number of matching Cloud SQL instances during recovery: ${legacy_sql_count}." >&2
+              exit 1
+              ;;
+          esac
           tofu -chdir="$TOFU_DIR" plan -input=false \
             -var='legacy_stack_enabled=true' \
             -var='legacy_deployer_permissions_enabled=true' \
