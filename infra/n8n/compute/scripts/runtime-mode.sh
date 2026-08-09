@@ -4,6 +4,21 @@ set -euo pipefail
 mode="${1:-}"
 compose=(docker compose --project-directory /opt/abpiv-n8n --file /opt/abpiv-n8n/docker-compose.yml)
 
+wait_for_mode() {
+  local expected_mode="$1"
+  local response=""
+  for _ in $(seq 1 30); do
+    if response="$(curl --fail --silent --max-time 2 \
+      --header 'Host: workflows.lobst3rs.com' http://127.0.0.1:8080/healthz 2>/dev/null)" && \
+      [ "$response" = "$expected_mode" ]; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Local n8n ingress did not reach ${expected_mode}." >&2
+  return 1
+}
+
 case "$mode" in
   maintenance)
     /usr/local/sbin/abpiv-container-firewall --check
@@ -16,7 +31,7 @@ case "$mode" in
     "${compose[@]}" up --detach --wait postgres
     "${compose[@]}" up --detach --wait --force-recreate nginx
     systemctl restart abpiv-cloudflared.service
-    test "$(curl --fail --silent --show-error --header 'Host: workflows.lobst3rs.com' http://127.0.0.1:8080/healthz)" = "maintenance-ready"
+    wait_for_mode maintenance-ready
     ;;
   active)
     /usr/local/sbin/abpiv-container-firewall --check
@@ -31,7 +46,7 @@ case "$mode" in
     systemctl enable abpiv-n8n.service abpiv-cloudflared.service abpiv-n8n-backup.timer abpiv-n8n-health.timer
     systemctl start abpiv-n8n-backup.timer abpiv-n8n-health.timer
     printf '%s\n' active > /etc/abpiv-n8n/mode
-    test "$(curl --fail --silent --show-error --header 'Host: workflows.lobst3rs.com' http://127.0.0.1:8080/healthz)" = "active-ready"
+    wait_for_mode active-ready
     ;;
   stopped)
     systemctl stop abpiv-cloudflared.service 2>/dev/null || true
