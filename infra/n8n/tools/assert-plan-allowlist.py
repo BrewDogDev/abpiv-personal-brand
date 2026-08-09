@@ -56,8 +56,12 @@ DNS_COMPUTED_ROOTS = {
     "meta",
     "modified_on",
     "proxiable",
+    "settings",
+    "tags",
     "tags_modified_on",
 }
+
+DNS_REPLACEMENT_GENERATED_ROOTS = {"settings", "tags"}
 
 SQL_COMPUTED_ROOTS = {
     "available_maintenance_versions",
@@ -149,6 +153,16 @@ def noncomputed(paths: set[tuple[str, ...]], computed_roots: set[str]) -> set[tu
     return {path for path in paths if path and path[0] not in computed_roots}
 
 
+def has_known_value(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, dict):
+        return any(has_known_value(nested) for nested in value.values())
+    if isinstance(value, list):
+        return any(has_known_value(nested) for nested in value)
+    return True
+
+
 def value_at(value: object, path: tuple[str, ...]) -> object:
     current = value
     for part in path:
@@ -167,6 +181,16 @@ def exact_update_error(phase: str, address: str, change: dict[str, object]) -> s
     unknown = unknown_paths(after_unknown)
 
     if address.startswith("cloudflare_dns_record."):
+        unknown_roots = {path[0] for path in unknown if path}
+        represented_roots = DNS_REPLACEMENT_GENERATED_ROOTS & (
+            before.keys() | after.keys() | unknown_roots
+        )
+        for root in represented_roots:
+            if has_known_value(before.get(root)) or has_known_value(after.get(root)):
+                return f"{address}: DNS replacement changed configured {root} values"
+            if root not in unknown_roots:
+                return f"{address}: DNS replacement {root} lacks a provider-unknown marker"
+
         expected = {("content",), ("type",)}
         if noncomputed(paths, DNS_COMPUTED_ROOTS) != expected:
             return f"{address}: DNS update changed fields other than content and type"
