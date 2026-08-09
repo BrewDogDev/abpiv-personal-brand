@@ -192,6 +192,8 @@ Assert-Match $freshRuntimeBaseline 'email IS NULL[\s\S]*firstName[\s\S]*IS NULL[
 Assert-Match $assertFreshRuntime 'ON_ERROR_STOP=1[\s\S]*fresh-runtime-baseline\.sql' "Fresh cutover database checks must fail closed on SQL errors and use the pinned clean-start baseline."
 Assert-Match $assertFreshRuntime 'baseline_ok=false[\s\S]*seq 1 12[\s\S]*sleep 5[\s\S]*baseline_ok' "Fresh cutover must allow bounded startup time for n8n's generated clean-start metadata."
 Assert-Match $assertFreshRuntime '/srv/n8n/state[\s\S]*/srv/n8n/binary[\s\S]*/srv/n8n/backups[\s\S]*/srv/n8n/migration' "Fresh cutover must reject persisted application, binary, backup, or migration files."
+Assert-Match $assertFreshRuntime 'n8nEventLog\.log[\s\S]*! -f[\s\S]*-L[\s\S]*-s' "Fresh cutover may tolerate only an empty, regular n8n-generated event log."
+Assert-Match $assertFreshRuntime 'package_json="\$nodes_dir/package\.json"[\s\S]*keys == \["dependencies", "name", "private"\][\s\S]*\.name == "installed-nodes"[\s\S]*\.private == true[\s\S]*\.dependencies == \{\}' "Fresh cutover may tolerate only n8n's exact empty installed-nodes package scaffold."
 Assert-Match $freshRuntimeBaseline 'deployment_key[\s\S]*instance_version_history[\s\S]*mcp_registry_server[\s\S]*migrations[\s\S]*project[\s\S]*project_relation[\s\S]*role[\s\S]*role_scope[\s\S]*scope[\s\S]*settings[\s\S]*user' "The pinned clean-start database baseline must allow only n8n-generated tables with rows."
 Assert-Match $freshRuntimeBaseline 'userManagement\.isInstanceOwnerSetUp[\s\S]*false[\s\S]*Unnamed Project[\s\S]*personal[\s\S]*project:personalOwner' "The clean-start baseline must reject claimed ownership or a changed bootstrap project."
 $boundedCutoverSteps = @(
