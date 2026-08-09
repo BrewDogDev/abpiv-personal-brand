@@ -129,6 +129,7 @@ services:
         read_only: true
     networks:
       - backend
+      - ingress
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:8080/healthz || exit 1"]
       interval: 10s
@@ -145,4 +146,6 @@ networks:
   backend:
     internal: true
   egress:
+    driver: bridge
+  ingress:
     driver: bridge
