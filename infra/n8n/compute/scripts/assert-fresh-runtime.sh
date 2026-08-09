@@ -9,7 +9,7 @@ esac
 /opt/abpiv-n8n/scripts/assert-data-disk.sh
 
 unexpected_state="$(find /srv/n8n/state -mindepth 1 -maxdepth 1 \
-  ! -name config ! -name nodes ! -name n8nEventLog.log -print -quit)"
+  ! -name config ! -name nodes ! -name 'n8nEventLog*.log' ! -name crash.journal -print -quit)"
 if [ -n "$unexpected_state" ]; then
   echo "Refusing fresh cutover: durable n8n application state exists at ${unexpected_state}." >&2
   exit 1
@@ -21,10 +21,17 @@ if [ -e /srv/n8n/state/config ] || [ -L /srv/n8n/state/config ]; then
   fi
 fi
 
-event_log=/srv/n8n/state/n8nEventLog.log
-if [ -e "$event_log" ] || [ -L "$event_log" ]; then
+while IFS= read -r -d '' event_log; do
   if [ ! -f "$event_log" ] || [ -L "$event_log" ] || [ -s "$event_log" ]; then
     echo "Refusing fresh cutover: the generated n8n event log is not an empty regular file." >&2
+    exit 1
+  fi
+done < <(find /srv/n8n/state -mindepth 1 -maxdepth 1 -name 'n8nEventLog*.log' -print0)
+
+crash_journal=/srv/n8n/state/crash.journal
+if [ -e "$crash_journal" ] || [ -L "$crash_journal" ]; then
+  if [ "$runtime_mode" != active ] || [ ! -f "$crash_journal" ] || [ -L "$crash_journal" ] || [ -s "$crash_journal" ]; then
+    echo "Refusing fresh cutover: the generated n8n crash journal is not an empty regular file in active mode." >&2
     exit 1
   fi
 fi
