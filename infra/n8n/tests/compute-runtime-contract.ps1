@@ -120,6 +120,7 @@ Assert-Match $firewall '169\.254\.169\.254/32' "The container firewall must targ
 Assert-Match $firewall 'DOCKER-USER[\s\S]*--jump DROP' "All containers must be blocked from the GCE metadata endpoint."
 Assert-Match $provision 'docker\.service\.d/abpiv-container-firewall\.conf[\s\S]*ExecStartPost=/usr/local/sbin/abpiv-container-firewall --enforce' "Docker startup must durably restore the metadata firewall rule."
 Assert-Match $runtimeMode 'maintenance[\s\S]*abpiv-container-firewall --check[\s\S]*systemctl enable abpiv-n8n\.service abpiv-cloudflared\.service' "Maintenance mode must enforce metadata isolation and persist fail-closed reboot recovery."
+Assert-Match $runtimeMode 'wait_for_mode\(\)[\s\S]*seq 1 30[\s\S]*curl --fail --silent --max-time 2[\s\S]*sleep 1[\s\S]*wait_for_mode maintenance-ready[\s\S]*wait_for_mode active-ready' "Runtime mode changes must tolerate the bounded host-port publication delay after Compose reports healthy."
 
 # Automation must preserve the explicit gates and verifiable recovery path.
 Assert-Match $provision 'findmnt[\s\S]*UUID' "Provisioning must mount the data disk by UUID."
