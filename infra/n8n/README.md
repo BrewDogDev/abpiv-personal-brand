@@ -55,6 +55,7 @@ That combination is additive. `runtime_origin=compute` changes only the two Clou
 - `n8n-iam-bootstrap.yml`: two-dispatch, target-only bootstrap for four required Google APIs, the new Compute runtime identity, the exact missing deployer project roles, two service-account-user bindings, the two repository-scoped Workload Identity bindings on the dedicated n8n deployer, and the 19 declared legacy singleton state-address moves that OpenTofu requires in every targeted plan until they are recorded. Plan evidence and apply are bound to the exact commit, action manifest, state-move manifest, and canonical non-sensitive plan values; the move targets may not change the live legacy resources.
 - `n8n-apply.yml`: two-dispatch additive preparation. `plan` first proves the deployer already has the required effective permissions, then publishes redacted evidence plus action and non-sensitive plan-value hashes; a later `apply` must use the same reviewed commit and match both regenerated hashes.
 - `n8n-redeploy.yml`: separately gated Tunnel-token storage and stopped-host provisioning, or an in-place release deployment that preserves runtime mode.
+- `n8n-fresh-cutover.yml`: approval-gated fresh-start production cutover for cases where the legacy n8n database and binary data are intentionally abandoned. It installs the exact reviewed runtime release, requires the target to be stopped and match the pinned clean-start database/filesystem baseline, starts and verifies the private runtime, and changes only the two production DNS records to the managed Tunnel. An Access-authenticated target-only health probe must cross Cloudflare before commit; any precommit failure restores the Cloud Run origin before attempting to stop the target.
 - `plausible-redeploy.yml`: additive stopped-host Plausible provisioning or an in-place mode-preserving release deployment.
 - `plausible-cutover.yml`: imports the unchanged old runtime secrets without printing them, moves the existing Tunnel connector, encrypts and transfers the complete old dataset, compares PostgreSQL and ClickHouse counts plus application-state checksums, observes the shared host, and stops—but never deletes—the intact old VM only after acceptance.
 - `n8n-cutover.yml`: independently reviewed 60-minute maintenance-window migration that first requires the sole traffic-serving Cloud Run revision and prepared target to use the same immutable n8n digest, with minute-45 rollback, combined-host observation, and `e2-standard-2` fallback.
@@ -102,6 +103,14 @@ Runtime secret values remain only in Secret Manager:
 - `abpiv-plausible-backup-age-key`
 
 The provisioning workflow obtains the Tunnel token directly from Cloudflare, writes it to a mode-0600 temporary file, adds it to Secret Manager, and deletes the file through a trap. It never asks an operator to copy, reveal, or retain the value.
+
+## Fresh-start n8n cutover
+
+Use `n8n-fresh-cutover.yml` only when the owner has explicitly accepted an empty target and does not require legacy users, workflows, credentials, executions, projects, settings, or binary data. Before DNS can move, the target must have no persisted application, binary, backup, or migration files and its database must be either virgin or exactly match the generated rows from the pinned n8n image with an unclaimed owner. The workflow does not read, back up, export, compare, or restore the Cloud SQL database or legacy binary-data bucket.
+
+The cutover preserves the old Cloud Run, Cloud SQL, load-balancer, and storage resources. After the workflow succeeds, the owner must sign in through `workflows.lobst3rs.com`, complete first-user setup, recreate or import workflows and credentials, activate the intended workflows, and test the exact production form and webhook URLs. Generated URLs, internal ids, API tokens, and the n8n MCP bearer token may differ on the fresh instance.
+
+Only after that manual acceptance should Cloud Run be scaled to zero. Destruction of the retained legacy resources remains a separate explicitly approved action.
 
 ## Local verification
 

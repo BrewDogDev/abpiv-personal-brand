@@ -58,6 +58,8 @@ $runtimeService = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-n8n.servi
 $bootstrap = Read-RepositoryFile "infra/n8n/compute/scripts/bootstrap-host.sh"
 $firewall = Read-RepositoryFile "infra/n8n/compute/scripts/configure-container-firewall.sh"
 $runtimeMode = Read-RepositoryFile "infra/n8n/compute/scripts/runtime-mode.sh"
+$assertFreshRuntime = Read-RepositoryFile "infra/n8n/compute/scripts/assert-fresh-runtime.sh"
+$freshRuntimeBaseline = Read-RepositoryFile "infra/n8n/compute/scripts/fresh-runtime-baseline.sql"
 $prepareCutover = Read-RepositoryFile "infra/n8n/compute/scripts/prepare-cutover-runtime.sh"
 $precommitNginx = Read-RepositoryFile "infra/n8n/compute/nginx/precommit.conf"
 $backupTimer = Read-RepositoryFile "infra/n8n/compute/systemd/abpiv-n8n-backup.timer"
@@ -69,6 +71,7 @@ $migrations = Read-RepositoryFile "infra/n8n/opentofu/migrations.tf"
 $canonicalPlanValues = Read-RepositoryFile "infra/n8n/tools/canonical-plan-values.py"
 $decommission = Read-RepositoryFile ".github/workflows/n8n-decommission.yml"
 $cutoverWorkflow = Read-RepositoryFile ".github/workflows/n8n-cutover.yml"
+$freshCutoverWorkflow = Read-RepositoryFile ".github/workflows/n8n-fresh-cutover.yml"
 $cutover = $cutoverWorkflow + $decommission
 
 # OpenTofu defaults must remain additive and rollback-safe.
@@ -165,6 +168,26 @@ Assert-Match $cutoverWorkflow 'id:\s*commit[\s\S]*steps\.job_budget\.outputs\.st
 Assert-Match $cutoverWorkflow "steps\.transition\.outputs\.attempted == 'true'[\s\S]*--phase rollback" "Every attempted n8n route transition must enter the precommit rollback path on failure."
 Assert-Match $cutoverWorkflow "if:\s*\(failure\(\) \|\| cancelled\(\)\) && steps\.transition\.outputs\.attempted == 'true' && steps\.commit\.outputs\.committed != 'true'" "An interrupted precommit n8n route transition must run rollback on both failure and cancellation."
 Assert-Match $cutoverWorkflow "if:\s*\(failure\(\) \|\| cancelled\(\)\) && steps\.commit\.outputs\.committed == 'true'" "An interrupted postcommit n8n cutover must preserve the canonical target on both failure and cancellation."
+Assert-Match $freshCutoverWorkflow 'confirm_fresh_start[\s\S]*start-empty-n8n' "Fresh cutover must require an explicit empty-runtime confirmation."
+Assert-Match $freshCutoverWorkflow 'confirm_dns_cutover[\s\S]*switch-n8n-dns-to-tunnel' "Fresh cutover must separately confirm the two production DNS changes."
+Assert-Match $freshCutoverWorkflow 'environment:\s*production-cutover' "Fresh cutover must use the protected production-cutover environment."
+Assert-Match $freshCutoverWorkflow 'TF_VAR_runtime_origin:\s*compute[\s\S]*TF_VAR_legacy_stack_enabled:\s*"true"' "Fresh cutover must switch only the origin while retaining the legacy stack."
+Assert-Match $freshCutoverWorkflow 'runtime-mode\.sh maintenance[\s\S]*assert-fresh-runtime\.sh[\s\S]*runtime-mode\.sh active[\s\S]*verify-runtime\.sh[\s\S]*assert-fresh-runtime\.sh[\s\S]*id:\s*dns' "Fresh cutover must prove the target empty before starting n8n and recheck it before changing DNS."
+Assert-Match $freshCutoverWorkflow 'id:\s*dns[\s\S]*attempted=true[\s\S]*--phase cutover[\s\S]*tofu[\s\S]*apply' "Fresh cutover must arm recovery before applying the strictly allowlisted DNS plan."
+Assert-Match $freshCutoverWorkflow "steps\.dns\.outputs\.attempted == 'true'[\s\S]*TF_VAR_runtime_origin=cloud_run[\s\S]*--phase rollback" "Every attempted fresh DNS transition must roll back through the strict origin allowlist on failure or cancellation."
+Assert-Match $freshCutoverWorkflow 'timeout-minutes:\s*75[\s\S]*CUTOVER_STARTED_EPOCH[\s\S]*id:\s*dns[\s\S]*elapsed_seconds[\s\S]*2400' "Fresh cutover must reserve enough hard-timeout budget for DNS recovery before beginning the transition."
+Assert-Match $freshCutoverWorkflow 'n8n_mcp_cf_access_client_id[\s\S]*n8n_mcp_cf_access_client_secret[\s\S]*CF-Access-Client-Id[\s\S]*CF-Access-Client-Secret[\s\S]*active-ready' "Fresh cutover must prove Cloudflare reaches the target-only active health response before commit."
+Assert-Match $freshCutoverWorkflow 'TF_VAR_runtime_origin=cloud_run[\s\S]*fresh-rollback\.tfplan[\s\S]*apply[\s\S]*detailed-exitcode[\s\S]*gcloud compute ssh[\s\S]*runtime-mode\.sh stopped' "Fresh cutover recovery must restore DNS before attempting best-effort target shutdown."
+Assert-Match $freshCutoverWorkflow 'tofu[\s\S]*plan -input=false -detailed-exitcode[\s\S]*id:\s*commit[\s\S]*committed=true' "Fresh cutover must prove post-apply convergence before declaring the new origin canonical."
+Assert-NotMatch $freshCutoverWorkflow 'gcloud sql backups|export-cloud-sql|migrate-from-cloud-sql|confirm_data_movement' "Fresh cutover must not read, back up, export, or migrate the abandoned legacy n8n data."
+Assert-Match $freshRuntimeBaseline 'workflow_entity[\s\S]*credentials_entity[\s\S]*execution_entity[\s\S]*"user"' "The fresh-runtime guard must reject existing workflows, credentials, executions, or claimed users."
+Assert-Match $freshRuntimeBaseline 'actual_count[^\r\n]*<>[^\r\n]*expected_count[\s\S]*RAISE EXCEPTION' "The fresh-runtime guard must fail closed when any public table differs from the pinned baseline."
+Assert-Match $freshRuntimeBaseline 'email IS NULL[\s\S]*firstName[\s\S]*IS NULL[\s\S]*lastName[\s\S]*IS NULL[\s\S]*password IS NULL[\s\S]*global:owner[\s\S]*disabled IS FALSE[\s\S]*mfaEnabled[\s\S]*IS FALSE' "Fresh cutover may allow only n8n's unclaimed bootstrap owner row."
+Assert-Match $assertFreshRuntime 'ON_ERROR_STOP=1[\s\S]*fresh-runtime-baseline\.sql' "Fresh cutover database checks must fail closed on SQL errors and use the pinned clean-start baseline."
+Assert-Match $assertFreshRuntime 'baseline_ok=false[\s\S]*seq 1 12[\s\S]*sleep 5[\s\S]*baseline_ok' "Fresh cutover must allow bounded startup time for n8n's generated clean-start metadata."
+Assert-Match $assertFreshRuntime '/srv/n8n/state[\s\S]*/srv/n8n/binary[\s\S]*/srv/n8n/backups[\s\S]*/srv/n8n/migration' "Fresh cutover must reject persisted application, binary, backup, or migration files."
+Assert-Match $freshRuntimeBaseline 'deployment_key[\s\S]*instance_version_history[\s\S]*mcp_registry_server[\s\S]*migrations[\s\S]*project[\s\S]*project_relation[\s\S]*role[\s\S]*role_scope[\s\S]*scope[\s\S]*settings[\s\S]*user' "The pinned clean-start database baseline must allow only n8n-generated tables with rows."
+Assert-Match $freshRuntimeBaseline 'userManagement\.isInstanceOwnerSetUp[\s\S]*false[\s\S]*Unnamed Project[\s\S]*personal[\s\S]*project:personalOwner' "The clean-start baseline must reject claimed ownership or a changed bootstrap project."
 $boundedCutoverSteps = @(
     "Start private origin in maintenance mode"
     "Plan and apply only the two Tunnel DNS updates"
@@ -257,6 +280,7 @@ foreach ($workflowPath in @(
     ".github/workflows/n8n-apply.yml",
     ".github/workflows/n8n-redeploy.yml",
     ".github/workflows/n8n-cutover.yml",
+    ".github/workflows/n8n-fresh-cutover.yml",
     ".github/workflows/n8n-decommission.yml",
     ".github/workflows/plausible-redeploy.yml",
     ".github/workflows/plausible-cutover.yml"
