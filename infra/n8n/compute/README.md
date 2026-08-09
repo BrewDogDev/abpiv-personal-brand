@@ -1,6 +1,6 @@
 # Private Compute runtime
 
-This directory defines the host-managed n8n runtime used after the approved cutover. It runs PostgreSQL 16, n8n, and Nginx in Docker on `abpiv-runtime-vm`; Cloudflare Tunnel is the only application ingress path. The VM has no public IP, Nginx binds only to `127.0.0.1:8080`, and neither n8n nor PostgreSQL publishes a host port.
+This directory defines the host-managed n8n runtime used after the approved cutover. It runs PostgreSQL 16, n8n, and Nginx in Docker on `abpiv-runtime-vm`; Cloudflare Tunnel is the only application ingress path. The VM has no public IP, Nginx binds only to `127.0.0.1:8080`, and neither n8n nor PostgreSQL publishes a host port. Nginx joins both the internal application network and a dedicated standard bridge: Docker requires the latter to activate loopback port publication, but the explicit `127.0.0.1` binding keeps it host-only.
 
 ## Safety states
 

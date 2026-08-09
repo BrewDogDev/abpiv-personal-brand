@@ -104,6 +104,8 @@ Assert-Match $compose 'nginx@sha256:[a-f0-9]{64}' "Nginx must use an immutable i
 Assert-Match $compose '127\.0\.0\.1:8080:8080' "Only Nginx may publish a loopback port."
 Assert-NotMatch $compose '(?m)^\s*-\s*"?(5678|5432):' "n8n and PostgreSQL ports must never be published."
 Assert-Match $compose '(?m)^\s*internal:\s*true\s*$' "The application Docker network must be internal."
+Assert-Match $compose '(?ms)^  nginx:\s*$.*?^    networks:\s*\r?\n      - backend\s*\r?\n      - ingress\s*$' "Nginx must join a dedicated non-internal ingress bridge so Docker activates its loopback port publication."
+Assert-Match $compose '(?ms)^networks:\s*$.*?^  ingress:\s*\r?\n    driver:\s*bridge\s*$' "The Nginx ingress network must be a standard bridge, not the internal application network."
 Assert-Match $compose '(?m)^\s*healthcheck:\s*$' "Every runtime service must define a health check."
 Assert-Match $compose '/srv/n8n/' "Runtime data must live on the attached disk."
 Assert-Match $compose 'N8N_ENCRYPTION_KEY_FILE' "n8n must consume its encryption key by ephemeral file path."
