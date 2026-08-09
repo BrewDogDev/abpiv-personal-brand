@@ -71,6 +71,7 @@ $bootstrapWorkflow = Read-RepositoryFile ".github/workflows/n8n-iam-bootstrap.ym
 $migrations = Read-RepositoryFile "infra/n8n/opentofu/migrations.tf"
 $canonicalPlanValues = Read-RepositoryFile "infra/n8n/tools/canonical-plan-values.py"
 $decommission = Read-RepositoryFile ".github/workflows/n8n-decommission.yml"
+$freshDecommission = Read-RepositoryFile ".github/workflows/n8n-fresh-decommission.yml"
 $cutoverWorkflow = Read-RepositoryFile ".github/workflows/n8n-cutover.yml"
 $freshCutoverWorkflow = Read-RepositoryFile ".github/workflows/n8n-fresh-cutover.yml"
 $cutover = $cutoverWorkflow + $decommission
@@ -81,7 +82,7 @@ Assert-Match $variables 'variable\s+"legacy_stack_enabled"[\s\S]*?default\s*=\s*
 Assert-Match $variables 'variable\s+"legacy_destruction_armed"[\s\S]*?default\s*=\s*false' "Legacy destruction arming must default to false."
 Assert-Match $variables 'variable\s+"compute_machine_type"[\s\S]*?default\s*=\s*"e2-custom-medium-6144"' "The shared VM must default to e2-custom-medium-6144."
 Assert-Match $variables 'variable\s+"compute_data_disk_size_gb"[\s\S]*?default\s*=\s*30' "The data disk must default to 30 GiB."
-Assert-Match $gcp 'resource\s+"google_cloud_run_v2_service"\s+"n8n"\s*\{[\s\S]*?labels\s*=\s*local\.labels\s+scaling\s*\{\s*manual_instance_count\s*=\s*0\s+min_instance_count\s*=\s*0\s*\}\s+template\s*\{' "Additive preparation must preserve the legacy Cloud Run service-level scaling values."
+Assert-Match $gcp 'resource\s+"google_cloud_run_v2_service"\s+"n8n"\s*\{[\s\S]*?labels\s*=\s*local\.labels\s+scaling\s*\{\s*scaling_mode\s*=\s*"MANUAL"\s+manual_instance_count\s*=\s*0\s+min_instance_count\s*=\s*0\s*\}\s+template\s*\{' "The retained Cloud Run service must remain manually disabled at zero instances before destruction."
 
 # The host is private, uses a durable data disk, and has NAT plus IAP/OS Login.
 Assert-Match $compute 'resource\s+"google_compute_instance"\s+"n8n"' "The Compute Engine runtime VM is missing."
@@ -225,6 +226,14 @@ Assert-Match $decommission 'reviewed_commit_sha[\s\S]*GITHUB_SHA[\s\S]*REVIEWED_
 Assert-Match $decommission 'database\.dump[\s\S]*binary-data\.tar[\s\S]*binary-checksums\.txt[\s\S]*source-binary-count\.txt[\s\S]*source-counts\.tsv[\s\S]*SHA256SUMS' "Decommission must round-trip every required migration artifact before planning or applying destruction."
 Assert-Match $decommission 'gcloud storage cp[\s\S]*sha256sum --check SHA256SUMS' "Decommission must download and verify the complete retained migration package."
 Assert-Match $decommission 'migration-backup[\s\S]*migration_manifest_sha256' "The reviewed destruction manifest must bind the exact retained migration prefix and checksum manifest."
+Assert-Match $freshDecommission 'fresh-runtime-manual-acceptance-passed[\s\S]*fresh-start-abandoned-data-authorized[\s\S]*destroy-abandoned-fresh-start-legacy-n8n' "Fresh-start destruction must require separate acceptance, abandoned-data, and destructive confirmations."
+Assert-Match $freshDecommission "environment:\s*\$\{\{ inputs\.mode == 'apply' && 'production-destruction' \|\| 'production-plan' \}\}" "Fresh-start destruction plan and apply must use separately protected environments."
+Assert-Match $freshDecommission 'run\.googleapis\.com/scalingMode[\s\S]*manual[\s\S]*run\.googleapis\.com/manualInstanceCount[\s\S]*0' "Fresh-start destruction must prove Cloud Run is manually disabled before planning."
+Assert-Match $freshDecommission 'reviewed_commit_sha[\s\S]*GITHUB_SHA[\s\S]*REVIEWED_COMMIT_SHA' "Fresh-start destruction apply must be bound to the exact independently reviewed commit."
+Assert-Match $freshDecommission 'reviewed_allowlist_sha256[\s\S]*destruction-actions\.sha256[\s\S]*REVIEWED_ALLOWLIST_SHA256' "Fresh-start destruction apply must regenerate and match the reviewed destruction manifest."
+Assert-Match $freshDecommission "-var='legacy_stack_enabled=true'[\s\S]*--phase arm[\s\S]*-var='legacy_stack_enabled=false'[\s\S]*--phase destroy" "Fresh-start destruction must separately arm Cloud SQL and validate the full deletion plan."
+Assert-Match $freshDecommission 'n8n-binary-data[\s\S]*gcloud storage rm --recursive' "Fresh-start destruction must empty only the exact abandoned legacy binary bucket before applying its deletion plan."
+Assert-NotMatch $freshDecommission 'gcloud storage cp|gcloud sql export|pg_dump|database\.dump|binary-data\.tar|source-counts\.tsv|retained_migration|migration-backup' "Fresh-start destruction must not inspect, export, back up, or preserve abandoned legacy data."
 Assert-Match $observation 'metadata\.google\.internal[\s\S]*e2-custom-medium-6144[\s\S]*reserved_millicores' "The initial CPU gate must normalize guest usage against the live shared-core entitlement."
 Assert-Match $observation "write-out '%\{time_total\}'[\s\S]*/healthz/readiness" "The initial latency gate must time an n8n-proxied readiness request."
 Assert-Match $monitor 'State\.Health\.Status' "Runtime monitoring must inspect Docker health for every container."
@@ -292,6 +301,7 @@ foreach ($workflowPath in @(
     ".github/workflows/n8n-cutover.yml",
     ".github/workflows/n8n-fresh-cutover.yml",
     ".github/workflows/n8n-decommission.yml",
+    ".github/workflows/n8n-fresh-decommission.yml",
     ".github/workflows/plausible-redeploy.yml",
     ".github/workflows/plausible-cutover.yml"
 )) {
