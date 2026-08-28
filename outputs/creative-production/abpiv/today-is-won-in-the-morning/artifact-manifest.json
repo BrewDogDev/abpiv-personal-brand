@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "1.0.0",
+  "artifactId": "today-is-won-in-the-morning-cover",
+  "artifactType": "branded-static-graphic",
+  "purpose": "Editorial hero and social cover for the Today is won in the morning article",
+  "audience": "Founders, operators, and remote knowledge workers who want to protect health and personally meaningful work before external demands",
+  "channels": [
+    "ABPIV website insight",
+    "LinkedIn Article",
+    "X Article",
+    "Open Graph and X link card"
+  ],
+  "brandKit": {
+    "id": "abpiv",
+    "version": "source-bundle-2026-06-06",
+    "status": "reviewed",
+    "profile": "default",
+    "statusNote": "The repository brand package is canonical for this artifact but does not declare a lifecycle status or semantic version. Reviewed is recorded conservatively."
+  },
+  "renderer": {
+    "capability": "OpenAI image generation with ffmpeg export processing",
+    "version": "image_gen built-in; ffmpeg 8.1.2"
+  },
+  "sourceInputs": [
+    "content-site/insights/2026-08-28-win-the-morning-first.mdx",
+    "creative-production/brand-systems/abpiv/README.md",
+    "creative-production/brand-systems/abpiv/colors_and_type.css",
+    "creative-production/brand-systems/abpiv/creative-production.manifest.json"
+  ],
+  "sourceMaster": "master/red-blue-choice-source.png",
+  "editableMaster": null,
+  "outputs": [
+    {
+      "path": "exports/red-blue-website-hero-1920x1080.png",
+      "dimensions": "1920x1080",
+      "format": "PNG",
+      "purpose": "Website article hero and LinkedIn/X native article cover"
+    },
+    {
+      "path": "exports/red-blue-website-hero-1920x1080.webp",
+      "dimensions": "1920x1080",
+      "format": "WebP",
+      "purpose": "Optimized visible website article hero"
+    },
+    {
+      "path": "exports/red-blue-social-card-1200x630.png",
+      "dimensions": "1200x630",
+      "format": "PNG",
+      "purpose": "Open Graph and X link preview"
+    }
+  ],
+  "websiteCopies": [
+    "content-site/static/img/insights/today-is-won-in-the-morning/hero.webp",
+    "content-site/static/img/insights/today-is-won-in-the-morning/social-card.png"
+  ],
+  "distributionDrafts": [
+    {
+      "platform": "LinkedIn Article",
+      "path": "drafts/linkedin-article.md",
+      "status": "ready-for-review"
+    },
+    {
+      "platform": "X Article",
+      "path": "drafts/x-article.md",
+      "status": "ready-for-review"
+    }
+  ],
+  "exactCopy": [
+    "Today is won in the morning",
+    "8:50 AM",
+    "3:30 AM",
+    "ABPIV"
+  ],
+  "altText": "Two open hands offering a blue pill labeled 8:50 AM and a red pill labeled 3:30 AM beneath the title Today is won in the morning.",
+  "overrides": [
+    {
+      "token": "brandKit.versionStatusProfile",
+      "originalValue": "not declared by the repository package",
+      "replacement": "source-bundle-2026-06-06, reviewed, default",
+      "reason": "Conservative provenance for this review artifact",
+      "scope": "artifact manifest only"
+    },
+    {
+      "token": "color.accentUsage",
+      "originalValue": "Sparse amber and cyan emphasis",
+      "replacement": "Saturated blue and red pills with matching light",
+      "reason": "User explicitly selected a red-pill-or-blue-pill editorial concept",
+      "scope": "This article cover only"
+    }
+  ],
+  "rights": {
+    "generatedImagery": "Original AI-generated composition depicting anonymous hands and capsules; no franchise characters, logos, or real-person likenesses",
+    "portrait": "Anonymous generated hands only; no identifiable person",
+    "logo": "ABPIV rendered as plain typographic copy",
+    "fonts": "Text is rasterized within the generated source image"
+  },
+  "discardedIterations": [
+    {
+      "source": "master/article-cover.html",
+      "outputs": [
+        "exports/website-hero-1920x1080.png",
+        "exports/website-hero-1920x1080.webp",
+        "exports/social-card-1200x630.png"
+      ],
+      "status": "rejected by user",
+      "reason": "Superseded by the red-pill-or-blue-pill concept"
+    }
+  ],
+  "checks": {
+    "contentIntegrity": "passed: generated title, time labels, ABPIV mark, article metadata, descriptive alt text, and website asset hashes verified",
+    "brandConsistency": "passed: navy editorial field, restrained system-map motif, ABPIV mark, and user-authorized red/blue concept visually inspected",
+    "accessibility": "passed: high-contrast title, text labels supplement color, and descriptive article alt text verified",
+    "dimensions": "passed: 1920x1080 PNG and WebP plus 1200x630 PNG verified with ffprobe",
+    "targetRender": "passed: preview-configured Docusaurus build resolved the 1920x1080 hero, absolute social metadata, and updated alt text"
+  },
+  "approval": {
+    "status": "approved-for-preview",
+    "published": false
+  }
+}
