@@ -1,14 +1,6 @@
----
-slug: win-the-morning-first
-title: "Today is won in the morning"
-authors: [allan]
-tags: [thoughts, strategy]
-date: 2026-08-28
-description: "A protected morning creates room for health and meaningful work before the day becomes reactive."
-image: /img/insights/today-is-won-in-the-morning/social-card.png
----
+# Today is won in the morning
 
-![Two open hands offering a blue pill labeled 8:50 AM and a red pill labeled 3:30 AM beneath the title Today is won in the morning.](/img/insights/today-is-won-in-the-morning/hero.webp)
+![Two open hands offering a blue pill labeled 8:50 AM and a red pill labeled 3:30 AM beneath the title Today is won in the morning.](../exports/red-blue-website-hero-1920x1080.png)
 
 There are two ways you can arrive at the same 9:00 a.m. standup.
 
@@ -50,20 +42,6 @@ Sometimes it should change. Collaboration matters, and other people can see oppo
 
 The difference is that you have already exercised, put independent work in motion, cleared your communications, and decided what you want the day to accomplish. A change now feels like an informed pivot instead of the day simply happening to you.
 
-## What changed between the two mornings
+Want to read what changed between these two mornings? Read the full article on my website:
 
-Both mornings can belong to the same person. I have lived both. The difference is the order in which priorities get a claim on my attention.
-
-I think about priorities in two categories. The first contains the things I know matter to me: my health, long-term learning, creative and entrepreneurial work, and the ideas I want to build. The second contains the priorities carried by the people and systems around me. They arrive through meetings, messages, requests, and urgent work.
-
-Both categories matter. The outside world will naturally advocate for its own priorities because a teammate knows what they need from me, a meeting has an agenda, and a message announces itself. None of those people know or own all of my private priorities.
-
-That is why the morning matters to me. Once I am fully awake, it is often my clearest working time. I am rested and have not yet absorbed the day's noise. It is the most reliable chance I have found to take care of my health, think creatively, and move personally meaningful work forward.
-
-Exercise belongs in that time because my health, energy, longevity, and mental health matter enough to deserve regular protection.
-
-That early block is where I get to cook on my own life.
-
-This is my routine, not a universal prescription. Nobody needs my exact wake time, workout, or sequence. Parents, shift workers, late risers, and people with less control over their schedules will need a different version. The transferable principle is to protect enough intentional time to move your own priorities forward before outside demands take over.
-
-I do not want to protect the morning so rigidly that I ignore the world. I want to win the morning first, then let collaboration and the outside world inform the rest of the day.
+https://allanbpediniv.com/info/insights/win-the-morning-first?utm_source=x&utm_medium=article&utm_campaign=today-is-won-in-the-morning
