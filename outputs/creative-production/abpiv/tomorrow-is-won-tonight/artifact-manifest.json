@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "1.0.0",
+  "artifactId": "tomorrow-is-won-tonight-sunset-cover",
+  "artifactType": "branded-static-graphic",
+  "purpose": "Editorial sunset hero and social cover for the Tomorrow is won tonight article",
+  "audience": "Founders, operators, and knowledge workers who want to protect tomorrow by making intentional evening choices",
+  "channels": [
+    "ABPIV website insight",
+    "LinkedIn Article",
+    "X Article",
+    "Open Graph and X link card"
+  ],
+  "brandKit": {
+    "id": "abpiv",
+    "version": "source-bundle-2026-06-06",
+    "status": "reviewed",
+    "profile": "default",
+    "statusNote": "The repository brand package is canonical for this artifact but does not declare a lifecycle status or semantic version. Reviewed is recorded conservatively."
+  },
+  "renderer": {
+    "capability": "OpenAI image generation with ffmpeg export processing",
+    "version": "image_gen built-in; ffmpeg 8.1.2"
+  },
+  "sourceInputs": [
+    "content-site/insights/2026-08-29-tomorrow-is-won-tonight.mdx",
+    "creative-production/brand-systems/abpiv/README.md",
+    "creative-production/brand-systems/abpiv/colors_and_type.css",
+    "creative-production/brand-systems/abpiv/creative-production.manifest.json"
+  ],
+  "sourceMaster": "master/sunset-titled-source.png",
+  "editableMaster": null,
+  "outputs": [
+    {
+      "path": "exports/sunset-cover-1920x1080.png",
+      "dimensions": "1920x1080",
+      "format": "PNG",
+      "purpose": "Lossless LinkedIn and X native article cover"
+    },
+    {
+      "path": "exports/sunset-cover-1920x1080.jpg",
+      "dimensions": "1920x1080",
+      "format": "JPEG",
+      "purpose": "Compact LinkedIn and X native article cover"
+    },
+    {
+      "path": "exports/sunset-website-hero-1920x1080.webp",
+      "dimensions": "1920x1080",
+      "format": "WebP",
+      "purpose": "Optimized visible website article hero"
+    },
+    {
+      "path": "exports/sunset-social-card-1200x630.png",
+      "dimensions": "1200x630",
+      "format": "PNG",
+      "purpose": "Open Graph and X link preview"
+    }
+  ],
+  "websiteCopies": [
+    "content-site/static/img/insights/tomorrow-is-won-tonight/hero.webp",
+    "content-site/static/img/insights/tomorrow-is-won-tonight/social-card.png"
+  ],
+  "distributionDrafts": [
+    {
+      "platform": "LinkedIn Article",
+      "path": "agents/context/working/tomorrow-is-won-tonight-linkedin-article.md",
+      "status": "draft-for-review"
+    },
+    {
+      "platform": "X Article",
+      "path": "agents/context/working/tomorrow-is-won-tonight-x-article.md",
+      "status": "draft-for-review"
+    }
+  ],
+  "exactCopy": [
+    "Tomorrow is won tonight"
+  ],
+  "altText": "The title Tomorrow is won tonight above a small amber sun touching the horizon over deep navy water, with a narrow cyan twilight band and faint technical alignment lines.",
+  "generationPrompt": "Use case: stylized-concept. Asset type: shared editorial article cover for an ABPIV personal website, LinkedIn Article, and X Article. Primary request: a quiet sunset that represents the transition from tonight into tomorrow. Scene/backdrop: a wide low horizon over calm water at dusk, mostly deep near-black navy sky and foreground, a slim cyan-blue twilight band near the horizon, one small amber sun just touching the horizon with a restrained reflection. Subject: the sunset and horizon only, no people or objects. Style/medium: premium cinematic editorial illustration with natural atmospheric depth and subtle matte texture, rendered in the ABPIV technical executive visual language. Composition/framing: 16:9 landscape; focal sun and horizon kept inside the central 70 percent safe area; generous uncluttered sky; usable across 1920x1080 and a slightly wider 1.91:1 crop. Lighting/mood: calm, intentional, reflective, disciplined rather than sentimental. Color palette: approximately 90 percent deep navy and near-black (#04070D, #070B14, #0B1220), restrained cyan accents (#2CC8DC, #5FE6F4), one small earned amber focal point (#F4A63C, #FFC062). Brand detail: add only a few extremely subtle thin cyan route or alignment lines integrated into the sky and horizon at very low opacity, structural rather than decorative. Text: none. Constraints: no text, no typography, no logo, no wordmark, no watermark; no people; no city skyline; no dramatic clouds; no purple gradients; no particle fields; no generic AI glow; no decorative node spam; no oversaturated orange; maintain clean central crop safety and crisp horizon geometry.",
+  "editPrompt": "Add only the exact title Tomorrow is won tonight on one centered line in the upper third using crisp, cool off-white, premium geometric sans-serif typography. Preserve the approved sunset, palette, atmosphere, alignment lines, lighting, geometry, and crop unchanged. No punctuation, subtitle, logo, wordmark, additional text, glow, outline, or watermark.",
+  "overrides": [
+    {
+      "token": "brandKit.versionStatusProfile",
+      "originalValue": "not declared by the repository package",
+      "replacement": "source-bundle-2026-06-06, reviewed, default",
+      "reason": "Conservative provenance for this review artifact",
+      "scope": "artifact manifest only"
+    }
+  ],
+  "rights": {
+    "generatedImagery": "Original AI-generated sunset composition; no people, logos, trademarks, or third-party text",
+    "portrait": "No people or identifiable likenesses",
+    "logo": "No logo or wordmark used",
+    "fonts": "The generated title is rasterized as clean geometric sans-serif typography"
+  },
+  "checks": {
+    "contentIntegrity": "passed: exact title rendered once with correct spelling and capitalization; platform alt text and website asset hashes verified",
+    "brandConsistency": "passed: navy field, restrained cyan structure, sparse amber focal point, clean typographic hierarchy, and safe central crop visually inspected",
+    "accessibility": "passed: high-contrast title and updated descriptive alt text supplied for website, LinkedIn, and X drafts",
+    "dimensions": "passed: 1920x1080 PNG, JPEG, and WebP plus 1200x630 PNG verified with ffprobe",
+    "targetRender": "passed: refreshed Docusaurus production build emitted the titled optimized hero and resolved the updated image and social metadata"
+  },
+  "approval": {
+    "status": "approved-for-preview",
+    "published": false
+  }
+}
